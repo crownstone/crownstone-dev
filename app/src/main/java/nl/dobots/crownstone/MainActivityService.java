@@ -221,19 +221,21 @@ public class MainActivityService extends Activity implements IntervalScanListene
 		// get the list of devices from the service
 
 		_bleDeviceList = _service.getDeviceMap().getRssiSortedList();
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				// the closest device is the first device in the list (because we asked for the
-				// rssi sorted list)
-				_txtClosest.setText(getString(R.string.main_closest_device, _bleDeviceList.get(0).getName()));
+		if (!_bleDeviceList.isEmpty()) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					// the closest device is the first device in the list (because we asked for the
+					// rssi sorted list)
+					_txtClosest.setText(getString(R.string.main_closest_device, _bleDeviceList.get(0).getName()));
 
-				// update the list view
-				DeviceListAdapter adapter = ((DeviceListAdapter) _lvScanList.getAdapter());
-				adapter.updateList(_bleDeviceList);
-				adapter.notifyDataSetChanged();
-			}
-		});
+					// update the list view
+					DeviceListAdapter adapter = ((DeviceListAdapter) _lvScanList.getAdapter());
+					adapter.updateList(_bleDeviceList);
+					adapter.notifyDataSetChanged();
+				}
+			});
+		}
 	}
 
 	@Override

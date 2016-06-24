@@ -291,26 +291,26 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 						updateLightBulb(result > 0);
 						_sbPwm.setProgress(result);
 
-						_handler.postDelayed(_stateChecker, 2000);
+						_handler.postDelayed(_advStateChecker, 2000);
 
-//						// at the end we disconnect and close the device again. you could also
-//						// stay connected if you want. but it's preferable to only connect,
-//						// execute and disconnect, so that the device can continue advertising
-//						// again.
-//						_ble.disconnectAndClose(false, new IStatusCallback() {
-//							@Override
-//							public void onSuccess() {
-//								// at this point we successfully disconnected and closed
-//								// the device again
+						// at the end we disconnect and close the device again. you could also
+						// stay connected if you want. but it's preferable to only connect,
+						// execute and disconnect, so that the device can continue advertising
+						// again.
+						_ble.disconnectAndClose(false, new IStatusCallback() {
+							@Override
+							public void onSuccess() {
+								// at this point we successfully disconnected and closed
+								// the device again
 								dlg.dismiss();
-//							}
-//
-//							@Override
-//							public void onError(int error) {
-//								// an error occurred while disconnecting
-//								dlg.dismiss();
-//							}
-//						});
+							}
+
+							@Override
+							public void onError(int error) {
+								// an error occurred while disconnecting
+								dlg.dismiss();
+							}
+						});
 					}
 
 					@Override
@@ -330,21 +330,21 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 							finish();
 						} else {
 
-//							// disconnect and close the device again
-//							_ble.disconnectAndClose(false, new IStatusCallback() {
-//								@Override
-//								public void onSuccess() {
-//									// at this point we successfully disconnected and closed
-//									// the device again.
-//									dlg.dismiss();
-//								}
-//
-//								@Override
-//								public void onError(int error) {
-//									// an error occurred while disconnecting
+							// disconnect and close the device again
+							_ble.disconnectAndClose(false, new IStatusCallback() {
+								@Override
+								public void onSuccess() {
+									// at this point we successfully disconnected and closed
+									// the device again.
 									dlg.dismiss();
-//								}
-//							});
+								}
+
+								@Override
+								public void onError(int error) {
+									// an error occurred while disconnecting
+									dlg.dismiss();
+								}
+							});
 						}
 					}
 				});
@@ -539,6 +539,7 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 //		});
 
 		createGraph();
+//		_layStatistics.setVisibility(View.GONE);
 	}
 
 	private void pwmOff() {
