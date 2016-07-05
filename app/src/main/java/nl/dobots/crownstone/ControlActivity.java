@@ -91,6 +91,13 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 
 	private Handler _handler;
 
+	private long _maxPowerUsage;
+	private long _minPowerUsage;
+	private long _maxAccumulatedEnergy;
+	private long _minAccumulatedEnergy;
+	private int _powerUsageSeries;
+	private int _accumulatedEnergySeries;
+
 	private abstract class SequentialRunner implements Runnable {
 
 		private final String _name;
@@ -122,39 +129,6 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 		}
 	}
 
-	private SequentialRunner _stateChecker = new SequentialRunner("_stateChecker") {
-
-		IIntegerCallback tempCallback = new IIntegerCallback() {
-			@Override
-			public void onSuccess(final int result) {
-				runOnUiThread(new Runnable() {
-					@Override
-					public void run() {
-						onTemperature(result);
-						_txtTemperature.setText(String.format("%d °C", result));
-					}
-				});
-				done();
-			}
-
-			@Override
-			public void onError(int error) {
-				done();
-			}
-		};
-
-		@Override
-		public boolean execute() {
-//			if (_ble.hasCharacteristic(BluenetConfig.CHAR_TEMPERATURE_UUID, null)) {
-// 				_ble.readTemperature(_address, tempCallback);
-//			} else {
-				_ble.getBleExtState().getTemperature(_address, tempCallback);
-//			}
-			_handler.postDelayed(this, TEMP_UPDATE_TIME);
-			return true;
-		}
-	};
-
 	private SequentialRunner _advStateChecker = new SequentialRunner("_advStateChecker") {
 		@Override
 		public boolean execute() {
@@ -168,6 +142,9 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 							CrownstoneServiceData serviceData = device.getServiceData();
 							if (serviceData != null) {
 								onSwitchState(serviceData.getSwitchState());
+								onTemperature(serviceData.getTemperature());
+								onPowerUsage(serviceData.getPowerUsage());
+								onAccumulatedEnergy(serviceData.getAccumulatedEnergy());
 							}
 							_ble.stopScan(null);
 							done();
@@ -796,6 +773,72 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 		});
 	}
 
+	void onPowerUsage(int powerUsage) {
+
+		// add new point
+		XYSeries series = _dataSet.getSeriesAt(_powerUsageSeries);
+		series.add(new Date().getTime(), powerUsage);
+
+		// update y-axis range
+		if (powerUsage > _maxPowerUsage) {
+			_maxPowerUsage = (long)(powerUsage + (powerUsage - _minPowerUsage) * 0.2);
+		}
+		if (powerUsage < _minPowerUsage) {
+			_minPowerUsage = Math.min(0, (long)(powerUsage - (_maxPowerUsage - powerUsage) * 0.2));
+		}
+
+		// update x-axis range
+		_maxTime = new Date().getTime() + 1 * 60 * 1000;
+		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
+
+		// update range
+		if (_zoomLevel == 0) {
+			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
+			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
+		}
+
+		// redraw
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				_graphView.repaint();
+			}
+		});
+	}
+
+	void onAccumulatedEnergy(int accumulatedEnergy) {
+
+		// add new point
+		XYSeries series = _dataSet.getSeriesAt(_accumulatedEnergySeries);
+		series.add(new Date().getTime(), accumulatedEnergy);
+
+		// update y-axis range
+		if (accumulatedEnergy > _maxAccumulatedEnergy) {
+			_maxAccumulatedEnergy = (long)(accumulatedEnergy + (accumulatedEnergy - _minAccumulatedEnergy) * 0.2);
+		}
+		if (accumulatedEnergy < _minAccumulatedEnergy) {
+			_minAccumulatedEnergy = Math.min(0, (long)(accumulatedEnergy - (_maxAccumulatedEnergy - accumulatedEnergy) * 0.2));
+		}
+
+		// update x-axis range
+		_maxTime = new Date().getTime() + 1 * 60 * 1000;
+		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
+
+		// update range
+		if (_zoomLevel == 0) {
+			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
+			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
+		}
+
+		// redraw
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				_graphView.repaint();
+			}
+		});
+	}
+
 	private XYMultipleSeriesRenderer _multipleSeriesRenderer;
 	private XYMultipleSeriesDataset _dataSet;
 
@@ -803,9 +846,85 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 			PointStyle.POINT, PointStyle.SQUARE, PointStyle.TRIANGLE, PointStyle.X };
 
 	private int[] listOfSeriesColors = new int[] { 0xFF00BFFF, Color.GREEN, Color.RED, Color.YELLOW,
-			Color.MAGENTA, Color.CYAN, Color.BLACK };
+			Color.MAGENTA, Color.CYAN, Color.WHITE };
+
+	private void createPowerUsageSeries() {
+
+		_powerUsageSeries = _currentSeries++;
+
+		_minPowerUsage = 0;
+		_maxPowerUsage = 100;
+
+//		_minTime = Long.MAX_VALUE;
+//		_maxTime = Long.MIN_VALUE;
+
+		// create time series (series with x = timestamp, y = temperature)
+//		TimeSeries series = new TimeSeries("Temperature");
+		XYSeries series = new XYSeries("PowerUsage", _powerUsageSeries);
+		_dataSet.addSeries(series);
+
+		// create new renderer for the new series
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		_multipleSeriesRenderer.addSeriesRenderer(renderer);
+
+		renderer.setPointStyle(listOfPointStyles[_powerUsageSeries]);
+		renderer.setColor(listOfSeriesColors[_powerUsageSeries]);
+		renderer.setFillPoints(false);
+		renderer.setDisplayChartValues(true);
+//		renderer.setDisplayChartValuesDistance(50);
+		renderer.setChartValuesTextSize(30f);
+		renderer.setShowLegendItem(true);
+
+		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.RIGHT, _powerUsageSeries);
+		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, _powerUsageSeries);
+		_multipleSeriesRenderer.setAxisTitleTextSize(30f);
+		_multipleSeriesRenderer.setYLabelsColor(_powerUsageSeries, listOfSeriesColors[_powerUsageSeries]);
+//		_multipleSeriesRenderer.setYTitle("PowerUsage", 0);
+
+//		_currentPointStyle++;
+//		_currentSeriesColor++
+	}
+
+	private void createAccumulatedEnergySeries() {
+
+		_accumulatedEnergySeries = _currentSeries++;
+
+		_minAccumulatedEnergy = 0;
+		_maxAccumulatedEnergy = 100;
+
+//		_minTime = Long.MAX_VALUE;
+//		_maxTime = Long.MIN_VALUE;
+
+		// create time series (series with x = timestamp, y = temperature)
+//		TimeSeries series = new TimeSeries("Temperature");
+		XYSeries series = new XYSeries("AccumulatedEnergy", _accumulatedEnergySeries);
+		_dataSet.addSeries(series);
+
+		// create new renderer for the new series
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		_multipleSeriesRenderer.addSeriesRenderer(renderer);
+
+		renderer.setPointStyle(listOfPointStyles[_accumulatedEnergySeries]);
+		renderer.setColor(listOfSeriesColors[_accumulatedEnergySeries]);
+		renderer.setFillPoints(false);
+		renderer.setDisplayChartValues(true);
+//		renderer.setDisplayChartValuesDistance(50);
+		renderer.setChartValuesTextSize(30f);
+		renderer.setShowLegendItem(true);
+
+		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.RIGHT, _accumulatedEnergySeries);
+		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.RIGHT, _accumulatedEnergySeries);
+		_multipleSeriesRenderer.setAxisTitleTextSize(30f);
+		_multipleSeriesRenderer.setYLabelsColor(_accumulatedEnergySeries, listOfSeriesColors[_accumulatedEnergySeries]);
+//		_multipleSeriesRenderer.setYTitle("PowerUsage", 0);
+
+//		_currentPointStyle++;
+//		_currentSeriesColor++
+	}
 
 	private void createTemperatureSeries() {
+
+		_temperatureSeries = _currentSeries++;
 
 		_minTemp = 20;
 		_maxTemp = 50;
@@ -815,63 +934,68 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("Temperature");
-		XYSeries series = new XYSeries("Temperature", 0);
+		XYSeries series = new XYSeries("Temperature", _temperatureSeries);
 
 		_dataSet.addSeries(series);
 
 		// create new renderer for the new series
 		XYSeriesRenderer renderer = new XYSeriesRenderer();
 		_multipleSeriesRenderer.addSeriesRenderer(renderer);
-		_temperatureSeries = _currentSeries++;
 
-		renderer.setPointStyle(listOfPointStyles[_currentPointStyle++]);
-		renderer.setColor(listOfSeriesColors[_currentSeriesColor++]);
+		renderer.setPointStyle(listOfPointStyles[_temperatureSeries]);
+		renderer.setColor(listOfSeriesColors[_temperatureSeries]);
 		renderer.setFillPoints(false);
-//		renderer.setDisplayChartValues(true);
+		renderer.setDisplayChartValues(true);
 //		renderer.setDisplayChartValuesDistance(50);
 		renderer.setChartValuesTextSize(30f);
 		renderer.setShowLegendItem(true);
 
-		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.RIGHT, 0);
+		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.LEFT, _temperatureSeries);
+		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.RIGHT, _temperatureSeries);
 		_multipleSeriesRenderer.setAxisTitleTextSize(30f);
-		_multipleSeriesRenderer.setYTitle("Temperature [°C]", 0);
+		_multipleSeriesRenderer.setYLabelsColor(_temperatureSeries, listOfSeriesColors[_temperatureSeries]);
+//		_multipleSeriesRenderer.setYTitle("Temperature [°C]", 0);
 	}
 
 	private void createSwitchStateSeries() {
 
+		_switchStateSeries = _currentSeries++;
+
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("SwitchState");
-		XYSeries series = new XYSeries("SwitchState", 1);
+		XYSeries series = new XYSeries("SwitchState", _switchStateSeries);
 
 		_dataSet.addSeries(series);
 
 		// create new renderer for the new series
 		XYSeriesRenderer renderer = new XYSeriesRenderer();
 		_multipleSeriesRenderer.addSeriesRenderer(renderer);
-		_switchStateSeries = _currentSeries++;
 
-		renderer.setPointStyle(listOfPointStyles[_currentPointStyle]);
-		renderer.setColor(listOfSeriesColors[_currentSeriesColor]);
+		renderer.setPointStyle(listOfPointStyles[_switchStateSeries]);
+		renderer.setColor(listOfSeriesColors[_switchStateSeries]);
 		renderer.setFillPoints(false);
-		renderer.setDisplayChartValues(false);
+		renderer.setDisplayChartValues(true);
 //		renderer.setDisplayChartValuesDistance(50);
-//		renderer.setChartValuesTextSize(30f);
+		renderer.setChartValuesTextSize(30f);
 		renderer.setShowLegendItem(true);
 
-		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.RIGHT, 1);
-		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, 1);
+		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.LEFT, _switchStateSeries);
+		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, _switchStateSeries);
 		_multipleSeriesRenderer.setAxisTitleTextSize(30f);
-		_multipleSeriesRenderer.setYTitle("Switch State", 1);
+		_multipleSeriesRenderer.setYLabelsColor(_switchStateSeries, listOfSeriesColors[_switchStateSeries]);
+//		_multipleSeriesRenderer.setYTitle("Switch State", 1);
 	}
 
 	void createGraph() {
 
 		// get graph renderer
-		_multipleSeriesRenderer = getRenderer();
+		_multipleSeriesRenderer = getRenderer(4);
 		_dataSet = new XYMultipleSeriesDataset();
 
 		createTemperatureSeries();
 		createSwitchStateSeries();
+		createPowerUsageSeries();
+		createAccumulatedEnergySeries();
 
 		_maxTime = new Date().getTime();
 		_liveMinTime = new Date().getTime() - STATISTICS_X_TIME * 60 * 1000;
@@ -891,8 +1015,8 @@ public class ControlActivity extends AppCompatActivity implements ZoomListener {
 	 *
 	 * @return renderer object
 	 */
-	public XYMultipleSeriesRenderer getRenderer() {
-		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer(2);
+	public XYMultipleSeriesRenderer getRenderer(int series) {
+		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer(series);
 
 		// set minimum for y axis to 0
 		renderer.setYAxisMin(0);

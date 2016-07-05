@@ -1,19 +1,6 @@
-#Android Bluenet Example
+#Crownstone DEV
 
-This is a simple project for android studio to showcase the use of the bluenet library for android. The bluenet library for android can be found [here](https://github.com/dobots/bluenet-lib-android).
-
-The project shows the following steps:
-
-1. Initialization of the library
-2. Searching for Devices
-3. Connecting to a device
-4. Reading a characteristic (read the PWM characteristic to check the current state)
-5. Writing to a characteristic (switch Power)
-
-The example shows to ways of how to scan for devices using the library:
-
-1. Using the library directly to scan for devices
-2. Using the BleScanService to scan for devices
+This app is designed to be used for developement of crownstone. 
 
 ##Installation
 
@@ -48,7 +35,7 @@ Choose the android-bluenet-example dir
 The copyrights (2015) for this code belongs to [DoBots](http://dobots.nl) and are provided under an noncontagious open-source license:
 
 * Author: Dominik Egger
-* Date: 02.10.2015
+* Date: 05.07.2016
 * License: LGPL v3
 * Distributed Organisms B.V. (DoBots), http://www.dobots.nl
 * Rotterdam, The Netherlands
