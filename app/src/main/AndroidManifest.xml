@@ -47,7 +47,9 @@
 
 		<activity
 			android:name="nl.dobots.crownstone.ControlActivity"
-			android:label="@string/title_activity_control" >
+			android:label="@string/title_activity_control"
+			android:theme="@style/Base.Widget.AppCompat.ActionBar"
+			>
 		</activity>
 
 	</application>
