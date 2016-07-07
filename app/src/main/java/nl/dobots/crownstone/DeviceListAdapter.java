@@ -9,6 +9,8 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
 
@@ -31,15 +33,26 @@ public class DeviceListAdapter extends BaseAdapter {
 
 	private Context _context;
 	private BleDeviceList _arrayList;
-	private String _selection = "";
+//	private String _selection = "";
+
+	private ArrayList<String> _selection = new ArrayList<>();
 
 	public DeviceListAdapter(Context context, BleDeviceList array) {
 		_context = context;
 		_arrayList = array;
 	}
 
-	public void setSelection(String address) {
-		_selection = address;
+	public void select(String address) {
+		_selection.add(address);
+	}
+
+	public void toggleSelection(String address) {
+		if (_selection.contains(address)) {
+			_selection.remove(address);
+		} else {
+			_selection.add(address);
+		}
+		notifyDataSetInvalidated();
 	}
 
 	// How many items are in the data set represented by this Adapter.
@@ -62,6 +75,20 @@ public class DeviceListAdapter extends BaseAdapter {
 
 	public void updateList(BleDeviceList list) {
 		_arrayList = list;
+	}
+
+	public String[] getSelection() {
+		String[] result = new String[_selection.size()];
+		_selection.toArray(result);
+		return result;
+	}
+
+	public BleDevice[] getSelectedDevices() {
+		BleDevice[] result = new BleDevice[_selection.size()];
+		for (int i = 0; i < _selection.size(); ++i) {
+			result[i] = _arrayList.getDevice(_selection.get(i));
+		}
+		return result;
 	}
 
 	private class ViewHolder {
@@ -132,7 +159,7 @@ public class DeviceListAdapter extends BaseAdapter {
 					convertView.setBackgroundColor(0x00000000);
 				}
 			}
-			if (device.getAddress() == _selection) {
+			if (_selection.contains(device.getAddress())) {
 				convertView.setBackgroundColor(0x66FF0000);
 			}
 		}

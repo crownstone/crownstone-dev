@@ -1,4 +1,4 @@
-package nl.dobots.crownstone;
+package nl.dobots.crownstone.gui.control;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -46,6 +45,7 @@ import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.utils.BleLog;
+import nl.dobots.crownstone.R;
 
 /**
  * This example activity shows the use of the bluenet library. The library is first initialized,
@@ -58,7 +58,7 @@ import nl.dobots.bluenet.utils.BleLog;
  * 5. And how to do the 3 steps (connectDiscover, execute and disconnectClose) with one
  *    function call
  *
- * For an example of how to scan for devices see MainActivity.java or MainActivityService.java
+ * For an example of how to scan for devices see MainActivity.java or MainActivity.java
  *
  * Created on 1-10-15
  * @author Dominik Egger

@@ -1,27 +1,19 @@
-package nl.dobots.crownstone;
+package nl.dobots.crownstone.gui.control;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.achartengine.ChartFactory;
@@ -31,23 +23,11 @@ import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
-import org.achartengine.tools.ZoomEvent;
-import org.achartengine.tools.ZoomListener;
 
-import java.util.Date;
-
-import nl.dobots.bluenet.ble.base.callbacks.IByteArrayCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IPowerSamplesCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
-import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 import nl.dobots.bluenet.ble.base.structs.PowerSamples;
-import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.extended.BleExt;
-import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
-import nl.dobots.bluenet.ble.extended.structs.BleDevice;
-import nl.dobots.bluenet.utils.BleLog;
+import nl.dobots.crownstone.R;
 
 /**
  * This example activity shows the use of the bluenet library. The library is first initialized,
@@ -60,7 +40,7 @@ import nl.dobots.bluenet.utils.BleLog;
  * 5. And how to do the 3 steps (connectDiscover, execute and disconnectClose) with one
  *    function call
  *
- * For an example of how to scan for devices see MainActivity.java or MainActivityService.java
+ * For an example of how to scan for devices see MainActivity.java or MainActivity.java
  *
  * Created on 1-10-15
  * @author Dominik Egger

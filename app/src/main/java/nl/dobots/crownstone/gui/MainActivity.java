@@ -1,4 +1,4 @@
-package nl.dobots.crownstone;
+package nl.dobots.crownstone.gui;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
@@ -8,69 +8,62 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
-import nl.dobots.bluenet.ble.extended.BleExt;
+import nl.dobots.crownstone.R;
 
-public class ControlActivity extends FragmentActivity {
+/**
+ * This example activity shows the use of the bluenet library through the BleScanService. The
+ * service is created on startup. The service takes care of initialization of the bluetooth
+ * adapter, listens to state changes of the adapter, notifies listeners about these changes
+ * and provides an interval scan. This means the service scans for some time, then pauses for
+ * some time before starting another scan (this reduces battery consumption)
+ *
+ * The following steps are shown:
+ *
+ * 1. Start and connect to the BleScanService
+ * 2. Set the scan interval and scan pause time
+ * 3. Scan for devices and set a scan device filter
+ * 4a. Register as a listener to get an update for every scanned device, or
+ * 4b. Register as a listener to get an event at the start and end of each scan interval
+ * 5. How to get the list of scanned devices, sorted by RSSI.
+ *
+ * For an example of how to read the current PWM state and how to power On, power Off, or toggle
+ * the device switch, see ControlActivity.java
+ * For an example of how to use the library directly, without using the service, see MainActivity.java
+ *
+ * Created on 1-10-15
+ * @author Dominik Egger
+ */
+public class MainActivity  extends FragmentActivity {
 
-	private static final String TAG = ControlActivity.class.getCanonicalName();
+	private static final String TAG = MainActivity.class.getCanonicalName();
 
 	private FragmentPagerAdapter _pagerAdapter;
 
 	private ViewPager _pager;
 
-	private ControlMainFragment _fragControlMain;
-	private ControlMeasurementsFragment _fragControlMeasurements;
+	private SelectControlFragment _fragMain;
+	private SelectMonitorFragment _fragSelect;
 
-	private static ControlActivity INSTANCE;
-
-	public static ControlActivity getInstance() {
-		return INSTANCE;
-	}
-
-	private String _address;
-	private BleExt _ble;
-	
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_control);
-
-		INSTANCE = this;
-
-		_address = getIntent().getStringExtra("address");
-
-		// create our access point to the library, and make sure it is initialized (if it
-		// wasn't already)
-		_ble = new BleExt();
-		_ble.init(this, new IStatusCallback() {
-			@Override
-			public void onSuccess() {
-				Log.v(TAG, "onSuccess");
-			}
-
-			@Override
-			public void onError(int error) {
-				Log.e(TAG, "onError: " + error);
-			}
-		});
+		setContentView(R.layout.activity_viewpager);
 
 		initUI();
 	}
 
 	private void initUI() {
-		_fragControlMain = new ControlMainFragment();
-		_fragControlMeasurements = new ControlMeasurementsFragment();
+		_fragMain = new SelectControlFragment();
+		_fragSelect = new SelectMonitorFragment();
 
 		_pagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
 			@Override
 			public Fragment getItem(int position) {
 				if (position == 0) {
-					return _fragControlMain;
+					return _fragMain;
 				} else {
-					return _fragControlMeasurements;
+					return _fragSelect;
 				}
 			}
 
@@ -120,16 +113,9 @@ public class ControlActivity extends FragmentActivity {
 
 		actionBar.addTab(
 				actionBar.newTab()
-						.setText("Measure")
+						.setText("Monitor")
 						.setTabListener(tabListener));
 
 	}
 
-	public BleExt getBle() {
-		return _ble;
-	}
-
-	public String getAddress() {
-		return _address;
-	}
 }

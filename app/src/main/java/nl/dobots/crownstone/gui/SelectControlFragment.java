@@ -1,6 +1,5 @@
-package nl.dobots.crownstone;
+package nl.dobots.crownstone.gui;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,14 +9,17 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
@@ -27,6 +29,9 @@ import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.service.callbacks.EventListener;
 import nl.dobots.bluenet.service.callbacks.IntervalScanListener;
 import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
+import nl.dobots.crownstone.DeviceListAdapter;
+import nl.dobots.crownstone.R;
+import nl.dobots.crownstone.gui.control.ControlActivity;
 
 /**
  * This example activity shows the use of the bluenet library through the BleScanService. The
@@ -51,9 +56,9 @@ import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class MainActivityService extends Activity implements IntervalScanListener, EventListener, ScanDeviceListener {
+public class SelectControlFragment extends Fragment implements IntervalScanListener, EventListener, ScanDeviceListener {
 
-	private static final String TAG = MainActivityService.class.getCanonicalName();
+	private static final String TAG = SelectControlFragment.class.getCanonicalName();
 
 	// scan for 1 second every 3 seconds
 	public static final int LOW_SCAN_INTERVAL = 10000; // 1 second scanning
@@ -63,33 +68,29 @@ public class MainActivityService extends Activity implements IntervalScanListene
 
 	private Button _btnScan;
 	private ListView _lvScanList;
-	private TextView _txtClosest;
 	private Spinner _spFilter;
 
 	private boolean _bound = false;
 
 	private BleDeviceList _bleDeviceList;
-	private String _address = "";
 
 	private static final int GUI_UPDATE_INTERVAL = 500;
 	private long _lastUpdate;
 	private BleDeviceFilter _selectedItem;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		initUI();
-
 		// create and bind to the BleScanService
-		Intent intent = new Intent(this, BleScanService.class);
-		bindService(intent, _connection, Context.BIND_AUTO_CREATE);
+		Intent intent = new Intent(getActivity(), BleScanService.class);
+		getActivity().bindService(intent, _connection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
-	protected void onDestroy() {
+	public void onDestroy() {
 		super.onDestroy();
-		unbindService(_connection);
+		getActivity().unbindService(_connection);
 	}
 
 	// if the service was connected successfully, the service connection gives us access to the service
@@ -104,15 +105,15 @@ public class MainActivityService extends Activity implements IntervalScanListene
 			// register as event listener. Events, like bluetooth initialized, and bluetooth turned
 			// off events will be triggered by the service, so we know if the user turned bluetooth
 			// on or off
-			_service.registerEventListener(MainActivityService.this);
+			_service.registerEventListener(SelectControlFragment.this);
 
 			// register as a scan device listener. If you want to get an event every time a device
 			// is scanned, then this is the choice for you.
-			_service.registerScanDeviceListener(MainActivityService.this);
+			_service.registerScanDeviceListener(SelectControlFragment.this);
 			// register as an interval scan listener. If you only need to know the list of scanned
 			// devices at every end of an interval, then this is better. additionally it also informs
 			// about the start of an interval.
-			_service.registerIntervalScanListener(MainActivityService.this);
+			_service.registerIntervalScanListener(SelectControlFragment.this);
 
 			// set the scan interval (for how many ms should the service scan for devices)
 			_service.setScanInterval(LOW_SCAN_INTERVAL);
@@ -138,10 +139,13 @@ public class MainActivityService extends Activity implements IntervalScanListene
 		return false;
 	}
 
-	private void initUI() {
-		setContentView(R.layout.activity_main);
 
-		_btnScan = (Button) findViewById(R.id.btnScan);
+	@Nullable
+	@Override
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+		View v = inflater.inflate(R.layout.frag_select_control, container, false);
+
+		_btnScan = (Button) v.findViewById(R.id.btnScan);
 		_btnScan.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -160,15 +164,15 @@ public class MainActivityService extends Activity implements IntervalScanListene
 		});
 
 		// create a spinner element with the device filter options
-		_spFilter = (Spinner) findViewById(R.id.spFilter);
-		_spFilter.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, BleDeviceFilter.values()));
+		_spFilter = (Spinner) v.findViewById(R.id.spFilter);
+		_spFilter.setAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, BleDeviceFilter.values()));
 
 		// create an empty list to assign to the list view. this will be updated whenever a
 		// device is scanned
 		_bleDeviceList = new BleDeviceList();
-		DeviceListAdapter adapter = new DeviceListAdapter(this, _bleDeviceList);
+		DeviceListAdapter adapter = new DeviceListAdapter(getActivity(), _bleDeviceList);
 
-		_lvScanList = (ListView) findViewById(R.id.lvScanList);
+		_lvScanList = (ListView) v.findViewById(R.id.lvScanList);
 		_lvScanList.setAdapter(adapter);
 		_lvScanList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
@@ -179,16 +183,16 @@ public class MainActivityService extends Activity implements IntervalScanListene
 				}
 
 				BleDevice device = _bleDeviceList.get(position);
-				_address = device.getAddress();
+				String address = device.getAddress();
 
 				// start the control activity to switch the device
-				Intent intent = new Intent(MainActivityService.this, ControlActivity.class);
-				intent.putExtra("address", _address);
+				Intent intent = new Intent(getActivity(), ControlActivity.class);
+				intent.putExtra("address", address);
 				startActivity(intent);
 			}
 		});
 
-		_txtClosest = (TextView) findViewById(R.id.txtClosest);
+		return v;
 	}
 
 	private void stopScan() {
@@ -222,13 +226,9 @@ public class MainActivityService extends Activity implements IntervalScanListene
 
 		_bleDeviceList = _service.getDeviceMap().getRssiSortedList();
 		if (!_bleDeviceList.isEmpty()) {
-			runOnUiThread(new Runnable() {
+			getActivity().runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					// the closest device is the first device in the list (because we asked for the
-					// rssi sorted list)
-					_txtClosest.setText(getString(R.string.main_closest_device, _bleDeviceList.get(0).getName()));
-
 					// update the list view
 					DeviceListAdapter adapter = ((DeviceListAdapter) _lvScanList.getAdapter());
 					adapter.updateList(_bleDeviceList);
@@ -286,7 +286,7 @@ public class MainActivityService extends Activity implements IntervalScanListene
 				break;
 			}
 			case BLE_PERMISSIONS_MISSING: {
-				_service.requestPermissions(this);
+				_service.requestPermissions(getActivity());
 			}
 		}
 	}
@@ -305,17 +305,17 @@ public class MainActivityService extends Activity implements IntervalScanListene
 
 					@Override
 					public void onError(int error) {
-						runOnUiThread(new Runnable() {
+						getActivity().runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								AlertDialog.Builder builder = new AlertDialog.Builder(MainActivityService.this);
+								AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 								builder.setTitle("Fatal Error")
 										.setMessage("Cannot scan for devices without permissions. Please " +
 												"grant permissions or uninstall the app again!")
 										.setNeutralButton("OK", new DialogInterface.OnClickListener() {
 											@Override
 											public void onClick(DialogInterface dialog, int which) {
-												MainActivityService.this.finish();
+												getActivity().finish();
 											}
 										});
 								builder.create().show();
