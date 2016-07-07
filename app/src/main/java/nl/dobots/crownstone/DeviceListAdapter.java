@@ -91,6 +91,11 @@ public class DeviceListAdapter extends BaseAdapter {
 		return result;
 	}
 
+	public void clear() {
+		_selection.clear();
+		_arrayList.clear();
+	}
+
 	private class ViewHolder {
 
 		protected TextView devName;

@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
@@ -158,8 +159,9 @@ public class SelectMonitorFragment extends Fragment implements EventListener, Sc
 		_btnScan.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				_service.clearDeviceMap();
 				if (!isScanning()) {
+					_service.clearDeviceMap();
+					_adapter.clear();
 					// start a scan with the given filter
 					startScan(BleDeviceFilter.crownstone);
 				} else {
@@ -174,9 +176,13 @@ public class SelectMonitorFragment extends Fragment implements EventListener, Sc
 			public void onClick(View v) {
 				String[] selection;
 				if ((selection = _adapter.getSelection()).length > 0) {
+					stopScan();
+
 					Intent intent = new Intent(getActivity(), MonitoringActivity.class);
 					intent.putExtra("addresses", selection);
 					startActivity(intent);
+				} else {
+					Toast.makeText(getActivity(), "No device(s) selected", Toast.LENGTH_LONG).show();
 				}
 			}
 		});
