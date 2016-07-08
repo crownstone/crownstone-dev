@@ -180,8 +180,13 @@ public class ControlMeasurementsFragment extends Fragment {
 
 			@Override
 			public void onError(int error) {
-				Toast.makeText(getActivity(), "Failed to get samples", Toast.LENGTH_LONG).show();
 				dlg.dismiss();
+				getActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(getActivity(), "Failed to get samples", Toast.LENGTH_LONG).show();
+					}
+				});
 			}
 		});
 	}

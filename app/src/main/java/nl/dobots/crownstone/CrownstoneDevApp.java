@@ -57,6 +57,11 @@ public class CrownstoneDevApp extends Application {
 
 	}
 
+	@Override
+	public void onTerminate() {
+		super.onTerminate();
+		_ble.destroy();
+	}
 
 	public BleExt getBle() {
 		return _ble;

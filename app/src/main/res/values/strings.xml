@@ -5,7 +5,7 @@
 	<string name="action_settings">Settings</string>
 	<string name="main_scan">Find Devices</string>
 	<string name="main_stop_scan">Stop</string>
-	<string name="main_welcome">This is a simple example of how to use the Bluenet Android library. It provides scanning for BLE devices, connecting to a device, reading out the current PWM state and switching the device. Color Code for scanning is: Green (Crownstone), Yellow (Guidestone), Blue (iBeacon), Black (any other BLE device). Use the dropdown list to filter for specific devices.</string>
+	<string name="main_welcome">Color Code for scanning is: Green (Crownstone), Yellow (Guidestone), Blue (iBeacon), Black (any other BLE device). Use the dropdown list to filter for specific devices.</string>
 	<string name="main_closest_device">Closest device: %s</string>
 	<string name="main_title">Welcome</string>
 	<string name="title_activity_control">ControlActivity</string>

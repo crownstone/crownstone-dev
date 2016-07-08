@@ -166,6 +166,7 @@ public class SelectControlFragment extends Fragment implements IntervalScanListe
 		// create a spinner element with the device filter options
 		_spFilter = (Spinner) v.findViewById(R.id.spFilter);
 		_spFilter.setAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, BleDeviceFilter.values()));
+		_spFilter.setSelection(1);
 
 		// create an empty list to assign to the list view. this will be updated whenever a
 		// device is scanned

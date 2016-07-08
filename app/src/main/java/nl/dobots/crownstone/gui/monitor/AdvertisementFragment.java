@@ -103,11 +103,12 @@ public class AdvertisementFragment extends Fragment implements ZoomListener, Int
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		createGraph();
+
 		_address = getArguments().getString("address");
 
 		_ble = CrownstoneDevApp.getInstance().getBle();
 
-		createGraph();
 	}
 
 	@Nullable
@@ -505,6 +506,8 @@ public class AdvertisementFragment extends Fragment implements ZoomListener, Int
 
 	@Override
 	public void onScanEnd() {
+		if (getActivity() == null) return;
+
 		BleDeviceMap deviceMap = MonitoringActivity.getInstance().getService().getDeviceMap();
 		BleDevice device = deviceMap.getDevice(_address);
 		if (device != null) {
