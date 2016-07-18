@@ -31,6 +31,7 @@ import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
+import org.achartengine.tools.PanListener;
 import org.achartengine.tools.ZoomEvent;
 import org.achartengine.tools.ZoomListener;
 
@@ -63,16 +64,14 @@ import nl.dobots.crownstone.R;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class ControlMainFragment extends Fragment implements ZoomListener {
+public class ControlMainFragment extends Fragment implements ZoomListener, PanListener {
 
 	private static final String TAG = ControlMainFragment.class.getCanonicalName();
 
-	private static final int TEMP_UPDATE_TIME = 5000;
+	private static final int TEMP_UPDATE_TIME = 2000;
 	public static final int STATISTICS_X_TIME = 5;
 
 	private GraphicalView _graphView;
-
-	private boolean _lightOn;
 
 	private ImageView _lightBulb;
 	private CheckBox _cbPwmEnable;
@@ -81,13 +80,16 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 	private Button _btnPwmOff;
 	private Button _btnPwmOn;
 	private SeekBar _sbPwm;
-	private TextView _txtTemperature;
 	private RelativeLayout _layGraph;
 	private ImageButton _btnZoomIn;
 	private ImageButton _btnZoomOut;
 	private ImageButton _btnZoomReset;
 
-	private int _zoomLevel;
+	private RelativeLayout _layStatistics;
+	private RelativeLayout _layControl;
+
+	private boolean _zoomApplied = false;
+	private boolean _panApplied = false;
 
 	private Handler _handler;
 
@@ -95,14 +97,17 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 	private long _minPowerUsage;
 	private long _maxAccumulatedEnergy;
 	private long _minAccumulatedEnergy;
-	private int _powerUsageSeries;
-	private int _accumulatedEnergySeries;
+
+	private boolean _lightOn;
+
 	private BleExt _ble;
 	private String _address;
+	private int _resetCounterSeries;
 
 	private abstract class SequentialRunner implements Runnable {
 
 		private final String _name;
+		private boolean noWait = false;
 
 		public SequentialRunner(String name) {
 			_name = name;
@@ -112,16 +117,19 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 
 		protected synchronized void done() {
 			this.notify();
+			noWait = true;
 			BleLog.LOGv(TAG, "notify");
 		}
 
 		@Override
 		public void run() {
-			if (execute()) {
 				synchronized (this) {
+			if (execute()) {
 					try {
 						BleLog.LOGv(TAG, "wait");
-						wait();
+						if (!noWait) {
+							wait();
+						}
 						BleLog.LOGv(TAG, "wait done");
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -130,6 +138,8 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 			}
 		}
 	}
+
+	private int resetCounter = -1;
 
 	private SequentialRunner _advStateChecker = new SequentialRunner("_advStateChecker") {
 		@Override
@@ -143,10 +153,25 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 						if (device.getAddress().equals(_address)) {
 							CrownstoneServiceData serviceData = device.getServiceData();
 							if (serviceData != null) {
-								onSwitchState(serviceData.getSwitchState());
+//								onSwitchState(serviceData.getSwitchState());
+								onPwm(serviceData.getPwm());
+								onRelayState(serviceData.getRelayState());
 								onTemperature(serviceData.getTemperature());
 								onPowerUsage(serviceData.getPowerUsage());
 								onAccumulatedEnergy(serviceData.getAccumulatedEnergy());
+
+								updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
+
+								String[] split = device.getName().split("_");
+								if (split.length > 1) {
+									int counter = Integer.valueOf(split[1]);
+									if (resetCounter == -1) {
+										resetCounter = counter;
+									} else if (counter != resetCounter) {
+										onResetCounterChange();
+										resetCounter = counter;
+									}
+								}
 							}
 							_ble.stopScan(null);
 							done();
@@ -168,17 +193,27 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		}
 	};
 
+	private XYMultipleSeriesRenderer _multipleSeriesRenderer;
+	private XYMultipleSeriesDataset _dataSet;
+
+	private PointStyle[] listOfPointStyles = new PointStyle[] { PointStyle.CIRCLE, PointStyle.POINT, PointStyle.DIAMOND,
+			PointStyle.SQUARE, PointStyle.TRIANGLE, PointStyle.X };
+
+	private int[] listOfSeriesColors = new int[] { 0xFF00BFFF, Color.DKGRAY, Color.GREEN, Color.YELLOW,
+			Color.MAGENTA, Color.CYAN, Color.WHITE };
+
 	private long _liveMinTime;
 	private long _maxTime;
 	private long _minTemp;
 	private long _maxTemp;
-	private RelativeLayout _layStatistics;
-	private RelativeLayout _layControl;
 	private int _currentSeries = 0;
 	private int _temperatureSeries;
-	private int _currentPointStyle = 0;
-	private int _currentSeriesColor = 0;
 	private int _switchStateSeries;
+	private int _powerUsageSeries;
+	private int _accumulatedEnergySeries;
+	private int _relayStateSeries;
+	private int _pwmSeries;
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -391,8 +426,6 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 			}
 		});
 
-		_txtTemperature = (TextView) v.findViewById(R.id.txtTemperature);
-
 		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
 		_layStatistics = (RelativeLayout) v.findViewById(R.id.layStatistics);
 		_layGraph = (RelativeLayout) v.findViewById(R.id.graph);
@@ -403,8 +436,6 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 			public void onClick(View v) {
 				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 				_layControl.setVisibility(View.INVISIBLE);
-//				_graphView.zoomIn();
-//				_zoomLevel++;
 			}
 		});
 		_btnZoomOut = (ImageButton) v.findViewById(R.id.zoomOut);
@@ -414,22 +445,18 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 				int pixels = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());
 				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
 				_layControl.setVisibility(View.VISIBLE);
-//				_graphView.zoomOut();
-//				_zoomLevel--;
 			}
 		});
 		_btnZoomReset = (ImageButton) v.findViewById(R.id.zoomReset);
-		_btnZoomReset.setVisibility(View.GONE);
-//		_btnZoomReset.setOnClickListener(new View.OnClickListener() {
-//			@Override
-//			public void onClick(View v) {
-//				int pixels = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());
-//				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
-//				_layControl.setVisibility(View.VISIBLE);
-////				_graphView.zoomReset();
-////				_zoomLevel = 0;
-//			}
-//		});
+//		_btnZoomReset.setVisibility(View.GONE);
+		_btnZoomReset.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				_graphView.zoomReset();
+				_zoomApplied = false;
+				_panApplied = false;
+			}
+		});
 
 		createGraph();
 //		_layStatistics.setVisibility(View.GONE);
@@ -449,7 +476,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 					public void onSuccess() {
 						Log.i(TAG, "power off success");
 						// power was switch off successfully, update the light bulb
-						updateLightBulb(false);
+//						updateLightBulb(false);
 						_sbPwm.setProgress(0);
 						done();
 					}
@@ -477,7 +504,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 					public void onSuccess() {
 						Log.i(TAG, "power on success");
 						// power was switch on successfully, update the light bulb
-						updateLightBulb(true);
+//						updateLightBulb(true);
 						_sbPwm.setProgress(100);
 						done();
 					}
@@ -506,7 +533,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 					public void onSuccess() {
 						Log.i(TAG, "toggle success");
 						// power was toggled successfully, update the light bulb
-						updateLightBulb(!_lightOn);
+//						updateLightBulb(!_lightOn);
 						if (_lightOn) {
 							_sbPwm.setProgress(100);
 						} else {
@@ -527,17 +554,19 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 	}
 
 	private void updateLightBulb(final boolean on) {
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				_lightOn = on;
-				if (on) {
-					_lightBulb.setImageResource(getResources().getIdentifier("light_bulb_on", "drawable", getActivity().getPackageName()));
-				} else {
-					_lightBulb.setImageResource(getResources().getIdentifier("light_bulb_off", "drawable", getActivity().getPackageName()));
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_lightOn = on;
+					if (on) {
+						_lightBulb.setImageResource(getResources().getIdentifier("light_bulb_on", "drawable", getActivity().getPackageName()));
+					} else {
+						_lightBulb.setImageResource(getResources().getIdentifier("light_bulb_off", "drawable", getActivity().getPackageName()));
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	private void relayOff() {
@@ -552,7 +581,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 					public void onSuccess() {
 						Log.i(TAG, "relay off success");
 						// power was switch off successfully, update the light bulb
-						updateLightBulb(false);
+//						updateLightBulb(false);
 						done();
 					}
 
@@ -579,7 +608,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 					public void onSuccess() {
 						Log.i(TAG, "relay on success");
 						// power was switch on successfully, update the light bulb
-						updateLightBulb(true);
+//						updateLightBulb(true);
 						done();
 					}
 
@@ -606,11 +635,11 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 					public void onSuccess() {
 						Log.i(TAG, "set pwm success");
 						// power was switch on successfully, update the light bulb
-						if (pwm > 0) {
-							updateLightBulb(true);
-						} else {
-							updateLightBulb(false);
-						}
+//						if (pwm > 0) {
+//							updateLightBulb(true);
+//						} else {
+//							updateLightBulb(false);
+//						}
 						done();
 					}
 
@@ -642,18 +671,113 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
 
 		// update range
-		if (_zoomLevel == 0) {
+		if (!(_zoomApplied || _panApplied)) {
 			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _switchStateSeries);
 			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _switchStateSeries);
 		}
 
 		// redraw
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				_graphView.repaint();
-			}
-		});
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
+	}
+
+	void onPwm(int pwm) {
+
+		if (pwm > 100) {
+			pwm = 100;
+		}
+
+		// add new point
+//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
+//		series.add(new Date(), pwm);
+		XYSeries series = _dataSet.getSeriesAt(_pwmSeries);
+		series.add(new Date().getTime(), pwm);
+
+		// update x-axis range
+		_maxTime = new Date().getTime() + 1 * 60 * 1000;
+		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
+
+		// update range
+		if (!(_zoomApplied || _panApplied)) {
+			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _pwmSeries);
+			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _pwmSeries);
+		}
+
+		// redraw
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
+	}
+
+	void onRelayState(boolean relayState) {
+
+		// add new point
+//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
+//		series.add(new Date(), relayState);
+		XYSeries series = _dataSet.getSeriesAt(_relayStateSeries);
+		series.add(new Date().getTime(), relayState ? 1 : 0);
+
+		// update x-axis range
+		_maxTime = new Date().getTime() + 1 * 60 * 1000;
+		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
+
+		// update range
+		if (!(_zoomApplied || _panApplied)) {
+			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _relayStateSeries);
+			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _relayStateSeries);
+		}
+
+		// redraw
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
+	}
+
+	void onResetCounterChange() {
+
+		// add new point
+//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
+//		series.add(new Date(), relayState);
+		XYSeries series = _dataSet.getSeriesAt(_resetCounterSeries);
+		series.add(new Date().getTime(), 0);
+		series.add(new Date().getTime(), 1);
+		series.add(new Date().getTime(), 0);
+
+		// update x-axis range
+		_maxTime = new Date().getTime() + 1 * 60 * 1000;
+		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
+
+		// update range
+		if (!(_zoomApplied || _panApplied)) {
+			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _resetCounterSeries);
+			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _resetCounterSeries);
+		}
+
+		// redraw
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
 	}
 
 	void onTemperature(int temperature) {
@@ -677,18 +801,20 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
 
 		// update range
-		if (_zoomLevel == 0) {
+		if (!(_zoomApplied || _panApplied)) {
 			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minTemp, _maxTemp}, _temperatureSeries);
 			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minTemp, _maxTemp}, _temperatureSeries);
 		}
 
 		// redraw
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				_graphView.repaint();
-			}
-		});
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
 	}
 
 	void onPowerUsage(int powerUsage) {
@@ -710,18 +836,20 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
 
 		// update range
-		if (_zoomLevel == 0) {
+		if (!(_zoomApplied || _panApplied)) {
 			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
 			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
 		}
 
 		// redraw
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				_graphView.repaint();
-			}
-		});
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
 	}
 
 	void onAccumulatedEnergy(int accumulatedEnergy) {
@@ -743,28 +871,82 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
 
 		// update range
-		if (_zoomLevel == 0) {
+		if (!(_zoomApplied || _panApplied)) {
 			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
 			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
 		}
 
 		// redraw
-		getActivity().runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				_graphView.repaint();
-			}
-		});
+		if (getActivity() != null) {
+			getActivity().runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					_graphView.repaint();
+				}
+			});
+		}
 	}
 
-	private XYMultipleSeriesRenderer _multipleSeriesRenderer;
-	private XYMultipleSeriesDataset _dataSet;
+	private void createResetCounterSeries() {
 
-	private PointStyle[] listOfPointStyles = new PointStyle[] { PointStyle.CIRCLE, PointStyle.DIAMOND,
-			PointStyle.POINT, PointStyle.SQUARE, PointStyle.TRIANGLE, PointStyle.X };
+		_resetCounterSeries = _currentSeries++;
 
-	private int[] listOfSeriesColors = new int[] { 0xFF00BFFF, Color.GREEN, Color.RED, Color.YELLOW,
-			Color.MAGENTA, Color.CYAN, Color.WHITE };
+		// create time series (series with x = timestamp, y = temperature)
+//		TimeSeries series = new TimeSeries("SwitchState");
+		XYSeries series = new XYSeries("Resets", _resetCounterSeries);
+
+		_dataSet.addSeries(series);
+
+		// create new renderer for the new series
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		_multipleSeriesRenderer.addSeriesRenderer(renderer);
+
+		renderer.setPointStyle(PointStyle.POINT);
+		renderer.setColor(Color.RED);
+		renderer.setFillPoints(false);
+		renderer.setDisplayChartValues(true);
+//		renderer.setDisplayChartValuesDistance(50);
+		renderer.setChartValuesTextSize(30f);
+		renderer.setShowLegendItem(true);
+
+		renderer.setLineWidth(5);
+
+//		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.LEFT, _resetCounterSeries);
+//		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, _resetCounterSeries);
+//		_multipleSeriesRenderer.setAxisTitleTextSize(30f);
+		_multipleSeriesRenderer.setYLabelsColor(_resetCounterSeries, Color.TRANSPARENT);
+//		_multipleSeriesRenderer.setYTitle("Relay State", 1);
+	}
+
+	private void createRelayStateSeries() {
+
+		_relayStateSeries = _currentSeries++;
+
+		// create time series (series with x = timestamp, y = temperature)
+//		TimeSeries series = new TimeSeries("SwitchState");
+		XYSeries series = new XYSeries("RelayState", _relayStateSeries);
+
+		_dataSet.addSeries(series);
+
+		// create new renderer for the new series
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		_multipleSeriesRenderer.addSeriesRenderer(renderer);
+
+//		renderer.setPointStyle(listOfPointStyles[_relayStateSeries]);
+		renderer.setPointStyle(PointStyle.POINT);
+		renderer.setColor(listOfSeriesColors[_relayStateSeries]);
+		renderer.setFillPoints(false);
+		renderer.setDisplayChartValues(true);
+//		renderer.setDisplayChartValuesDistance(50);
+		renderer.setChartValuesTextSize(30f);
+		renderer.setShowLegendItem(true);
+
+//		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.RIGHT, _relayStateSeries);
+//		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, _relayStateSeries);
+//		_multipleSeriesRenderer.setAxisTitleTextSize(0);
+		_multipleSeriesRenderer.setYLabelsColor(_relayStateSeries, Color.TRANSPARENT);
+//		_multipleSeriesRenderer.setYTitle("Relay State", 1);
+	}
 
 	private void createPowerUsageSeries() {
 
@@ -785,7 +967,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		XYSeriesRenderer renderer = new XYSeriesRenderer();
 		_multipleSeriesRenderer.addSeriesRenderer(renderer);
 
-		renderer.setPointStyle(listOfPointStyles[_powerUsageSeries]);
+		renderer.setPointStyle(listOfPointStyles[_powerUsageSeries % listOfPointStyles.length]);
 		renderer.setColor(listOfSeriesColors[_powerUsageSeries]);
 		renderer.setFillPoints(false);
 		renderer.setDisplayChartValues(true);
@@ -904,25 +1086,58 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 //		_multipleSeriesRenderer.setYTitle("Switch State", 1);
 	}
 
+	private void createPwmSeries() {
+
+		_pwmSeries = _currentSeries++;
+
+		// create time series (series with x = timestamp, y = temperature)
+//		TimeSeries series = new TimeSeries("SwitchState");
+		XYSeries series = new XYSeries("Pwm", _pwmSeries);
+
+		_dataSet.addSeries(series);
+
+		// create new renderer for the new series
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		_multipleSeriesRenderer.addSeriesRenderer(renderer);
+
+		renderer.setPointStyle(listOfPointStyles[_pwmSeries]);
+		renderer.setColor(listOfSeriesColors[_pwmSeries]);
+		renderer.setFillPoints(false);
+		renderer.setDisplayChartValues(true);
+//		renderer.setDisplayChartValuesDistance(50);
+		renderer.setChartValuesTextSize(30f);
+		renderer.setShowLegendItem(true);
+
+		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.LEFT, _pwmSeries);
+		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, _pwmSeries);
+		_multipleSeriesRenderer.setAxisTitleTextSize(30f);
+		_multipleSeriesRenderer.setYLabelsColor(_pwmSeries, listOfSeriesColors[_pwmSeries]);
+//		_multipleSeriesRenderer.setYTitle("Switch State", 1);
+	}
+
 	void createGraph() {
 
 		// get graph renderer
-		_multipleSeriesRenderer = getRenderer(4);
+		_multipleSeriesRenderer = getRenderer(6);
 		_dataSet = new XYMultipleSeriesDataset();
 
 		createTemperatureSeries();
-		createSwitchStateSeries();
+		createResetCounterSeries();
+//		createSwitchStateSeries();
+		createPwmSeries();
+		createRelayStateSeries();
 		createPowerUsageSeries();
 		createAccumulatedEnergySeries();
 
-		_maxTime = new Date().getTime();
-		_liveMinTime = new Date().getTime() - STATISTICS_X_TIME * 60 * 1000;
+//		_maxTime = new Date().getTime();
+//		_liveMinTime = new Date().getTime() - STATISTICS_X_TIME * 60 * 1000;
 
-		_multipleSeriesRenderer.setInitialRange(new double[] {_liveMinTime, _maxTime, _minTemp, _maxTemp}, _temperatureSeries);
+//		_multipleSeriesRenderer.setInitialRange(new double[] {_liveMinTime, _maxTime, _minTemp, _maxTemp}, _temperatureSeries);
 
 		// create graph
 		_graphView = ChartFactory.getTimeChartView(getActivity(), _dataSet, _multipleSeriesRenderer, null);
 		_graphView.addZoomListener(this, false, true);
+		_graphView.addPanListener(this);
 
 		// add to screen
 		_layGraph.addView(_graphView);
@@ -937,8 +1152,8 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 		XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer(series);
 
 		// set minimum for y axis to 0
-		renderer.setYAxisMin(0);
-		renderer.setYAxisMax(100);
+//		renderer.setYAxisMin(0);
+//		renderer.setYAxisMax(100);
 
 		// scrolling enabled
 //		renderer.setPanEnabled(true, false);
@@ -990,11 +1205,16 @@ public class ControlMainFragment extends Fragment implements ZoomListener {
 
 	@Override
 	public void zoomApplied(ZoomEvent zoomEvent) {
-		_zoomLevel = 100;
+		_zoomApplied = true;
 	}
 
 	@Override
 	public void zoomReset() {
-		_zoomLevel = 0;
+		_zoomApplied = false;
+	}
+
+	@Override
+	public void panApplied() {
+		_panApplied = true;
 	}
 }
