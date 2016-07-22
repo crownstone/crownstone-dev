@@ -164,7 +164,7 @@ public class ControlMainFragment extends Fragment implements ZoomListener, PanLi
 
 								String[] split = device.getName().split("_");
 								if (split.length > 1) {
-									int counter = Integer.valueOf(split[1]);
+									int counter = Integer.valueOf(split[split.length - 1]);
 									if (resetCounter == -1) {
 										resetCounter = counter;
 									} else if (counter != resetCounter) {
@@ -328,7 +328,9 @@ public class ControlMainFragment extends Fragment implements ZoomListener, PanLi
 				// an error occurred during connect/discover
 				Log.e(TAG, "failed to connect/discover: " + error);
 				dlg.dismiss();
-				getActivity().finish();
+				if (getActivity() != null) {
+					getActivity().finish();
+				}
 			}
 		});
 	}
