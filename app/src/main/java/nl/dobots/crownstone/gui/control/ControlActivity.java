@@ -12,8 +12,9 @@ import android.support.v4.view.ViewPager;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
+import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
 
-public class ControlActivity extends FragmentActivity {
+public class ControlActivity extends FragmentActivity implements ViewPagerActivity {
 
 	private static final String TAG = ControlActivity.class.getCanonicalName();
 
@@ -118,5 +119,10 @@ public class ControlActivity extends FragmentActivity {
 
 	public String getAddress() {
 		return _address;
+	}
+
+	@Override
+	public void disableTouch(boolean disable) {
+		_pager.requestDisallowInterceptTouchEvent(disable);
 	}
 }

@@ -27,20 +27,11 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import nl.dobots.bluenet.ble.base.callbacks.IPowerSamplesCallback;
 import nl.dobots.bluenet.ble.base.structs.PowerSamples;
 import nl.dobots.bluenet.ble.extended.BleExt;
+import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 
 /**
- * This example activity shows the use of the bluenet library. The library is first initialized,
- * which enables the bluetooth adapter. It shows the following steps:
- *
- * 1. Connect to a device and discover the available services / characteristics
- * 2. Read a characteristic (PWM characteristic)
- * 3. Write a characteristic (PWM characteristic)
- * 4. Disconnect and close the device
- * 5. And how to do the 3 steps (connectDiscover, execute and disconnectClose) with one
- *    function call
- *
- * For an example of how to scan for devices see MainActivity.java or MainActivity.java
+ * Request power samples from device and display in graph
  *
  * Created on 1-10-15
  * @author Dominik Egger
@@ -90,7 +81,7 @@ public class ControlMeasurementsFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		_ble = ControlActivity.getInstance().getBle();
+		_ble = CrownstoneDevApp.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
 
 	}

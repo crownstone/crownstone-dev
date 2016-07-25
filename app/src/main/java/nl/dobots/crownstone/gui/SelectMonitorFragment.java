@@ -1,14 +1,12 @@
 package nl.dobots.crownstone.gui;
 
 import android.app.AlertDialog;
-import android.content.ComponentName;
-import android.content.Context;
+import android.bluetooth.le.ScanSettings;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -22,131 +20,45 @@ import android.widget.Toast;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
+import nl.dobots.bluenet.ble.extended.BleExt;
+import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
-import nl.dobots.bluenet.service.BleScanService;
-import nl.dobots.bluenet.service.callbacks.EventListener;
-import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
+import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.DeviceListAdapter;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.monitor.MonitoringActivity;
 
 /**
- * This example activity shows the use of the bluenet library through the BleScanService. The
- * service is created on startup. The service takes care of initialization of the bluetooth
- * adapter, listens to state changes of the adapter, notifies listeners about these changes
- * and provides an interval scan. This means the service scans for some time, then pauses for
- * some time before starting another scan (this reduces battery consumption)
- *
- * The following steps are shown:
- *
- * 1. Start and connect to the BleScanService
- * 2. Set the scan interval and scan pause time
- * 3. Scan for devices and set a scan device filter
- * 4a. Register as a listener to get an update for every scanned device, or
- * 4b. Register as a listener to get an event at the start and end of each scan interval
- * 5. How to get the list of scanned devices, sorted by RSSI.
- *
- * For an example of how to read the current PWM state and how to power On, power Off, or toggle
- * the device switch, see ControlActivity.java
- * For an example of how to use the library directly, without using the service, see MainActivity.java
+ * Select crownstones to monitor their advertisement data. multiple crownstones can be selected.
+ * only crownstones are shown
  *
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class SelectMonitorFragment extends Fragment implements EventListener, ScanDeviceListener {
+public class SelectMonitorFragment extends Fragment implements IBleDeviceCallback, IStatusCallback {
 
-	private static final String TAG = SelectMonitorFragment.class.getCanonicalName();
-
-	// scan for 1 second every 3 seconds
-	public static final int LOW_SCAN_INTERVAL = 10000; // 1 second scanning
-	public static final int LOW_SCAN_PAUSE = 2000; // 2 seconds pause
-
-	private BleScanService _service;
+	private static final String TAG = SelectControlFragment.class.getCanonicalName();
 
 	private Button _btnScan;
 	private ListView _lvScanList;
-
-	private boolean _bound = false;
 
 	private BleDeviceList _bleDeviceList;
 
 	private static final int GUI_UPDATE_INTERVAL = 500;
 	private long _lastUpdate;
-	private BleDeviceFilter _selectedItem;
 	private DeviceListAdapter _adapter;
-	private Button _btnShow;
+
+	private BleExt _bleExt;
+	private boolean _scanning;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		_bleExt = CrownstoneDevApp.getInstance().getBle();
 
-		// create and bind to the BleScanService
-		Intent intent = new Intent(getActivity(), BleScanService.class);
-		getActivity().bindService(intent, _connection, Context.BIND_AUTO_CREATE);
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-		getActivity().unbindService(_connection);
-	}
-
-	// if the service was connected successfully, the service connection gives us access to the service
-	private ServiceConnection _connection = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			Log.i(TAG, "connected to ble scan service ...");
-			// get the service from the binder
-			BleScanService.BleScanBinder binder = (BleScanService.BleScanBinder) service;
-			_service = binder.getService();
-
-			// register as event listener. Events, like bluetooth initialized, and bluetooth turned
-			// off events will be triggered by the service, so we know if the user turned bluetooth
-			// on or off
-			_service.registerEventListener(SelectMonitorFragment.this);
-
-			// register as a scan device listener. If you want to get an event every time a device
-			// is scanned, then this is the choice for you.
-			_service.registerScanDeviceListener(SelectMonitorFragment.this);
-
-			// set the scan interval (for how many ms should the service scan for devices)
-			_service.setScanInterval(LOW_SCAN_INTERVAL);
-			// set the scan pause (how many ms should the service wait before starting the next scan)
-			_service.setScanPause(LOW_SCAN_PAUSE);
-
-			_bound = true;
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			Log.i(TAG, "disconnected from service");
-			_bound = false;
-		}
-	};
-
-	// is scanning returns true if the service is "running", not if it is currently in a
-	// scan interval or a scan pause
-	private boolean isScanning() {
-		if (_bound) {
-			return _service.isRunning();
-		}
-		return false;
-	}
-
-	@Override
-	public void onPause() {
-		super.onPause();
-		if (_bound) {
-			_service.unregisterScanDeviceListener(this);
-		}
-	}
-
-	@Override
-	public void onResume() {
-		super.onResume();
-		if (_bound) {
-			_service.registerScanDeviceListener(this);
+		if (Build.VERSION.SDK_INT >= 21) {
+			_bleExt.getBleBase().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
 		}
 	}
 
@@ -159,19 +71,18 @@ public class SelectMonitorFragment extends Fragment implements EventListener, Sc
 		_btnScan.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if (!isScanning()) {
-					_service.clearDeviceMap();
-					_adapter.clear();
+				if (!_scanning) {
 					// start a scan with the given filter
-					startScan(BleDeviceFilter.crownstone);
+					_adapter.clear();
+					startScan();
 				} else {
 					stopScan();
 				}
 			}
 		});
 
-		_btnShow = (Button) v.findViewById(R.id.btnShow);
-		_btnShow.setOnClickListener(new View.OnClickListener() {
+		Button btnShow = (Button) v.findViewById(R.id.btnShow);
+		btnShow.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				String[] selection;
@@ -207,35 +118,22 @@ public class SelectMonitorFragment extends Fragment implements EventListener, Sc
 	}
 
 	private void stopScan() {
-		if (_bound) {
-			_btnScan.setText(getString(R.string.main_scan));
-			// stop scanning for devices
-			_service.stopIntervalScan();
-		}
+		_btnScan.setText(getString(R.string.main_scan));
+		_bleExt.stopScan(this);
 	}
 
-	private void startScan(BleDeviceFilter filter) {
-		if (_bound) {
-			_btnScan.setText(getString(R.string.main_stop_scan));
-			// start scanning for devices, only return devices defined by the filter
-			_service.clearDeviceMap();
-			_service.startIntervalScan(filter);
-		}
-	}
-
-	private void onBleEnabled() {
-		_btnScan.setEnabled(true);
-	}
-
-	private void onBleDisabled() {
-		_btnScan.setEnabled(false);
+	private void startScan() {
+		_btnScan.setText(getString(R.string.main_stop_scan));
+		_bleExt.setScanFilter(BleDeviceFilter.crownstone);
+		_bleExt.startScan(true, this);
+		_scanning = true;
 	}
 
 	private void updateDeviceList() {
 		// update the device list. since we are not keeping up a list of devices ourselves, we
 		// get the list of devices from the service
 
-		_bleDeviceList = _service.getDeviceMap().getRssiSortedList();
+		_bleDeviceList = _bleExt.getDeviceMap().getRssiSortedList();
 		if (!_bleDeviceList.isEmpty()) {
 			getActivity().runOnUiThread(new Runnable() {
 				@Override
@@ -264,33 +162,14 @@ public class SelectMonitorFragment extends Fragment implements EventListener, Sc
 	}
 
 	@Override
-	public void onEvent(Event event) {
-		// by registering to the service as an EventListener, we will be informed whenever the
-		// user turns bluetooth on or off, or even refuses to enable bluetooth
-		switch (event) {
-			case BLUETOOTH_INITIALIZED: {
-				onBleEnabled();
-				break;
-			}
-			case BLUETOOTH_TURNED_OFF: {
-				onBleDisabled();
-				break;
-			}
-			case BLE_PERMISSIONS_MISSING: {
-				_service.requestPermissions(getActivity());
-			}
-		}
-	}
-
-	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 		if (requestCode == 123) {
 			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-				startScan(_selectedItem);
+				startScan();
 			} else {
 				Log.e(TAG, "Can't write fingerprints without access to storage!");
 			}
-		} else if (!_service.getBleExt().handlePermissionResult(requestCode, permissions, grantResults,
+		} else if (!_bleExt.handlePermissionResult(requestCode, permissions, grantResults,
 				new IStatusCallback() {
 
 					@Override
@@ -319,5 +198,15 @@ public class SelectMonitorFragment extends Fragment implements EventListener, Sc
 				})) {
 			super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 		}
+	}
+
+	@Override
+	public void onError(int error) {
+		_scanning = false;
+	}
+
+	@Override
+	public void onSuccess() {
+		_scanning = false;
 	}
 }

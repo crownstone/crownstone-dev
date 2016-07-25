@@ -12,24 +12,8 @@ import android.support.v4.view.ViewPager;
 import nl.dobots.crownstone.R;
 
 /**
- * This example activity shows the use of the bluenet library through the BleScanService. The
- * service is created on startup. The service takes care of initialization of the bluetooth
- * adapter, listens to state changes of the adapter, notifies listeners about these changes
- * and provides an interval scan. This means the service scans for some time, then pauses for
- * some time before starting another scan (this reduces battery consumption)
- *
- * The following steps are shown:
- *
- * 1. Start and connect to the BleScanService
- * 2. Set the scan interval and scan pause time
- * 3. Scan for devices and set a scan device filter
- * 4a. Register as a listener to get an update for every scanned device, or
- * 4b. Register as a listener to get an event at the start and end of each scan interval
- * 5. How to get the list of scanned devices, sorted by RSSI.
- *
- * For an example of how to read the current PWM state and how to power On, power Off, or toggle
- * the device switch, see ControlActivity.java
- * For an example of how to use the library directly, without using the service, see MainActivity.java
+ * Activity (container) for SelectControlFragment and SelectMonitorFragment. Provides
+ * swiping and tabs to change between one and the other
  *
  * Created on 1-10-15
  * @author Dominik Egger
