@@ -1,16 +1,21 @@
 package nl.dobots.crownstone;
 
 import android.app.Application;
+import android.bluetooth.le.ScanSettings;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import java.util.ArrayList;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.service.BleScanService;
+import nl.dobots.crownstone.gui.utils.ServiceBindListener;
 
 /**
  * Copyright (c) 2016 Dominik Egger <dominik@dobots.nl>. All rights reserved.
@@ -49,6 +54,8 @@ public class CrownstoneDevApp extends Application {
 	private BleExt _ble;
 
 	private boolean _bound = false;
+
+	private ArrayList<ServiceBindListener> _listeners = new ArrayList<>();
 
 	@Override
 	public void onCreate() {
@@ -108,7 +115,12 @@ public class CrownstoneDevApp extends Application {
 			// set the scan pause (how many ms should the service wait before starting the next scan)
 			_service.setScanPause(LOW_SCAN_PAUSE);
 
+			if (Build.VERSION.SDK_INT >= 21) {
+				_service.getBleExt().getBleBase().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+			}
+
 			_bound = true;
+			onServiceBind();
 		}
 
 		@Override
@@ -117,5 +129,35 @@ public class CrownstoneDevApp extends Application {
 			_bound = false;
 		}
 	};
+
+	/**
+	 * Register as a ScanDeviceListener. Whenever a device is detected, an onDeviceScanned event
+	 * is triggered with the detected device as a parameter
+	 * @param listener the listener to register
+	 */
+	public synchronized void registerServiceBindListener(ServiceBindListener listener) {
+		if (!_listeners.contains(listener)) {
+			_listeners.add(listener);
+		}
+	}
+
+	/**
+	 * Unregister from the service
+	 * @param listener the listener to unregister
+	 */
+	public synchronized void unregisterServiceBindListener(ServiceBindListener listener) {
+		if (_listeners.contains(listener)) {
+			_listeners.remove(listener);
+		}
+	}
+
+	/**
+	 * Helper function to notify IntervalScanListeners when a scan interval starts
+	 */
+	private synchronized void onServiceBind() {
+		for (ServiceBindListener listener : _listeners) {
+			listener.onBind();
+		}
+	}
 
 }

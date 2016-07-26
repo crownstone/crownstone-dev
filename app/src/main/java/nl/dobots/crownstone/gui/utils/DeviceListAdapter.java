@@ -1,4 +1,4 @@
-package nl.dobots.crownstone;
+package nl.dobots.crownstone.gui.utils;
 
 import android.content.Context;
 import android.util.Log;
@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
+import nl.dobots.crownstone.R;
 
 /**
  * This is just a simple list adapter to show the list of scanned devices. It checks the
@@ -23,6 +24,8 @@ import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
  * 		* Yellow: Guidestone
  * 		* Blue: iBeacon
  * 		* Black: any other BLE device
+ *
+ * Provides multi-selection of devices. a selected device will be shown in red.
  *
  * Created on 1-10-15
  * @author Dominik Egger
@@ -44,6 +47,10 @@ public class DeviceListAdapter extends BaseAdapter {
 
 	public void select(String address) {
 		_selection.add(address);
+	}
+
+	public void deselect(String address) {
+		_selection.remove(address);
 	}
 
 	public void toggleSelection(String address) {
