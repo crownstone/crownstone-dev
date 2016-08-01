@@ -24,7 +24,9 @@ import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
+import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IPowerSamplesCallback;
+import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.PowerSamples;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.crownstone.CrownstoneDevApp;
@@ -69,6 +71,7 @@ public class ControlMeasurementsFragment extends Fragment {
 	private int _currentSeriesColor = 0;
 //	private int _switchStateSeries;
 	private Button _btnSamplePower;
+	private Button _btnSubscribePower;
 
 	private int _currentSampleSeries;
 	private int _voltageSampleSeries;
@@ -76,6 +79,8 @@ public class ControlMeasurementsFragment extends Fragment {
 	private int _maxCurrentSample;
 	private int _minVoltageSample;
 	private int _maxVoltageSample;
+
+	private boolean _subscribedPowerSamples;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -146,6 +151,20 @@ public class ControlMeasurementsFragment extends Fragment {
 			}
 		});
 
+		_btnSubscribePower = (Button) v.findViewById(R.id.btnSubscribePower);
+		_btnSubscribePower.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (_subscribedPowerSamples) {
+					_btnSubscribePower.setText("Subscribe");
+					unsubscribePowerSamples();
+				} else {
+					_btnSubscribePower.setText("Unsubscribe");
+					subscribePowerSamples();
+				}
+			}
+		});
+
 		createGraph();
 //		_layStatistics.setVisibility(View.GONE);
 
@@ -182,7 +201,69 @@ public class ControlMeasurementsFragment extends Fragment {
 		});
 	}
 
-	void onPowerSamples(PowerSamples powerSamples) {
+	private void subscribePowerSamples() {
+
+		_ble.connectAndDiscover(_address, new IDiscoveryCallback() {
+			@Override
+			public void onDiscovery(String serviceUuid, String characteristicUuid) {
+
+			}
+
+			@Override
+			public void onSuccess() {
+				_ble.subscribePowerSamples(
+						new IPowerSamplesCallback() {
+							@Override
+							public void onData(PowerSamples powerSamples) {
+								_subscribedPowerSamples = true;
+								onPowerSamples(powerSamples);
+							}
+
+							@Override
+							public void onError(int error) {
+								getActivity().runOnUiThread(new Runnable() {
+									@Override
+									public void run() {
+										Toast.makeText(getActivity(), "Failed to get samples", Toast.LENGTH_LONG).show();
+									}
+								});
+							}
+						});
+			}
+
+			@Override
+			public void onError(int error) {
+
+			}
+		});
+	}
+
+	private void unsubscribePowerSamples() {
+		_ble.unsubscribePowerSamples(new IStatusCallback() {
+			@Override
+			public void onSuccess() {
+				_subscribedPowerSamples = false;
+				_ble.disconnect(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+
+					}
+
+					@Override
+					public void onError(int error) {
+
+					}
+				});
+			}
+
+			@Override
+			public void onError(int error) {
+
+			}
+		});
+	}
+
+	private void onPowerSamples(PowerSamples powerSamples) {
 
 		onCurrentSamples(powerSamples.getCurrentSamples(), powerSamples.getCurrentTimestamps());
 		onVoltageSamples(powerSamples.getVoltageSamples(), powerSamples.getVoltageTimestamps());
