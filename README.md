@@ -20,7 +20,7 @@ To install the project follow these steps:
 3. Import the project in Android Studio
 
         File > New > Import Project ...
-Choose the android-bluenet-example dir
+Choose the crownstone-dev dir
 
 4. Build and run
 
