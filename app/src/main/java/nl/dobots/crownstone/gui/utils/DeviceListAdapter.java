@@ -165,7 +165,7 @@ public class DeviceListAdapter extends BaseAdapter {
 			} else {
 				viewHolder.layIBeacon.setVisibility(View.GONE);
 				// is it a crownstone?
-				if (device.isCrownstone()) {
+				if (device.isStone()) {
 					convertView.setBackgroundColor(0x6600FF00);
 				} else {
 					convertView.setBackgroundColor(0x00000000);

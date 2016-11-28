@@ -1,21 +1,57 @@
 package nl.dobots.crownstone;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Application;
+import android.app.ProgressDialog;
 import android.bluetooth.le.ScanSettings;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Toast;
+
+import com.strongloop.android.loopback.RestAdapter;
+import com.strongloop.android.loopback.callbacks.JsonObjectParser;
+import com.strongloop.android.loopback.callbacks.ListCallback;
+import com.strongloop.android.loopback.callbacks.ObjectCallback;
+import com.strongloop.android.loopback.callbacks.VoidCallback;
+import com.strongloop.android.remoting.adapters.Adapter;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import nl.dobots.bluenet.ble.base.callbacks.IProgressCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
+import nl.dobots.bluenet.ble.extended.CrownstoneSetup;
+import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.service.BleScanService;
+import nl.dobots.bluenet.utils.BleLog;
+import nl.dobots.crownstone.cfg.Config;
+import nl.dobots.crownstone.cfg.Settings;
 import nl.dobots.crownstone.gui.utils.ServiceBindListener;
+import nl.dobots.loopback.CrownstoneRestAPI;
+import nl.dobots.loopback.gui.adapter.SphereListAdapter;
+import nl.dobots.loopback.loopback.models.Sphere;
+import nl.dobots.loopback.loopback.models.Stone;
+import nl.dobots.loopback.loopback.models.User;
+import nl.dobots.loopback.loopback.repositories.StoneRepository;
+import nl.dobots.loopback.loopback.repositories.UserRepository;
 
 /**
  * Copyright (c) 2016 Dominik Egger <dominik@dobots.nl>. All rights reserved.
@@ -46,6 +82,8 @@ public class CrownstoneDevApp extends Application {
 	private BleScanService _service;
 
 	private static CrownstoneDevApp instance = null;
+	private JSONArray _keys;
+	private StoneRepository _stoneRepository;
 
 	public static CrownstoneDevApp getInstance() {
 		return instance;
@@ -56,6 +94,18 @@ public class CrownstoneDevApp extends Application {
 	private boolean _bound = false;
 
 	private ArrayList<ServiceBindListener> _listeners = new ArrayList<>();
+
+	private Settings _settings;
+	private RestAdapter _restAdapter;
+
+	private UserRepository _userRepository;
+	private User _currentUser;
+
+	private List<Sphere> _spheres;
+
+	public Settings getSettings() {
+		return _settings;
+	}
 
 	@Override
 	public void onCreate() {
@@ -76,6 +126,14 @@ public class CrownstoneDevApp extends Application {
 				Log.e(TAG, "onError: " + error);
 			}
 		});
+
+		_settings = Settings.getInstance(getApplicationContext());
+
+		if (!Config.OFFLINE) {
+			_restAdapter = CrownstoneRestAPI.initializeApi(this);
+			_userRepository = CrownstoneRestAPI.getUserRepository();
+			_stoneRepository = CrownstoneRestAPI.getStoneRepository();
+		}
 
 		// create and bind to the BleScanService
 		Intent intent = new Intent(this, BleScanService.class);
@@ -158,6 +216,266 @@ public class CrownstoneDevApp extends Application {
 		for (ServiceBindListener listener : _listeners) {
 			listener.onBind();
 		}
+	}
+
+	public void retrieveCurrentUserData() {
+		_userRepository.findCurrentUser(new ObjectCallback<User>() {
+			@Override
+			public void onSuccess(User object) {
+				_currentUser = object;
+				loadSpheres(_currentUser);
+				loadKeys(_currentUser);
+			}
+
+			@Override
+			public void onError(Throwable t) {
+				Log.i(TAG, "failed to get user");
+				t.printStackTrace();
+			}
+		});
+	}
+
+	Set<Object> _isAdmin = new HashSet<>();
+
+	List<Sphere> _adminSpheres = new ArrayList<>();
+
+	private void loadKeys(User currentUser) {
+		currentUser.keys(new Adapter.JsonArrayCallback() {
+			@Override
+			public void onSuccess(JSONArray response) {
+				_keys = response;
+				try {
+					for (int i = 0; i < response.length(); i++) {
+						JSONObject object = response.getJSONObject(i);
+						if (object.getJSONObject("keys").has("admin")) {
+							Object sphereId = object.get("sphereId");
+							_isAdmin.add(sphereId);
+							for (int j = 0; j < _spheres.size(); j++) {
+								Sphere sphere = _spheres.get(j);
+								if (sphere.getId().equals(sphereId)) {
+									_adminSpheres.add(sphere);
+								}
+							}
+						}
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+
+			@Override
+			public void onError(Throwable t) {
+				Log.i(TAG, "failed to get keys of user");
+				t.printStackTrace();
+			}
+		});
+	}
+
+	private void loadSpheres(User currentUser) {
+		currentUser.spheres(new ListCallback<Sphere>() {
+			@Override
+			public void onSuccess(List<Sphere> objects) {
+				_spheres = objects;
+			}
+
+			@Override
+			public void onError(Throwable t) {
+				Log.i(TAG, "failed to get spheres of user");
+				t.printStackTrace();
+			}
+		});
+	}
+
+	public List<Sphere> getSpheres() {
+		return _spheres;
+	}
+
+	private JSONObject findKeys(Object sphereId) {
+		for (int i = 0; i < _keys.length(); i++) {
+			try {
+				JSONObject object = _keys.getJSONObject(i);
+				if (object.get("sphereId").equals(sphereId)) {
+					return object.getJSONObject("keys");
+				}
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
+	public void prepareSetup(final BleDevice device, IStatusCallback callback) {
+
+	}
+
+	public void executeSetup(final Activity activity, final BleDevice device, IStatusCallback callback) {
+
+		showSpheres(activity, new ObjectCallback<Sphere>() {
+
+			@Override
+			public void onSuccess(final Sphere sphere) {
+
+				_stoneRepository.findByAddress(device.getAddress(), new ObjectCallback<Stone>() {
+					@Override
+					public void onSuccess(Stone stone) {
+						if (stone != null) {
+							runSetup(sphere, stone, activity, device);
+						}
+					}
+
+					@Override
+					public void onError(Throwable t) {
+						sphere.createStone(device.getAddress(), device.getName(), new ObjectCallback<Stone>() {
+							@Override
+							public void onSuccess(Stone object) {
+								runSetup(sphere, object, activity, device);
+							}
+
+							@Override
+							public void onError(Throwable t) {
+								Log.e(TAG, "error");
+								t.printStackTrace();
+							}
+						});
+					}
+				});
+
+
+			}
+
+			@Override
+			public void onError(Throwable t) {
+
+			}
+		});
+	}
+
+	private void runSetup(Sphere object, Stone stone, final Activity activity, BleDevice device) {
+		final ProgressDialog dlg = new ProgressDialog(activity);
+		dlg.setTitle("Executing Setup");
+		dlg.setMessage("Please wait ...");
+		dlg.setIndeterminate(false);
+		dlg.setMax(13);
+		dlg.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		dlg.show();
+
+		EncryptionKeys keys = getKeys(object.getId());
+		CrownstoneSetup setup = new CrownstoneSetup(_ble);
+		_ble.enableEncryption(true);
+		setup.executeSetup(device.getAddress(),
+				stone.getUid(),
+				keys.getAdminKeyString(),
+				keys.getMemberKeyString(),
+				keys.getGuestKeyString(),
+				Long.valueOf(object.getMeshAccessAddress(), 16).intValue(),
+				object.getUuid(),
+				stone.getMajor(),
+				stone.getMinor(),
+				new IProgressCallback() {
+
+					@Override
+					public void onError(final int error) {
+						BleLog.LOGe(TAG, "failed with error: %d", error);
+						activity.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								Toast.makeText(activity, "failed with error: " + error, Toast.LENGTH_LONG).show();
+							}
+						});
+					}
+
+					@Override
+					public void onProgress(final double progress, @Nullable JSONObject statusJson) {
+						BleLog.LOGi(TAG, "progress: %f", progress);
+
+						activity.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								dlg.setProgress((int) progress);
+								//							Toast.makeText(activity, "progress: " + progress, Toast.LENGTH_SHORT).show();
+							}
+						});
+					}
+				}, new IStatusCallback() {
+
+					@Override
+					public void onError(final int error) {
+						BleLog.LOGe(TAG, "status error: %d", error);
+
+						dlg.dismiss();
+
+						activity.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								Toast.makeText(activity, "status error: " + error, Toast.LENGTH_LONG).show();
+							}
+						});
+					}
+
+					@Override
+					public void onSuccess() {
+						BleLog.LOGd(TAG, "success");
+
+						dlg.dismiss();
+
+						activity.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								Toast.makeText(activity, "success", Toast.LENGTH_LONG).show();
+							}
+						});
+					}
+				}
+		);
+	}
+
+	public void showSpheres(Activity activity, final ObjectCallback<Sphere> selectionCallback) {
+
+		AlertDialog.Builder b = new AlertDialog.Builder(activity);
+		b.setTitle("Select a sphere");
+
+		SphereListAdapter sphereListAdapter = new SphereListAdapter(activity, _adminSpheres);
+		b.setAdapter(sphereListAdapter, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if (selectionCallback != null) {
+					selectionCallback.onSuccess(_adminSpheres.get(which));
+				}
+			}
+		});
+		b.show();
+
+	}
+
+	public User getCurrentUser() {
+		return _currentUser;
+	}
+
+	public Sphere getSphere(String proximityUuid) {
+		for (int i = 0; i < _spheres.size(); i++) {
+			Sphere sphere = _spheres.get(i);
+			if (sphere.getUuid().equals(proximityUuid)) {
+				return sphere;
+			}
+		}
+		return null;
+	}
+
+	public EncryptionKeys getKeys(Object sphereId) {
+		JSONObject keys = findKeys(sphereId);
+
+		String adminKey = null;
+		String memberKey = null;
+		String guestKey = null;
+		try {
+			adminKey = keys.getString("admin");
+			memberKey = keys.getString("member");
+			guestKey = keys.getString("guest");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return new EncryptionKeys(adminKey, memberKey, guestKey);
 	}
 
 }

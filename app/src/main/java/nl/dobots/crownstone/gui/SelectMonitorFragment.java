@@ -45,7 +45,7 @@ public class SelectMonitorFragment extends SelectFragment {
 				if (!_scanning) {
 					// start a scan with the given filter
 					_adapter.clear();
-					_selectedItem = BleDeviceFilter.crownstone;
+					_selectedItem = BleDeviceFilter.anyStone;
 					startScan(_selectedItem);
 				} else {
 					stopScan();

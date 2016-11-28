@@ -61,6 +61,12 @@
 			>
 		</activity>
 
+		<activity
+			android:name="nl.dobots.loopback.gui.LoginActivity"
+			android:label="LoginActivity"
+			android:theme="@style/Base.Widget.AppCompat.ActionBar">
+		</activity>
+
 	</application>
 
 </manifest>

@@ -326,7 +326,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		renderer.setPointStyle(listOfPointStyles[_powerUsageSeries % listOfPointStyles.length]);
 		renderer.setColor(listOfSeriesColors[_powerUsageSeries]);
 		renderer.setFillPoints(false);
-		renderer.setDisplayChartValues(true);
+		renderer.setDisplayChartValues(false);
 //		renderer.setDisplayChartValuesDistance(50);
 		renderer.setChartValuesTextSize(convertDpToPixel(10, _activity));
 		renderer.setShowLegendItem(true);

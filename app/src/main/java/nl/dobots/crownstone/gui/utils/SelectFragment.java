@@ -53,7 +53,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 			_bleService = CrownstoneDevApp.getInstance().getScanService();
 		}
 
-		super.onStart();
+		super.onResume();
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		// unregister as service bind listener in any case
 		CrownstoneDevApp.getInstance().unregisterServiceBindListener(this);
 
-		super.onStop();
+		super.onPause();
 	}
 
 	protected void stopScan() {
@@ -69,6 +69,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		_bleService.stopIntervalScan();
 		// unregister as scan device listener again
 		_bleService.unregisterScanDeviceListener(this);
+		_scanning = false;
 	}
 
 	protected void startScan(BleDeviceFilter filter) {
@@ -76,6 +77,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		// only register as scan device listener before starting the scan
 		_bleService.registerScanDeviceListener(this);
 		_bleService.startIntervalScan(2000, 500, filter);
+		_bleService.clearDeviceMap();
 		_scanning = true;
 	}
 

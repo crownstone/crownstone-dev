@@ -8,18 +8,14 @@
         <option name="gradleJvm" value="1.7" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/../../libs/bluenet-lib-android" />
+            <option value="/work/Projects/dobots/Crownstone/apps/crownstone-dev" />
+            <option value="/work/Projects/dobots/Crownstone/apps/crownstone-dev/app" />
+            <option value="/work/Projects/dobots/Crownstone/libs/bluenet-lib-android" />
+            <option value="/work/Projects/dobots/Crownstone/libs/crownstone-loopback-sdk" />
+            <option value="/work/Projects/dobots/Crownstone/third/loopback-sdk-android" />
           </set>
         </option>
-        <option name="myModules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/../../libs/bluenet-lib-android" />
-          </set>
-        </option>
+        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

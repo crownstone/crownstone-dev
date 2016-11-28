@@ -2,9 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../libs/bluenet-lib-android/bluenet.iml" filepath="$PROJECT_DIR$/../../libs/bluenet-lib-android/bluenet.iml" />
-      <module fileurl="file://$PROJECT_DIR$/crownstone-dev.iml" filepath="$PROJECT_DIR$/crownstone-dev.iml" />
+      <module fileurl="file:///work/Projects/dobots/Crownstone/apps/crownstone-dev/app/app.iml" filepath="/work/Projects/dobots/Crownstone/apps/crownstone-dev/app/app.iml" />
+      <module fileurl="file:///work/Projects/dobots/Crownstone/libs/bluenet-lib-android/bluenet.iml" filepath="/work/Projects/dobots/Crownstone/libs/bluenet-lib-android/bluenet.iml" />
+      <module fileurl="file:///work/Projects/dobots/Crownstone/apps/crownstone-dev/crownstone-dev.iml" filepath="/work/Projects/dobots/Crownstone/apps/crownstone-dev/crownstone-dev.iml" />
+      <module fileurl="file:///work/Projects/dobots/Crownstone/libs/crownstone-loopback-sdk/crownstone-loopback-sdk.iml" filepath="/work/Projects/dobots/Crownstone/libs/crownstone-loopback-sdk/crownstone-loopback-sdk.iml" />
+      <module fileurl="file:///work/Projects/dobots/Crownstone/third/loopback-sdk-android/loopback-sdk-android.iml" filepath="/work/Projects/dobots/Crownstone/third/loopback-sdk-android/loopback-sdk-android.iml" />
     </modules>
   </component>
 </project>

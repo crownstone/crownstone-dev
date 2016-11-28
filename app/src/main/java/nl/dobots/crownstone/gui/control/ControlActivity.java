@@ -2,17 +2,36 @@ package nl.dobots.crownstone.gui.control;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
+import com.strongloop.android.loopback.callbacks.ObjectCallback;
+import com.strongloop.android.loopback.callbacks.VoidCallback;
+
+import org.json.JSONObject;
+
+import java.util.UUID;
+
+import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
+import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
+import nl.dobots.loopback.CrownstoneRestAPI;
+import nl.dobots.loopback.gui.LoginActivity;
+import nl.dobots.loopback.loopback.models.Sphere;
+import nl.dobots.loopback.loopback.models.Stone;
+import nl.dobots.loopback.loopback.repositories.StoneRepository;
 
 public class ControlActivity extends FragmentActivity implements ViewPagerActivity {
 
@@ -26,6 +45,11 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 	private ControlMeasurementsFragment _fragControlMeasurements;
 
 	private static ControlActivity INSTANCE;
+	private CrownstoneDevApp _app;
+	private UUID _proximityUuid;
+	private StoneRepository _stoneRepository;
+	private Stone _currentStone;
+	private boolean _pwmEnabled;
 
 	public static ControlActivity getInstance() {
 		return INSTANCE;
@@ -42,10 +66,41 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 		INSTANCE = this;
 
 		_address = getIntent().getStringExtra("address");
+		_proximityUuid = (UUID)getIntent().getSerializableExtra("proximityUuid");
 
-		_ble = CrownstoneDevApp.getInstance().getBle();
+		_app = CrownstoneDevApp.getInstance();
+		_ble = _app.getBle();
+
+		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode()) {
+			Sphere sphere = _app.getSphere(_proximityUuid.toString());
+			if (sphere != null) {
+				EncryptionKeys keys = _app.getKeys(sphere.getId());
+
+				_ble.enableEncryption(true);
+				_ble.getBleBase().setEncryptionKeys(keys);
+
+				_stoneRepository = CrownstoneRestAPI.getStoneRepository();
+				_stoneRepository.findByAddress(_address, new ObjectCallback<Stone>() {
+					@Override
+					public void onSuccess(Stone object) {
+						_currentStone = object;
+					}
+
+					@Override
+					public void onError(Throwable t) {
+
+					}
+				});
+			}
+		}
 
 		initUI();
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		_ble.enableEncryption(false);
 	}
 
 	private void initUI() {
@@ -125,4 +180,53 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 	public void disableTouch(boolean disable) {
 		_pager.requestDisallowInterceptTouchEvent(disable);
 	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.menu_control, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+
+		switch(id) {
+//			case R.id.action_pwm: {
+//				enablePwm(!_pwmEnabled);
+//				break;
+//			}
+			case R.id.action_dfu: {
+				_ble.resetToBootloader(_address, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "success");
+						finish();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.e(TAG, "error" + error);
+					}
+				});
+				break;
+			}
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+//	private void enablePwm(boolean enable) {
+//		_pwmEnabled = enable;
+//	}
+
 }

@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -17,10 +18,12 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
@@ -71,6 +74,7 @@ public class ControlMainFragment extends Fragment {
 	private RelativeLayout _layControl;
 
 	private Handler _handler;
+	private boolean _closing;
 
 	private boolean _lightOn;
 
@@ -78,6 +82,11 @@ public class ControlMainFragment extends Fragment {
 	private String _address;
 
 	private AdvertisementGraph _graph;
+	private boolean _pwmEnabled = false;
+	private LinearLayout _layPwm;
+	private LinearLayout _layPower;
+	private boolean _led1On;
+	private boolean _led2On;
 
 	private abstract class SequentialRunner implements Runnable {
 
@@ -89,6 +98,7 @@ public class ControlMainFragment extends Fragment {
 		}
 
 		public abstract boolean execute();
+
 
 		protected synchronized void done() {
 			this.notify();
@@ -138,6 +148,10 @@ public class ControlMainFragment extends Fragment {
 								}
 								done();
 							}
+							if (_closing) {
+								_ble.stopScan(null);
+								done();
+							}
 						}
 
 						@Override
@@ -175,6 +189,7 @@ public class ControlMainFragment extends Fragment {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		_closing = true;
 		_handler.removeCallbacksAndMessages(null);
 		// finish has to be called on the library to release the objects if the library
 		// is not used anymore
@@ -265,6 +280,8 @@ public class ControlMainFragment extends Fragment {
 			}
 		});
 
+		_layPwm = (LinearLayout) v.findViewById(R.id.layPwm);
+		_layPower = (LinearLayout) v.findViewById(R.id.layPower);
 		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
 		_layStatistics = (RelativeLayout) v.findViewById(R.id.layStatistics);
 
@@ -296,6 +313,8 @@ public class ControlMainFragment extends Fragment {
 				_graph.resetZoom();
 			}
 		});
+
+		enablePwm(_pwmEnabled);
 
 		return v;
 	}
@@ -409,6 +428,53 @@ public class ControlMainFragment extends Fragment {
 		});
 	}
 
+	private void toggleLed2() {
+		_handler.post(new SequentialRunner("pwmOff") {
+			@Override
+			public boolean execute() {
+					_ble.writeLed(_address, 2, !_led2On, new IStatusCallback() {
+						@Override
+						public void onSuccess() {
+							Log.i(TAG, "write led success");
+							_led2On = !_led2On;
+							done();
+						}
+
+						@Override
+						public void onError(int error) {
+							Log.i(TAG, "write led failed: " + error);
+							done();
+						}
+					});
+				return true;
+			}
+		});
+	}
+
+
+	private void toggleLed1() {
+		_handler.post(new SequentialRunner("pwmOff") {
+			@Override
+			public boolean execute() {
+					_ble.writeLed(_address, 1, !_led1On, new IStatusCallback() {
+						@Override
+						public void onSuccess() {
+							Log.i(TAG, "write led success");
+							_led1On = !_led1On;
+							done();
+						}
+
+						@Override
+						public void onError(int error) {
+							Log.i(TAG, "write led failed: " + error);
+							done();
+						}
+					});
+				return true;
+			}
+		});
+	}
+
 	private void pwmOff() {
 		_handler.post(new SequentialRunner("pwmOff") {
 			@Override
@@ -473,13 +539,13 @@ public class ControlMainFragment extends Fragment {
 				// check first if the device is connected (and connect if it is not), then it reads the
 				// current PWM state, and depending on the state, decides if it needs to switch it on or
 				// off. in the end it disconnects again (once the disconnect timeout expires)
-				_ble.togglePower(_address, new IStatusCallback() {
+				_ble.togglePower(_address, new IBooleanCallback() {
 					@Override
-					public void onSuccess() {
+					public void onSuccess(boolean result) {
 						Log.i(TAG, "toggle success");
 						// power was toggled successfully, update the light bulb
 //						updateLightBulb(!_lightOn);
-						if (_lightOn) {
+						if (result) {
 							_sbPwm.setProgress(100);
 						} else {
 							_sbPwm.setProgress(0);
@@ -599,4 +665,30 @@ public class ControlMainFragment extends Fragment {
 		});
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle action bar item clicks here. The action bar will
+		// automatically handle clicks on the Home/Up button, so long
+		// as you specify a parent activity in AndroidManifest.xml.
+		int id = item.getItemId();
+
+		switch(id) {
+			case R.id.action_pwm: {
+				enablePwm(!_pwmEnabled);
+				break;
+			}
+		}
+
+		return super.onOptionsItemSelected(item);
+	}
+
+	private void enablePwm(boolean enable) {
+		_pwmEnabled = enable;
+		_layPwm.setEnabled(_pwmEnabled);
+		_layPower.setEnabled(_pwmEnabled);
+		_cbPwmEnable.setEnabled(_pwmEnabled);
+		_btnPwmOff.setEnabled(_pwmEnabled);
+		_btnPwmOn.setEnabled(_pwmEnabled);
+		_sbPwm.setEnabled(_pwmEnabled);
+	}
 }

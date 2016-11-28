@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 24
+    buildToolsVersion '24.0.2'
 
     defaultConfig {
         applicationId "nl.dobots.crownstone"
         minSdkVersion 19
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 4
         versionName "1.0.3"
     }
@@ -22,6 +22,9 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':bluenet')
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
 //    compile 'org.achartengine:achartengine:1.2.0'
     compile files('libs/achartengine-1.2.0.jar')
+    compile project(path: ':crownstone-loopback-sdk')
 }

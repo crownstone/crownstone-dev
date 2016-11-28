@@ -48,7 +48,7 @@ public class MonitoringActivity extends FragmentActivity implements ViewPagerAct
 		initUI();
 
 		CrownstoneDevApp.getInstance().getScanService().
-				startIntervalScan(LOW_SCAN_INTERVAL, LOW_SCAN_PAUSE, BleDeviceFilter.crownstone);
+				startIntervalScan(LOW_SCAN_INTERVAL, LOW_SCAN_PAUSE, BleDeviceFilter.anyStone);
 
 	}
 
