@@ -223,8 +223,17 @@ public class CrownstoneDevApp extends Application {
 			@Override
 			public void onSuccess(User object) {
 				_currentUser = object;
-				loadSpheres(_currentUser);
-				loadKeys(_currentUser);
+				loadSpheres(_currentUser, new VoidCallback() {
+					@Override
+					public void onSuccess() {
+						loadKeys(_currentUser);
+					}
+
+					@Override
+					public void onError(Throwable t) {
+
+					}
+				});
 			}
 
 			@Override
@@ -271,17 +280,19 @@ public class CrownstoneDevApp extends Application {
 		});
 	}
 
-	private void loadSpheres(User currentUser) {
+	private void loadSpheres(User currentUser, final VoidCallback callback) {
 		currentUser.spheres(new ListCallback<Sphere>() {
 			@Override
 			public void onSuccess(List<Sphere> objects) {
 				_spheres = objects;
+				callback.onSuccess();
 			}
 
 			@Override
 			public void onError(Throwable t) {
 				Log.i(TAG, "failed to get spheres of user");
 				t.printStackTrace();
+				callback.onError(t);
 			}
 		});
 	}
@@ -308,18 +319,32 @@ public class CrownstoneDevApp extends Application {
 
 	}
 
-	public void executeSetup(final Activity activity, final BleDevice device, IStatusCallback callback) {
+	public void executeSetup(final Activity activity, final BleDevice device, final IStatusCallback callback) {
 
 		showSpheres(activity, new ObjectCallback<Sphere>() {
 
 			@Override
 			public void onSuccess(final Sphere sphere) {
 
-				_stoneRepository.findByAddress(device.getAddress(), new ObjectCallback<Stone>() {
+				sphere.findStone(device.getAddress(), new ObjectCallback<Stone>() {
+//				_stoneRepository.findByAddress(device.getAddress(), new ObjectCallback<Stone>() {
 					@Override
 					public void onSuccess(Stone stone) {
-						if (stone != null) {
-							runSetup(sphere, stone, activity, device);
+						if (stone != null && sphere.getId().equals(stone.getSphereId())) {
+							runSetup(sphere, stone, activity, device, callback);
+						} else {
+							sphere.createStone(device.getAddress(), device.getName(), new ObjectCallback<Stone>() {
+								@Override
+								public void onSuccess(Stone object) {
+									runSetup(sphere, object, activity, device, callback);
+								}
+
+								@Override
+								public void onError(Throwable t) {
+									Log.e(TAG, "error");
+									t.printStackTrace();
+								}
+							});
 						}
 					}
 
@@ -328,7 +353,7 @@ public class CrownstoneDevApp extends Application {
 						sphere.createStone(device.getAddress(), device.getName(), new ObjectCallback<Stone>() {
 							@Override
 							public void onSuccess(Stone object) {
-								runSetup(sphere, object, activity, device);
+								runSetup(sphere, object, activity, device, callback);
 							}
 
 							@Override
@@ -345,12 +370,11 @@ public class CrownstoneDevApp extends Application {
 
 			@Override
 			public void onError(Throwable t) {
-
 			}
 		});
 	}
 
-	private void runSetup(Sphere object, Stone stone, final Activity activity, BleDevice device) {
+	private void runSetup(Sphere object, Stone stone, final Activity activity, BleDevice device, final IStatusCallback callback) {
 		final ProgressDialog dlg = new ProgressDialog(activity);
 		dlg.setTitle("Executing Setup");
 		dlg.setMessage("Please wait ...");
@@ -402,6 +426,7 @@ public class CrownstoneDevApp extends Application {
 					public void onError(final int error) {
 						BleLog.LOGe(TAG, "status error: %d", error);
 
+						callback.onError(error);
 						dlg.dismiss();
 
 						activity.runOnUiThread(new Runnable() {
@@ -416,6 +441,7 @@ public class CrownstoneDevApp extends Application {
 					public void onSuccess() {
 						BleLog.LOGd(TAG, "success");
 
+						callback.onSuccess();
 						dlg.dismiss();
 
 						activity.runOnUiThread(new Runnable() {

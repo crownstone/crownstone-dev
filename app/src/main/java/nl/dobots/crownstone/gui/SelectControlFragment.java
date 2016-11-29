@@ -44,7 +44,6 @@ public class SelectControlFragment extends SelectFragment {
 	private Spinner _spFilter;
 	private CrownstoneDevApp _app;
 	private BleExt _bleExt;
-	private DeviceListAdapter _adapter;
 
 	@Nullable
 	@Override
@@ -135,7 +134,47 @@ public class SelectControlFragment extends SelectFragment {
 			public boolean onItemLongClick(final AdapterView<?> parent, final View view, final int position, long id) {
 
 				final BleDevice device = _bleDeviceList.get(position);
-				if (device.isStone()) {
+				if (device.isSetupMode()) {
+
+					final AlertDialog.Builder builder = new AlertDialog.Builder(parent.getContext());
+					builder.setTitle("Dfu Stone");
+					builder.setMessage("Do you want to set the stone " + device.getName() + " into DFU?");
+					builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							_bleExt.resetToBootloader(device.getAddress(), new IStatusCallback() {
+								@Override
+								public void onSuccess() {
+									getActivity().runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											_bleDeviceList.remove(device);
+											_adapter.notifyDataSetChanged();
+										}
+									});
+								}
+
+								@Override
+								public void onError(final int error) {
+									getActivity().runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											Toast.makeText(getActivity(), "failed with error: " + error, Toast.LENGTH_LONG).show();
+										}
+									});
+								}
+							});
+						}
+					});
+
+					builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int id) {
+							/* nothing to do */
+						}
+					});
+					builder.show();
+
+					return true;
+				} else if (device.isStone()) {
 
 					final AlertDialog.Builder builder = new AlertDialog.Builder(parent.getContext());
 					builder.setTitle("Recover Stone");
@@ -163,7 +202,7 @@ public class SelectControlFragment extends SelectFragment {
 		return v;
 	}
 
-	private void recoverStone(BleDevice device) {
+	private void recoverStone(final BleDevice device) {
 		final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Recovering Stone " + device.getName(), "Please wait ...", true);
 		_bleExt.recover(device.getAddress(), new IStatusCallback() {
 			@Override
@@ -173,9 +212,10 @@ public class SelectControlFragment extends SelectFragment {
 				getActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						_bleDeviceList.clear();
+//						_bleDeviceList.clear();
+						_bleDeviceList.remove(device);
 						_adapter.notifyDataSetChanged();
-						_lvScanList.invalidate();
+//						_lvScanList.invalidate();
 						Toast.makeText(getActivity(), "Stone successfully recovered", Toast.LENGTH_LONG).show();
 					}
 				});
@@ -195,16 +235,16 @@ public class SelectControlFragment extends SelectFragment {
 		});
 	}
 
-	private void setupStone(BleDevice device) {
+	private void setupStone(final BleDevice device) {
 		_app.executeSetup(getActivity(), device, new IStatusCallback() {
 			@Override
 			public void onSuccess() {
 				getActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						_bleDeviceList.clear();
+						_bleDeviceList.remove(device);
 						_adapter.notifyDataSetChanged();
-						_lvScanList.invalidate();
+//						_lvScanList.invalidate();
 					}
 				});
 			}

@@ -42,6 +42,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 	protected Button _btnScan;
 	protected ListView _lvScanList;
 	protected BleDeviceFilter _selectedItem;
+	protected DeviceListAdapter _adapter;
 
 	@Override
 	public void onResume() {
@@ -78,6 +79,8 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		_bleService.registerScanDeviceListener(this);
 		_bleService.startIntervalScan(2000, 500, filter);
 		_bleService.clearDeviceMap();
+		_adapter.clear();
+		_adapter.notifyDataSetChanged();
 		_scanning = true;
 	}
 

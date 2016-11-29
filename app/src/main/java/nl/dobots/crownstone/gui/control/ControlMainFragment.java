@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -174,6 +175,7 @@ public class ControlMainFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
 
 		HandlerThread ht = new HandlerThread("BleHandler");
 		ht.start();
@@ -663,6 +665,18 @@ public class ControlMainFragment extends Fragment {
 				return true;
 			}
 		});
+	}
+
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+
+		if (_pwmEnabled) {
+			menu.findItem(R.id.action_pwm).setTitle("Disable PWM");
+		} else {
+			menu.findItem(R.id.action_pwm).setTitle("Enable PWM");
+		}
+
+		super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
