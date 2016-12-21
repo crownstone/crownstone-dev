@@ -103,7 +103,27 @@ public class SelectControlFragment extends SelectFragment {
 					builder.setMessage("Do you want to setup the stone " + device.getName() + "?");
 					builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							setupStone(device);
+							setupStone(device, new IStatusCallback() {
+								@Override
+				  				public void onSuccess() {
+									_bleExt.getHandler().postDelayed(new Runnable() {
+										@Override
+										public void run() {
+											UUID proximityUuid = device.getProximityUuid();
+											// start the control activity to switch the device
+											Intent intent = new Intent(getActivity(), ControlActivity.class);
+											intent.putExtra("address", address);
+											intent.putExtra("proximityUuid", proximityUuid);
+											startActivity(intent);
+										}
+									}, 2000);
+								}
+
+								@Override
+								public void onError(int error) {
+
+								}
+							});
 						}
 					});
 					builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
