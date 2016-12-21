@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+	  xmlns:app="http://schemas.android.com/apk/res-auto"
+	  xmlns:tools="http://schemas.android.com/tools">
+	<item
+		android:id="@+id/action_pwm"
+		android:orderInCategory="100"
+		android:title="PWM Enable"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_dfu"
+		android:orderInCategory="100"
+		android:title="DFU"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_factoryreset"
+		android:orderInCategory="100"
+		android:title="Factory Reset ..."
+		app:showAsAction="never"/>
+
+</menu>

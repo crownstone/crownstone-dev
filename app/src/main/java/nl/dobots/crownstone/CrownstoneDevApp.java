@@ -84,6 +84,7 @@ public class CrownstoneDevApp extends Application {
 	private static CrownstoneDevApp instance = null;
 	private JSONArray _keys;
 	private StoneRepository _stoneRepository;
+	private boolean _bleInitialized;
 
 	public static CrownstoneDevApp getInstance() {
 		return instance;
@@ -115,17 +116,17 @@ public class CrownstoneDevApp extends Application {
 		// create our access point to the library, and make sure it is initialized (if it
 		// wasn't already)
 		_ble = new BleExt();
-		_ble.init(this, new IStatusCallback() {
-			@Override
-			public void onSuccess() {
-				Log.v(TAG, "onSuccess");
-			}
-
-			@Override
-			public void onError(int error) {
-				Log.e(TAG, "onError: " + error);
-			}
-		});
+//		_ble.init(this, new IStatusCallback() {
+//			@Override
+//			public void onSuccess() {
+//				Log.v(TAG, "onSuccess");
+//			}
+//
+//			@Override
+//			public void onError(int error) {
+//				Log.e(TAG, "onError: " + error);
+//			}
+//		});
 
 		_settings = Settings.getInstance(getApplicationContext());
 
@@ -148,6 +149,21 @@ public class CrownstoneDevApp extends Application {
 	}
 
 	public BleExt getBle() {
+		if (!_bleInitialized) {
+			_ble.init(this, new IStatusCallback() {
+				@Override
+				public void onSuccess() {
+					Log.v(TAG, "onSuccess");
+					_bleInitialized = true;
+				}
+
+				@Override
+				public void onError(int error) {
+					Log.e(TAG, "onError: " + error);
+					_bleInitialized = false;
+				}
+			});
+		}
 		return _ble;
 	}
 
@@ -384,8 +400,8 @@ public class CrownstoneDevApp extends Application {
 		dlg.show();
 
 		EncryptionKeys keys = getKeys(object.getId());
-		CrownstoneSetup setup = new CrownstoneSetup(_ble);
-		_ble.enableEncryption(true);
+		CrownstoneSetup setup = new CrownstoneSetup(getBle());
+		getBle().enableEncryption(true);
 		setup.executeSetup(device.getAddress(),
 				stone.getUid(),
 				keys.getAdminKeyString(),
@@ -399,7 +415,7 @@ public class CrownstoneDevApp extends Application {
 
 					@Override
 					public void onError(final int error) {
-						BleLog.LOGe(TAG, "failed with error: %d", error);
+						BleLog.getInstance().LOGe(TAG, "failed with error: %d", error);
 						activity.runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
@@ -410,7 +426,7 @@ public class CrownstoneDevApp extends Application {
 
 					@Override
 					public void onProgress(final double progress, @Nullable JSONObject statusJson) {
-						BleLog.LOGi(TAG, "progress: %f", progress);
+						BleLog.getInstance().LOGi(TAG, "progress: %f", progress);
 
 						activity.runOnUiThread(new Runnable() {
 							@Override
@@ -424,7 +440,7 @@ public class CrownstoneDevApp extends Application {
 
 					@Override
 					public void onError(final int error) {
-						BleLog.LOGe(TAG, "status error: %d", error);
+						BleLog.getInstance().LOGe(TAG, "status error: %d", error);
 
 						callback.onError(error);
 						dlg.dismiss();
@@ -439,7 +455,7 @@ public class CrownstoneDevApp extends Application {
 
 					@Override
 					public void onSuccess() {
-						BleLog.LOGd(TAG, "success");
+						BleLog.getInstance().LOGd(TAG, "success");
 
 						callback.onSuccess();
 						dlg.dismiss();

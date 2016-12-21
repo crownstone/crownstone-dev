@@ -6,6 +6,9 @@
 		 the MainActivity and BleScanService instead for the example using the
 		 bluenet library through the scan service -->
 
+	<uses-permission android:name="android.permission.READ_CONTACTS" />
+	<uses-permission android:name="android.permission.READ_PROFILE" />
+
 	<application
 		android:name=".CrownstoneDevApp"
 		android:allowBackup="true"

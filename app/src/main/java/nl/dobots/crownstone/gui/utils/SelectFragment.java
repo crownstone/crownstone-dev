@@ -13,6 +13,7 @@ import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
 import nl.dobots.bluenet.service.BleScanService;
+import nl.dobots.bluenet.service.callbacks.EventListener;
 import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
@@ -26,7 +27,7 @@ import nl.dobots.crownstone.gui.SelectControlFragment;
  *
  * @author Dominik Egger <dominik@dobots.nl>
  */
-public abstract class SelectFragment extends Fragment implements ScanDeviceListener, ServiceBindListener {
+public abstract class SelectFragment extends Fragment implements ScanDeviceListener, ServiceBindListener, EventListener {
 
 	private static final String TAG = SelectControlFragment.class.getCanonicalName();
 
@@ -52,6 +53,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		} else {
 			// otherwise get the service
 			_bleService = CrownstoneDevApp.getInstance().getScanService();
+			_bleService.registerEventListener(SelectFragment.this);
 		}
 
 		super.onResume();
@@ -66,14 +68,15 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 	}
 
 	protected void stopScan() {
+		_scanning = false;
 		_btnScan.setText(getString(R.string.main_scan));
 		_bleService.stopIntervalScan();
 		// unregister as scan device listener again
 		_bleService.unregisterScanDeviceListener(this);
-		_scanning = false;
 	}
 
 	protected void startScan(BleDeviceFilter filter) {
+		_scanning = true;
 		_btnScan.setText(getString(R.string.main_stop_scan));
 		// only register as scan device listener before starting the scan
 		_bleService.registerScanDeviceListener(this);
@@ -81,7 +84,6 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		_bleService.clearDeviceMap();
 		_adapter.clear();
 		_adapter.notifyDataSetChanged();
-		_scanning = true;
 	}
 
 	private void updateDeviceList() {
@@ -115,47 +117,21 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 	}
 
 	@Override
-	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-		if (requestCode == 123) {
-			if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-				startScan(_selectedItem);
-			} else {
-				Log.e(TAG, "Can't write fingerprints without access to storage!");
-			}
-		} else if (!_bleService.getBleExt().handlePermissionResult(requestCode, permissions, grantResults,
-				new IStatusCallback() {
-
-					@Override
-					public void onError(int error) {
-						getActivity().runOnUiThread(new Runnable() {
-							@Override
-							public void run() {
-								AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-								builder.setTitle("Fatal Error")
-										.setMessage("Cannot scan for devices without permissions. Please " +
-												"grant permissions or uninstall the app again!")
-										.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-											@Override
-											public void onClick(DialogInterface dialog, int which) {
-												getActivity().finish();
-											}
-										});
-								builder.create().show();
-							}
-						});
-					}
-
-					@Override
-					public void onSuccess() {
-					}
-				})) {
-			super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		}
+	public void onBind() {
+		_bleService = CrownstoneDevApp.getInstance().getScanService();
+		_bleService.registerEventListener(SelectFragment.this);
+		_btnScan.setEnabled(true);
 	}
 
 	@Override
-	public void onBind() {
-		_bleService = CrownstoneDevApp.getInstance().getScanService();
-		_btnScan.setEnabled(true);
+	public void onEvent(Event event) {
+		switch(event) {
+			case BLE_PERMISSIONS_MISSING: {
+				_btnScan.setText(getString(R.string.main_scan));
+				// unregister as scan device listener again
+				_bleService.unregisterScanDeviceListener(this);
+				_scanning = false;
+			}
+		}
 	}
 }

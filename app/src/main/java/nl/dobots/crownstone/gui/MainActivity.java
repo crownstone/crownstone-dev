@@ -1,8 +1,11 @@
 package nl.dobots.crownstone.gui;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,10 +22,15 @@ import com.strongloop.android.loopback.callbacks.VoidCallback;
 import java.util.List;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.extended.BleExt;
+import nl.dobots.bluenet.service.BleScanService;
+import nl.dobots.bluenet.service.callbacks.EventListener;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.cfg.Settings;
+import nl.dobots.crownstone.gui.utils.SelectFragment;
+import nl.dobots.crownstone.gui.utils.ServiceBindListener;
 import nl.dobots.loopback.CrownstoneRestAPI;
 import nl.dobots.loopback.gui.LoginActivity;
 import nl.dobots.loopback.loopback.models.Sphere;
@@ -36,7 +44,7 @@ import nl.dobots.loopback.loopback.repositories.UserRepository;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class MainActivity  extends FragmentActivity {
+public class MainActivity  extends FragmentActivity implements ServiceBindListener, EventListener {
 
 	private static final String TAG = MainActivity.class.getCanonicalName();
 
@@ -53,6 +61,9 @@ public class MainActivity  extends FragmentActivity {
 	private List<Sphere> _spheres;
 	private CrownstoneDevApp _app;
 
+	private BleScanService _bleService;
+	private BleExt _bleExt;
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -62,7 +73,13 @@ public class MainActivity  extends FragmentActivity {
 		_settings = _app.getSettings();
 
 		initUI();
-//		CrownstoneDevApp.getInstance().getBle().requestPermissions(this);
+
+		if (!CrownstoneDevApp.getInstance().isServiceBound()) {
+			CrownstoneDevApp.getInstance().registerServiceBindListener(this);
+		} else {
+			// otherwise get the service
+			onBind();
+		}
 	}
 
 	@Override
@@ -94,22 +111,6 @@ public class MainActivity  extends FragmentActivity {
 		}
 
 		super.onActivityResult(requestCode, resultCode, data);
-	}
-
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-		CrownstoneDevApp.getInstance().getBle().handlePermissionResult(requestCode, permissions, grantResults,
-				new IStatusCallback() {
-					@Override
-					public void onSuccess() {
-
-					}
-
-					@Override
-					public void onError(int error) {
-
-					}
-				});
 	}
 
 	private void initUI() {
@@ -240,6 +241,55 @@ public class MainActivity  extends FragmentActivity {
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onBind() {
+		_bleService = CrownstoneDevApp.getInstance().getScanService();
+		_bleService.registerEventListener(this);
+		_bleExt = _bleService.getBleExt();
+	}
+
+	@Override
+	public void onEvent(EventListener.Event event) {
+		switch(event) {
+			case BLE_PERMISSIONS_MISSING: {
+				_bleService.requestPermissions(this);
+			}
+		}
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		if (!_bleExt.handlePermissionResult(requestCode, permissions, grantResults,
+				new IStatusCallback() {
+
+					@Override
+					public void onError(int error) {
+						runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+								builder.setTitle("Fatal Error")
+										.setMessage("Cannot scan for devices without permissions. Please " +
+												"grant permissions or uninstall the app again!")
+										.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+											@Override
+											public void onClick(DialogInterface dialog, int which) {
+//												dismiss();
+											}
+										});
+								builder.create().show();
+							}
+						});
+					}
+
+					@Override
+					public void onSuccess() {
+					}
+				})) {
+			super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		}
 	}
 
 }

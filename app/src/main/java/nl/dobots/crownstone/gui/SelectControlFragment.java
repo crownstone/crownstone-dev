@@ -235,7 +235,7 @@ public class SelectControlFragment extends SelectFragment {
 		});
 	}
 
-	private void setupStone(final BleDevice device) {
+	private void setupStone(final BleDevice device, final IStatusCallback callback) {
 		_app.executeSetup(getActivity(), device, new IStatusCallback() {
 			@Override
 			public void onSuccess() {
@@ -245,13 +245,14 @@ public class SelectControlFragment extends SelectFragment {
 						_bleDeviceList.remove(device);
 						_adapter.notifyDataSetChanged();
 //						_lvScanList.invalidate();
+						callback.onSuccess();
 					}
 				});
 			}
 
 			@Override
 			public void onError(int error) {
-
+				callback.onError(error);
 			}
 		});
 	}

@@ -8,8 +8,8 @@ android {
         applicationId "nl.dobots.crownstone"
         minSdkVersion 19
         targetSdkVersion 24
-        versionCode 5
-        versionName "2.0.0"
+        versionCode 6
+        versionName "2.0.1"
     }
     buildTypes {
         release {

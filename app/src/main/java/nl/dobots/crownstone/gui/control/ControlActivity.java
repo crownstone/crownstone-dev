@@ -12,6 +12,7 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.strongloop.android.loopback.callbacks.ObjectCallback;
 import com.strongloop.android.loopback.callbacks.VoidCallback;
@@ -216,6 +217,23 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
+					}
+				});
+				break;
+			}
+			case R.id.action_factoryreset: {
+				_ble.writeFactoryReset(_address, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "success");
+						Toast.makeText(ControlActivity.this, "success", Toast.LENGTH_SHORT).show();
+						finish();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.e(TAG, "error" + error);
+						Toast.makeText(ControlActivity.this, "failed to factory reset", Toast.LENGTH_LONG).show();
 					}
 				});
 				break;

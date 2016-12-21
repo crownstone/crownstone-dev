@@ -26,7 +26,6 @@ import android.widget.Toast;
 
 import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 import nl.dobots.bluenet.ble.cfg.BleErrors;
@@ -104,7 +103,7 @@ public class ControlMainFragment extends Fragment {
 		protected synchronized void done() {
 			this.notify();
 			noWait = true;
-			BleLog.LOGv(TAG, "notify");
+			BleLog.getInstance().LOGv(TAG, "notify");
 		}
 
 		@Override
@@ -112,11 +111,11 @@ public class ControlMainFragment extends Fragment {
 				synchronized (this) {
 			if (execute()) {
 					try {
-						BleLog.LOGv(TAG, "wait");
+						BleLog.getInstance().LOGv(TAG, "wait");
 						if (!noWait) {
 							wait();
 						}
-						BleLog.LOGv(TAG, "wait done");
+						BleLog.getInstance().LOGv(TAG, "wait done");
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -132,12 +131,12 @@ public class ControlMainFragment extends Fragment {
 			// connected
 
 			if (!_ble.isConnected(null)) {
-				BleLog.LOGi(TAG, "starting scan");
+				BleLog.getInstance().LOGi(TAG, "starting scan");
 				if (!_ble.isScanning()) {
 					_ble.startScan(new IBleDeviceCallback() {
 						@Override
 						public void onDeviceScanned(BleDevice device) {
-							BleLog.LOGd(TAG, "onDeviceScanned %s", device.getName());
+							BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
 							if (device.getAddress().equals(_address)) {
 								CrownstoneServiceData serviceData = device.getServiceData();
 								if (serviceData != null) {
@@ -157,7 +156,7 @@ public class ControlMainFragment extends Fragment {
 
 						@Override
 						public void onError(int error) {
-							BleLog.LOGe(TAG, "scan error: %d", error);
+							BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
 							done();
 						}
 					});
@@ -219,7 +218,7 @@ public class ControlMainFragment extends Fragment {
 		_lightBulb.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				togglePWM();
+				toggleRelay();
 			}
 		});
 
@@ -348,16 +347,15 @@ public class ControlMainFragment extends Fragment {
 
 				// first we try and read the PWM value from the device. this call will make sure
 				// that the PWM or State characteristic is available, otherwise an error is created
-				_ble.readPwm(new IIntegerCallback() {
+				_ble.readRelay(new IBooleanCallback() {
 					@Override
-					public void onSuccess(int result) {
+					public void onSuccess(boolean result) {
 						// if reading was successful, we get the value in the onSuccess as
 						// the parameter
 
 						// now we can update the image of the light bulb to on (if PWM value is
 						// greater than 0) or off if it is 0
-						updateLightBulb(result > 0);
-						_sbPwm.setProgress(result);
+						updateLightBulb(result);
 
 						_handler.postDelayed(_advStateChecker, 2000);
 
@@ -484,7 +482,7 @@ public class ControlMainFragment extends Fragment {
 				// switch the device off. this function will check first if the device is connected
 				// (and connect if it is not), then it switches the device off, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.powerOff(_address, new IStatusCallback() {
+				_ble.pwmOff(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "power off success");
@@ -512,7 +510,7 @@ public class ControlMainFragment extends Fragment {
 				// switch the device on. this function will check first if the device is connected
 				// (and connect if it is not), then it switches the device on, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.powerOn(_address, new IStatusCallback() {
+				_ble.pwmOn(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "power on success");
@@ -533,25 +531,20 @@ public class ControlMainFragment extends Fragment {
 		});
 	}
 
-	private void togglePWM() {
-		_handler.post(new SequentialRunner("togglePWM") {
+	private void toggleRelay() {
+		_handler.post(new SequentialRunner("toggleRelay") {
 			@Override
 			public boolean execute() {
 				// toggle the device switch, without needing to know the current state. this function will
 				// check first if the device is connected (and connect if it is not), then it reads the
 				// current PWM state, and depending on the state, decides if it needs to switch it on or
 				// off. in the end it disconnects again (once the disconnect timeout expires)
-				_ble.togglePower(_address, new IBooleanCallback() {
+				_ble.toggleRelay(_address, new IBooleanCallback() {
 					@Override
 					public void onSuccess(boolean result) {
 						Log.i(TAG, "toggle success");
 						// power was toggled successfully, update the light bulb
-//						updateLightBulb(!_lightOn);
-						if (result) {
-							_sbPwm.setProgress(100);
-						} else {
-							_sbPwm.setProgress(0);
-						}
+						updateLightBulb(result);
 						done();
 					}
 

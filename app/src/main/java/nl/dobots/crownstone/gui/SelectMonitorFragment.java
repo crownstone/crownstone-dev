@@ -31,7 +31,7 @@ public class SelectMonitorFragment extends SelectFragment {
 
 	private static final String TAG = SelectControlFragment.class.getCanonicalName();
 
-	private DeviceListAdapter _adapter;
+//	private DeviceListAdapter _adapter;
 
 	@Nullable
 	@Override
@@ -44,7 +44,6 @@ public class SelectMonitorFragment extends SelectFragment {
 			public void onClick(View view) {
 				if (!_scanning) {
 					// start a scan with the given filter
-					_adapter.clear();
 					_selectedItem = BleDeviceFilter.anyStone;
 					startScan(_selectedItem);
 				} else {
