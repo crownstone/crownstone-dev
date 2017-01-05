@@ -337,10 +337,12 @@ public class CrownstoneDevApp extends Application {
 
 	public void executeSetup(final Activity activity, final BleDevice device, final IStatusCallback callback) {
 
-		showSpheres(activity, new ObjectCallback<Sphere>() {
+//		showSpheres(activity, new ObjectCallback<Sphere>() {
+//
+//			@Override
+//			public void onSuccess(final Sphere sphere) {
 
-			@Override
-			public void onSuccess(final Sphere sphere) {
+			final Sphere sphere = _adminSpheres.get(0);
 
 				sphere.findStone(device.getAddress(), new ObjectCallback<Stone>() {
 //				_stoneRepository.findByAddress(device.getAddress(), new ObjectCallback<Stone>() {
@@ -382,12 +384,12 @@ public class CrownstoneDevApp extends Application {
 				});
 
 
-			}
-
-			@Override
-			public void onError(Throwable t) {
-			}
-		});
+//			}
+//
+//			@Override
+//			public void onError(Throwable t) {
+//			}
+//		});
 	}
 
 	private void runSetup(Sphere object, Stone stone, final Activity activity, BleDevice device, final IStatusCallback callback) {

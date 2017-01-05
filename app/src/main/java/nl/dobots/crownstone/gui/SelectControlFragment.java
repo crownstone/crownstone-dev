@@ -74,7 +74,7 @@ public class SelectControlFragment extends SelectFragment {
 		// create a spinner element with the device filter options
 		_spFilter = (Spinner) v.findViewById(R.id.spFilter);
 		_spFilter.setAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, BleDeviceFilter.values()));
-		_spFilter.setSelection(2);
+		_spFilter.setSelection(6);
 
 		// create an empty list to assign to the list view. this will be updated whenever a
 		// device is scanned
@@ -220,6 +220,14 @@ public class SelectControlFragment extends SelectFragment {
 		});
 
 		return v;
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		if (_bleService != null) {
+			_btnScan.callOnClick();
+		}
 	}
 
 	private void recoverStone(final BleDevice device) {

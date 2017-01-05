@@ -82,7 +82,7 @@ public class ControlMainFragment extends Fragment {
 	private String _address;
 
 	private AdvertisementGraph _graph;
-	private boolean _pwmEnabled = false;
+	private boolean _pwmEnabled = true;
 	private LinearLayout _layPwm;
 	private LinearLayout _layPower;
 	private boolean _led1On;
@@ -363,20 +363,20 @@ public class ControlMainFragment extends Fragment {
 						// stay connected if you want. but it's preferable to only connect,
 						// execute and disconnect, so that the device can continue advertising
 						// again.
-						_ble.disconnectAndClose(false, new IStatusCallback() {
-							@Override
-							public void onSuccess() {
-								// at this point we successfully disconnected and closed
-								// the device again
+//						_ble.disconnectAndClose(false, new IStatusCallback() {
+//							@Override
+//							public void onSuccess() {
+//								// at this point we successfully disconnected and closed
+//								// the device again
 								dlg.dismiss();
-							}
-
-							@Override
-							public void onError(int error) {
-								// an error occurred while disconnecting
-								dlg.dismiss();
-							}
-						});
+//							}
+//
+//							@Override
+//							public void onError(int error) {
+//								// an error occurred while disconnecting
+//								dlg.dismiss();
+//							}
+//						});
 					}
 
 					@Override
