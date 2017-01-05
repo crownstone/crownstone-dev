@@ -106,6 +106,7 @@ public class SelectControlFragment extends SelectFragment {
 							setupStone(device, new IStatusCallback() {
 								@Override
 				  				public void onSuccess() {
+									final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait ...");
 									_bleExt.getHandler().postDelayed(new Runnable() {
 										@Override
 										public void run() {
@@ -115,6 +116,7 @@ public class SelectControlFragment extends SelectFragment {
 											intent.putExtra("address", address);
 											intent.putExtra("proximityUuid", proximityUuid);
 											startActivity(intent);
+											dlg.dismiss();
 										}
 									}, 2000);
 								}
