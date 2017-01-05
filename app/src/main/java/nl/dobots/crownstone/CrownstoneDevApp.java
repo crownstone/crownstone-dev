@@ -25,6 +25,7 @@ import com.strongloop.android.loopback.callbacks.ObjectCallback;
 import com.strongloop.android.loopback.callbacks.VoidCallback;
 import com.strongloop.android.remoting.adapters.Adapter;
 
+import org.apache.http.client.HttpResponseException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,7 +47,9 @@ import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.cfg.Settings;
 import nl.dobots.crownstone.gui.utils.ServiceBindListener;
 import nl.dobots.loopback.CrownstoneRestAPI;
+import nl.dobots.loopback.gui.LoginActivity;
 import nl.dobots.loopback.gui.adapter.SphereListAdapter;
+import nl.dobots.loopback.loopback.callbacks.SimpleObjectCallback;
 import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.models.User;
@@ -255,6 +258,37 @@ public class CrownstoneDevApp extends Application {
 			@Override
 			public void onError(Throwable t) {
 				Log.i(TAG, "failed to get user");
+				if (t instanceof HttpResponseException) {
+					if (((HttpResponseException)t).getStatusCode() == 401) {
+						LoginActivity.attemptReLogin(getApplicationContext(), new SimpleObjectCallback<User>() {
+							@Override
+							public void onSuccess(User object) {
+								_currentUser = object;
+
+								loadSpheres(_currentUser, new VoidCallback() {
+									@Override
+									public void onSuccess() {
+										loadKeys(_currentUser);
+									}
+
+									@Override
+									public void onError(Throwable t) {
+
+									}
+								});
+							}
+
+							@Override
+							public void onError(Throwable t) {
+								Log.i(TAG, "failed to get user");
+								t.printStackTrace();
+								Toast.makeText(getApplicationContext(), "Failed to login, please try again", Toast.LENGTH_LONG).show();
+							}
+						});
+						return;
+					}
+				}
+
 				t.printStackTrace();
 			}
 		});
