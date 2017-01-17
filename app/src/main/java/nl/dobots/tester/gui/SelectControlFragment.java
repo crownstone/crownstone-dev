@@ -43,7 +43,7 @@ public class SelectControlFragment extends SelectFragment {
 
 	private Spinner _spFilter;
 	private CrownstoneDevApp _app;
-	private BleExt _bleExt;
+//	private BleExt _bleExt;
 
 	@Nullable
 	@Override
@@ -51,7 +51,7 @@ public class SelectControlFragment extends SelectFragment {
 		View v = inflater.inflate(R.layout.frag_select_control, container, false);
 
 		_app = CrownstoneDevApp.getInstance();
-		_bleExt = _app.getBle();
+//		_bleExt = _app.getBle();
 
 		_btnScan = (Button) v.findViewById(R.id.btnScan);
 		_btnScan.setOnClickListener(new View.OnClickListener() {
@@ -106,7 +106,10 @@ public class SelectControlFragment extends SelectFragment {
 							setupStone(device, new IStatusCallback() {
 								@Override
 				  				public void onSuccess() {
+									final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait ...");
 									_bleExt.getHandler().postDelayed(new Runnable() {
+									final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait ...");
+									_app.getBle().getHandler().postDelayed(new Runnable() {
 										@Override
 										public void run() {
 											UUID proximityUuid = device.getProximityUuid();
@@ -115,6 +118,7 @@ public class SelectControlFragment extends SelectFragment {
 											intent.putExtra("address", address);
 											intent.putExtra("proximityUuid", proximityUuid);
 											startActivity(intent);
+											dlg.dismiss();
 										}
 									}, 2000);
 								}
@@ -161,7 +165,7 @@ public class SelectControlFragment extends SelectFragment {
 					builder.setMessage("Do you want to set the stone " + device.getName() + " into DFU?");
 					builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
-							_bleExt.resetToBootloader(device.getAddress(), new IStatusCallback() {
+							_app.getBle().resetToBootloader(device.getAddress(), new IStatusCallback() {
 								@Override
 								public void onSuccess() {
 									getActivity().runOnUiThread(new Runnable() {
@@ -232,7 +236,7 @@ public class SelectControlFragment extends SelectFragment {
 
 	private void recoverStone(final BleDevice device) {
 		final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Recovering Stone " + device.getName(), "Please wait ...", true);
-		_bleExt.recover(device.getAddress(), new IStatusCallback() {
+		_app.getBle().recover(device.getAddress(), new IStatusCallback() {
 			@Override
 			public void onSuccess() {
 				dlg.dismiss();

@@ -222,6 +222,17 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 					public void onSuccess() {
 						Log.i(TAG, "success");
 						Toast.makeText(ControlActivity.this, "success", Toast.LENGTH_SHORT).show();
+						_currentStone.destroy(new VoidCallback() {
+							@Override
+							public void onSuccess() {
+								Toast.makeText(ControlActivity.this, "Stone removed from DB", Toast.LENGTH_SHORT).show();
+							}
+
+							@Override
+							public void onError(Throwable t) {
+								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
+							}
+						});
 						finish();
 					}
 

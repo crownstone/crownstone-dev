@@ -22,6 +22,7 @@ import com.strongloop.android.loopback.callbacks.ObjectCallback;
 import com.strongloop.android.loopback.callbacks.VoidCallback;
 import com.strongloop.android.remoting.adapters.Adapter;
 
+import org.apache.http.client.HttpResponseException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.callbacks.IProgressCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
@@ -43,7 +45,9 @@ import nl.dobots.tester.cfg.Config;
 import nl.dobots.tester.cfg.Settings;
 import nl.dobots.tester.gui.utils.ServiceBindListener;
 import nl.dobots.loopback.CrownstoneRestAPI;
+import nl.dobots.loopback.gui.LoginActivity;
 import nl.dobots.loopback.gui.adapter.SphereListAdapter;
+import nl.dobots.loopback.loopback.callbacks.SimpleObjectCallback;
 import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.models.User;
@@ -74,6 +78,7 @@ public class CrownstoneDevApp extends Application {
 	// scan for 1 second every 3 seconds
 	public static final int LOW_SCAN_INTERVAL = 10000; // 1 second scanning
 	public static final int LOW_SCAN_PAUSE = 2000; // 2 seconds pause
+	public static final int DEVICE_EXPIRATION_TIME = 5000;
 
 
 	private BleScanService _service;
@@ -124,6 +129,8 @@ public class CrownstoneDevApp extends Application {
 //				Log.e(TAG, "onError: " + error);
 //			}
 //		});
+
+		BleDevice.setExpirationTime(DEVICE_EXPIRATION_TIME);
 
 		_settings = Settings.getInstance(getApplicationContext());
 
@@ -252,6 +259,37 @@ public class CrownstoneDevApp extends Application {
 			@Override
 			public void onError(Throwable t) {
 				Log.i(TAG, "failed to get user");
+				if (t instanceof HttpResponseException) {
+					if (((HttpResponseException)t).getStatusCode() == 401) {
+						LoginActivity.attemptReLogin(getApplicationContext(), new SimpleObjectCallback<User>() {
+							@Override
+							public void onSuccess(User object) {
+								_currentUser = object;
+
+								loadSpheres(_currentUser, new VoidCallback() {
+									@Override
+									public void onSuccess() {
+										loadKeys(_currentUser);
+									}
+
+									@Override
+									public void onError(Throwable t) {
+
+									}
+								});
+							}
+
+							@Override
+							public void onError(Throwable t) {
+								Log.i(TAG, "failed to get user");
+								t.printStackTrace();
+								Toast.makeText(getApplicationContext(), "Failed to login, please try again", Toast.LENGTH_LONG).show();
+							}
+						});
+						return;
+					}
+				}
+
 				t.printStackTrace();
 			}
 		});
@@ -267,6 +305,7 @@ public class CrownstoneDevApp extends Application {
 			public void onSuccess(JSONArray response) {
 				_keys = response;
 				try {
+					_adminSpheres.clear();
 					for (int i = 0; i < response.length(); i++) {
 						JSONObject object = response.getJSONObject(i);
 						if (object.getJSONObject("keys").has("admin")) {
@@ -389,7 +428,7 @@ public class CrownstoneDevApp extends Application {
 //		});
 	}
 
-	private void runSetup(Sphere object, Stone stone, final Activity activity, BleDevice device, final IStatusCallback callback) {
+	private void runSetup(Sphere sphere, Stone stone, final Activity activity, BleDevice device, final IStatusCallback callback) {
 		final ProgressDialog dlg = new ProgressDialog(activity);
 		dlg.setTitle("Executing Setup");
 		dlg.setMessage("Please wait ...");
@@ -398,7 +437,11 @@ public class CrownstoneDevApp extends Application {
 		dlg.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		dlg.show();
 
-		EncryptionKeys keys = getKeys(object.getId());
+		device.setProximityUuid(UUID.fromString(sphere.getUuid()));
+		device.setMajor(stone.getMajor());
+		device.setMinor(stone.getMinor());
+
+		EncryptionKeys keys = getKeys(sphere.getId());
 		CrownstoneSetup setup = new CrownstoneSetup(getBle());
 		getBle().enableEncryption(true);
 		setup.executeSetup(device.getAddress(),
@@ -406,8 +449,8 @@ public class CrownstoneDevApp extends Application {
 				keys.getAdminKeyString(),
 				keys.getMemberKeyString(),
 				keys.getGuestKeyString(),
-				Long.valueOf(object.getMeshAccessAddress(), 16).intValue(),
-				object.getUuid(),
+				Long.valueOf(sphere.getMeshAccessAddress(), 16).intValue(),
+				sphere.getUuid(),
 				stone.getMajor(),
 				stone.getMinor(),
 				new IProgressCallback() {
@@ -493,10 +536,12 @@ public class CrownstoneDevApp extends Application {
 	}
 
 	public Sphere getSphere(String proximityUuid) {
-		for (int i = 0; i < _spheres.size(); i++) {
-			Sphere sphere = _spheres.get(i);
-			if (sphere.getUuid().equals(proximityUuid)) {
-				return sphere;
+		if (_spheres != null) {
+			for (int i = 0; i < _spheres.size(); i++) {
+				Sphere sphere = _spheres.get(i);
+				if (sphere.getUuid().equals(proximityUuid)) {
+					return sphere;
+				}
 			}
 		}
 		return null;
