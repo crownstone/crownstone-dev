@@ -62,7 +62,7 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 	private CrownstoneDevApp _app;
 
 	private BleScanService _bleService;
-	private BleExt _bleExt;
+//	private BleExt _bleExt;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -229,6 +229,10 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 				}
 				break;
 			}
+			case R.id.resetBle: {
+				_bleService.getBleExt().getBleBase().resetBle();
+				break;
+			}
 //			case R.id.spheres: {
 //				if (!Config.OFFLINE && !_app.getSettings().isOfflineMode()) {
 //					if (_app.getSpheres() != null) {
@@ -247,7 +251,7 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 	public void onBind() {
 		_bleService = CrownstoneDevApp.getInstance().getScanService();
 		_bleService.registerEventListener(this);
-		_bleExt = _bleService.getBleExt();
+//		_bleExt = _bleService.getBleExt();
 	}
 
 	@Override
@@ -261,7 +265,7 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-		if (!_bleExt.handlePermissionResult(requestCode, permissions, grantResults,
+		if (!_bleService.getBleExt().handlePermissionResult(requestCode, permissions, grantResults,
 				new IStatusCallback() {
 
 					@Override

@@ -145,8 +145,10 @@ public class ControlMainFragment extends Fragment {
 									// once an advertisement is received for the device, stop the
 									// scan again
 									_ble.stopScan(null);
+									done();
+								} else {
+									_graph.updateRange();
 								}
-								done();
 							}
 							if (_closing) {
 								_ble.stopScan(null);
