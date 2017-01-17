@@ -2,7 +2,6 @@ package nl.dobots.crownstone.gui.control;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -17,8 +16,6 @@ import android.widget.Toast;
 import com.strongloop.android.loopback.callbacks.ObjectCallback;
 import com.strongloop.android.loopback.callbacks.VoidCallback;
 
-import org.json.JSONObject;
-
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
@@ -29,7 +26,6 @@ import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
 import nl.dobots.loopback.CrownstoneRestAPI;
-import nl.dobots.loopback.gui.LoginActivity;
 import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.repositories.StoneRepository;
@@ -227,6 +223,17 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 					public void onSuccess() {
 						Log.i(TAG, "success");
 						Toast.makeText(ControlActivity.this, "success", Toast.LENGTH_SHORT).show();
+						_currentStone.destroy(new VoidCallback() {
+							@Override
+							public void onSuccess() {
+								Toast.makeText(ControlActivity.this, "Stone removed from DB", Toast.LENGTH_SHORT).show();
+							}
+
+							@Override
+							public void onError(Throwable t) {
+								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
+							}
+						});
 						finish();
 					}
 
