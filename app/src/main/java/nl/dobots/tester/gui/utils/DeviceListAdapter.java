@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.utils;
+package nl.dobots.tester.gui.utils;
 
 import android.content.Context;
 import android.util.Log;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
-import nl.dobots.crownstone.R;
+import nl.dobots.tester.R;
 
 /**
  * This is just a simple list adapter to show the list of scanned devices. It checks the

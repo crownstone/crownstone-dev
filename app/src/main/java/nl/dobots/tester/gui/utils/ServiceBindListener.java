@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.utils;
+package nl.dobots.tester.gui.utils;
 
 /**
  * Copyright (c) 2016 Dominik Egger <dominik@dobots.nl>. All rights reserved.

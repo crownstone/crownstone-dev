@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.monitor;
+package nl.dobots.tester.gui.monitor;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
@@ -12,9 +12,9 @@ import android.support.v4.view.ViewPager;
 import java.util.HashMap;
 
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
+import nl.dobots.tester.gui.utils.ViewPagerActivity;
 
 public class MonitoringActivity extends FragmentActivity implements ViewPagerActivity {
 

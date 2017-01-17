@@ -1,8 +1,7 @@
-package nl.dobots.crownstone.gui.control;
+package nl.dobots.tester.gui.control;
 
 import android.app.ActionBar;
 import android.app.FragmentTransaction;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -15,21 +14,17 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.strongloop.android.loopback.callbacks.ObjectCallback;
-import com.strongloop.android.loopback.callbacks.VoidCallback;
-
-import org.json.JSONObject;
 
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.cfg.Config;
-import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
+import nl.dobots.tester.cfg.Config;
+import nl.dobots.tester.gui.utils.ViewPagerActivity;
 import nl.dobots.loopback.CrownstoneRestAPI;
-import nl.dobots.loopback.gui.LoginActivity;
 import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.repositories.StoneRepository;

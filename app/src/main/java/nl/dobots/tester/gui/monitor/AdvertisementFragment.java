@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.monitor;
+package nl.dobots.tester.gui.monitor;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,9 +14,9 @@ import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceMap;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.service.callbacks.IntervalScanListener;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
+import nl.dobots.tester.gui.utils.AdvertisementGraph;
 
 /**
  * show advertisement of a crownstone in a graph

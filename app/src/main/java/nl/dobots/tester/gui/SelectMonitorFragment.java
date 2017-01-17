@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui;
+package nl.dobots.tester.gui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,11 +14,11 @@ import android.widget.Toast;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.gui.monitor.MonitoringActivity;
-import nl.dobots.crownstone.gui.utils.DeviceListAdapter;
-import nl.dobots.crownstone.gui.utils.SelectFragment;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
+import nl.dobots.tester.gui.monitor.MonitoringActivity;
+import nl.dobots.tester.gui.utils.DeviceListAdapter;
+import nl.dobots.tester.gui.utils.SelectFragment;
 
 /**
  * Select crownstones to monitor their advertisement data. multiple crownstones can be selected.

@@ -1,4 +1,4 @@
-package nl.dobots.crownstone;
+package nl.dobots.tester;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

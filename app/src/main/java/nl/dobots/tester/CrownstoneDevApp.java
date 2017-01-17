@@ -1,4 +1,4 @@
-package nl.dobots.crownstone;
+package nl.dobots.tester;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,12 +14,9 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.strongloop.android.loopback.RestAdapter;
-import com.strongloop.android.loopback.callbacks.JsonObjectParser;
 import com.strongloop.android.loopback.callbacks.ListCallback;
 import com.strongloop.android.loopback.callbacks.ObjectCallback;
 import com.strongloop.android.loopback.callbacks.VoidCallback;
@@ -42,9 +39,9 @@ import nl.dobots.bluenet.ble.extended.CrownstoneSetup;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.utils.BleLog;
-import nl.dobots.crownstone.cfg.Config;
-import nl.dobots.crownstone.cfg.Settings;
-import nl.dobots.crownstone.gui.utils.ServiceBindListener;
+import nl.dobots.tester.cfg.Config;
+import nl.dobots.tester.cfg.Settings;
+import nl.dobots.tester.gui.utils.ServiceBindListener;
 import nl.dobots.loopback.CrownstoneRestAPI;
 import nl.dobots.loopback.gui.adapter.SphereListAdapter;
 import nl.dobots.loopback.loopback.models.Sphere;

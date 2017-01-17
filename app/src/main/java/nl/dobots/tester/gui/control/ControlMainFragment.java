@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.control;
+package nl.dobots.tester.gui.control;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -33,8 +33,8 @@ import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.utils.BleLog;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
+import nl.dobots.tester.R;
+import nl.dobots.tester.gui.utils.AdvertisementGraph;
 
 /**
  * This example activity shows the use of the bluenet library. The library is first initialized,

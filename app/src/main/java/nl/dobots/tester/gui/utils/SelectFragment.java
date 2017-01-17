@@ -1,23 +1,18 @@
-package nl.dobots.crownstone.gui.utils;
+package nl.dobots.tester.gui.utils;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.service.callbacks.EventListener;
 import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.gui.SelectControlFragment;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
+import nl.dobots.tester.gui.SelectControlFragment;
 
 /**
  * Abstract class, can be used by fragments that want to scan for devices.

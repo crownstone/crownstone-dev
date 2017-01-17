@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="nl.dobots.crownstone" >
+	package="nl.dobots.tester" >
 
 	<!-- Use the MainActivity to see the example using the bluenet library directly, enable
 		 the MainActivity and BleScanService instead for the example using the

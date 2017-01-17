@@ -5,7 +5,7 @@ android {
     buildToolsVersion '24.0.2'
 
     defaultConfig {
-        applicationId "nl.dobots.crownstone"
+        applicationId "nl.dobots.tester"
         minSdkVersion 19
         targetSdkVersion 24
         versionCode 6

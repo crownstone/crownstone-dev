@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.cfg;
+package nl.dobots.tester.cfg;
 
 import android.content.Context;
 import android.content.SharedPreferences;

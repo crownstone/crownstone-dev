@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui;
+package nl.dobots.tester.gui;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -23,12 +23,12 @@ import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
-import nl.dobots.crownstone.cfg.Config;
-import nl.dobots.crownstone.gui.control.ControlActivity;
-import nl.dobots.crownstone.gui.utils.DeviceListAdapter;
-import nl.dobots.crownstone.gui.utils.SelectFragment;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
+import nl.dobots.tester.cfg.Config;
+import nl.dobots.tester.gui.control.ControlActivity;
+import nl.dobots.tester.gui.utils.DeviceListAdapter;
+import nl.dobots.tester.gui.utils.SelectFragment;
 
 /**
  * Select crownstones to control

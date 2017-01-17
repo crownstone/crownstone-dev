@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.cfg;
+package nl.dobots.tester.cfg;
 
 /**
  * Copyright (c) 2015 Dominik Egger <dominik@dobots.nl>. All rights reserved.

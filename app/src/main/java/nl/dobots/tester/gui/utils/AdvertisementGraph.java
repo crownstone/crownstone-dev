@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.utils;
+package nl.dobots.tester.gui.utils;
 
 import android.app.Activity;
 import android.content.Context;

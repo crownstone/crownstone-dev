@@ -1,4 +1,4 @@
-package nl.dobots.crownstone.gui.control;
+package nl.dobots.tester.gui.control;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -29,8 +29,8 @@ import nl.dobots.bluenet.ble.base.callbacks.IPowerSamplesCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.PowerSamples;
 import nl.dobots.bluenet.ble.extended.BleExt;
-import nl.dobots.crownstone.CrownstoneDevApp;
-import nl.dobots.crownstone.R;
+import nl.dobots.tester.CrownstoneDevApp;
+import nl.dobots.tester.R;
 
 /**
  * Request power samples from device and display in graph
