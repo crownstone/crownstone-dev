@@ -107,8 +107,6 @@ public class SelectControlFragment extends SelectFragment {
 								@Override
 				  				public void onSuccess() {
 									final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait ...");
-									_bleExt.getHandler().postDelayed(new Runnable() {
-									final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait ...");
 									_app.getBle().getHandler().postDelayed(new Runnable() {
 										@Override
 										public void run() {
