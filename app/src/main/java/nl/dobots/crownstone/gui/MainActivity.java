@@ -216,6 +216,7 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 							public void onSuccess() {
 								Log.d(TAG, "Logout success");
 								_settings.setOfflineMode(true);
+								_app.setCurrentUser(null);
 							}
 
 							@Override
@@ -265,6 +266,7 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+
 		if (!_bleService.getBleExt().handlePermissionResult(requestCode, permissions, grantResults,
 				new IStatusCallback() {
 

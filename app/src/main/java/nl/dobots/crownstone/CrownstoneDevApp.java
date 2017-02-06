@@ -13,6 +13,8 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -530,6 +532,10 @@ public class CrownstoneDevApp extends Application {
 		});
 		b.show();
 
+	}
+
+	public void setCurrentUser(User currentUser) {
+		_currentUser = currentUser;
 	}
 
 	public User getCurrentUser() {
