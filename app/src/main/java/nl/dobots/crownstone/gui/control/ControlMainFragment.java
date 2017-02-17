@@ -1,7 +1,9 @@
 package nl.dobots.crownstone.gui.control;
 
 import android.app.ProgressDialog;
+import android.bluetooth.le.ScanSettings;
 import android.content.DialogInterface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -124,51 +126,97 @@ public class ControlMainFragment extends Fragment {
 		}
 	}
 
+	private long _lastUpdate = System.nanoTime();
+
 	private SequentialRunner _advStateChecker = new SequentialRunner("_advStateChecker") {
 		@Override
 		public boolean execute() {
 			// update graph, to move x axis along even if device is not scanned, or currently
 			// connected
 
-			if (!_ble.isConnected(null)) {
+			if (Build.VERSION.SDK_INT >= 24) {
 				BleLog.getInstance().LOGi(TAG, "starting scan");
 				if (!_ble.isScanning()) {
+					_ble.getBleBase().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
 					_ble.startScan(new IBleDeviceCallback() {
 						@Override
 						public void onDeviceScanned(BleDevice device) {
 							BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
 							if (device.getAddress().equals(_address)) {
-								CrownstoneServiceData serviceData = device.getServiceData();
-								if (serviceData != null) {
-									_graph.onServiceData(device.getName(), serviceData);
-									updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
-									// once an advertisement is received for the device, stop the
-									// scan again
-									_ble.stopScan(null);
-									done();
-								} else {
-									_graph.updateRange();
+								if (System.nanoTime() - _lastUpdate > TEMP_UPDATE_TIME * 1000000) {
+									_lastUpdate = System.nanoTime();
+									CrownstoneServiceData serviceData = device.getServiceData();
+									if (serviceData != null) {
+										_graph.onServiceData(device.getName(), serviceData);
+										updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
+										// once an advertisement is received for the device, stop the
+										// scan again
+//										_ble.stopScan(null);
+//										done();
+									} else {
+										_graph.updateRange();
+									}
 								}
 							}
-							if (_closing) {
-								_ble.stopScan(null);
-								done();
-							}
+//							if (_closing) {
+//								_ble.stopScan(null);
+//								done();
+//							}
 						}
 
 						@Override
 						public void onError(int error) {
 							BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
-							done();
+//							_handler.postDelayed(this, 100);
+//							done();
 						}
 					});
+
 				}
-				_handler.postDelayed(this, TEMP_UPDATE_TIME);
+				done();
+//				_handler.postDelayed(this, TEMP_UPDATE_TIME);
 				return true;
 			} else {
-				_graph.updateRange();
-				_handler.postDelayed(this, 100);
-				return false;
+				if (!_ble.isConnected(null)) {
+					BleLog.getInstance().LOGi(TAG, "starting scan");
+					if (!_ble.isScanning()) {
+						_ble.startScan(new IBleDeviceCallback() {
+							@Override
+							public void onDeviceScanned(BleDevice device) {
+								BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
+								if (device.getAddress().equals(_address)) {
+									CrownstoneServiceData serviceData = device.getServiceData();
+									if (serviceData != null) {
+										_graph.onServiceData(device.getName(), serviceData);
+										updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
+										// once an advertisement is received for the device, stop the
+										// scan again
+										_ble.stopScan(null);
+										done();
+									} else {
+										_graph.updateRange();
+									}
+								}
+								if (_closing) {
+									_ble.stopScan(null);
+									done();
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
+								done();
+							}
+						});
+					}
+					_handler.postDelayed(this, TEMP_UPDATE_TIME);
+					return true;
+				} else {
+					_graph.updateRange();
+					_handler.postDelayed(this, 100);
+					return false;
+				}
 			}
 		}
 	};
@@ -194,6 +242,9 @@ public class ControlMainFragment extends Fragment {
 		super.onDestroy();
 		_closing = true;
 		_handler.removeCallbacksAndMessages(null);
+		if (_ble.isScanning()) {
+			_ble.stopScan(null);
+		}
 		// finish has to be called on the library to release the objects if the library
 		// is not used anymore
 		if (_ble.isConnected(null)) {

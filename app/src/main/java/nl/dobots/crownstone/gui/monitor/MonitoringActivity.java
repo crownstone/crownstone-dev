@@ -1,13 +1,14 @@
 package nl.dobots.crownstone.gui.monitor;
 
-import android.app.ActionBar;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 
 import java.util.HashMap;
 
@@ -16,7 +17,7 @@ import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
 
-public class MonitoringActivity extends FragmentActivity implements ViewPagerActivity {
+public class MonitoringActivity extends AppCompatActivity implements ViewPagerActivity {
 
 	private static final String TAG = MonitoringActivity.class.getCanonicalName();
 
@@ -86,11 +87,11 @@ public class MonitoringActivity extends FragmentActivity implements ViewPagerAct
 					public void onPageSelected(int position) {
 						// When swiping between pages, select the
 						// corresponding tab.
-						getActionBar().setSelectedNavigationItem(position);
+						getSupportActionBar().setSelectedNavigationItem(position);
 					}
 				});
 
-		final ActionBar actionBar = getActionBar();
+		final ActionBar actionBar = getSupportActionBar();
 
 		// Specify that tabs should be displayed in the action bar.
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);

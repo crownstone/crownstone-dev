@@ -1,35 +1,34 @@
 package nl.dobots.crownstone.gui;
 
-import android.app.ActionBar;
-import android.app.AlertDialog;
-import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.strongloop.android.loopback.callbacks.VoidCallback;
 
 import java.util.List;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
-import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.service.callbacks.EventListener;
+import nl.dobots.bluenet.utils.BleLog;
+import nl.dobots.bluenet.utils.FileLogger;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.cfg.Settings;
-import nl.dobots.crownstone.gui.utils.SelectFragment;
 import nl.dobots.crownstone.gui.utils.ServiceBindListener;
 import nl.dobots.loopback.CrownstoneRestAPI;
 import nl.dobots.loopback.gui.LoginActivity;
@@ -44,7 +43,7 @@ import nl.dobots.loopback.loopback.repositories.UserRepository;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class MainActivity  extends FragmentActivity implements ServiceBindListener, EventListener {
+public class MainActivity  extends AppCompatActivity implements ServiceBindListener, EventListener {
 
 	private static final String TAG = MainActivity.class.getCanonicalName();
 
@@ -141,11 +140,11 @@ public class MainActivity  extends FragmentActivity implements ServiceBindListen
 					public void onPageSelected(int position) {
 						// When swiping between pages, select the
 						// corresponding tab.
-						getActionBar().setSelectedNavigationItem(position);
+						getSupportActionBar().setSelectedNavigationItem(position);
 					}
 				});
 
-		final ActionBar actionBar = getActionBar();
+		final ActionBar actionBar = getSupportActionBar();
 
 		// Specify that tabs should be displayed in the action bar.
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);

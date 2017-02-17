@@ -1,13 +1,14 @@
 package nl.dobots.crownstone.gui.control;
 
-import android.app.ActionBar;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +31,7 @@ import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.repositories.StoneRepository;
 
-public class ControlActivity extends FragmentActivity implements ViewPagerActivity {
+public class ControlActivity extends AppCompatActivity implements ViewPagerActivity {
 
 	private static final String TAG = ControlActivity.class.getCanonicalName();
 
@@ -128,11 +129,11 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 					public void onPageSelected(int position) {
 						// When swiping between pages, select the
 						// corresponding tab.
-						getActionBar().setSelectedNavigationItem(position);
+						getSupportActionBar().setSelectedNavigationItem(position);
 					}
 				});
 
-		final ActionBar actionBar = getActionBar();
+		final ActionBar actionBar = getSupportActionBar();
 
 		// Specify that tabs should be displayed in the action bar.
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);

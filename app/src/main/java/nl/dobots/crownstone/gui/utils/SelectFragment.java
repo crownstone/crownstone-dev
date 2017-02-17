@@ -1,14 +1,9 @@
 package nl.dobots.crownstone.gui.utils;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
