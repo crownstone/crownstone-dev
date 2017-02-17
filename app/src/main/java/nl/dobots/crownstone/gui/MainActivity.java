@@ -61,6 +61,11 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 	private CrownstoneDevApp _app;
 
 	private BleScanService _bleService;
+
+	private boolean _logToFile = true;
+	private String _logDir ="crownstone/dev-app";
+	private FileLogger _fileLogger;
+
 //	private BleExt _bleExt;
 
 	@Override
@@ -70,6 +75,13 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 
 		_app = CrownstoneDevApp.getInstance();
 		_settings = _app.getSettings();
+
+//		_fileLogger = new FileLogger(this);
+//		if (_fileLogger.checkPermissions(this)) {
+//			BleLog.addFileLogger(_fileLogger);
+//		} else {
+//			_fileLogger.requestPermissions(this);
+//		}
 
 		initUI();
 
@@ -292,8 +304,24 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 					@Override
 					public void onSuccess() {
 					}
-				})) {
-			super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+				}))
+		{
+			if (!_fileLogger.handlePermissionResult(requestCode, permissions, grantResults,
+					new IStatusCallback() {
+						@Override
+						public void onSuccess() {
+							BleLog.addFileLogger(_fileLogger);
+						}
+
+						@Override
+						public void onError(int error) {
+							Toast.makeText(MainActivity.this, "can't write to file without write permissions", Toast.LENGTH_LONG).show();
+							BleLog.getInstance().LOGe(TAG, "can't write to file without write permissions");
+						}
+					}))
+			{
+				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+			}
 		}
 	}
 

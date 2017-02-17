@@ -432,12 +432,21 @@ public class CrownstoneDevApp extends Application {
 	}
 
 	private void runSetup(Sphere sphere, Stone stone, final Activity activity, BleDevice device, final IStatusCallback callback) {
+		final CrownstoneSetup setup = new CrownstoneSetup(getBle());
+
 		final ProgressDialog dlg = new ProgressDialog(activity);
 		dlg.setTitle("Executing Setup");
 		dlg.setMessage("Please wait ...");
 		dlg.setIndeterminate(false);
 		dlg.setMax(13);
 		dlg.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		dlg.setCanceledOnTouchOutside(false);
+		dlg.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				setup.cancelSetup();
+			}
+		});
 		dlg.show();
 
 		device.setProximityUuid(UUID.fromString(sphere.getUuid()));
@@ -445,7 +454,6 @@ public class CrownstoneDevApp extends Application {
 		device.setMinor(stone.getMinor());
 
 		EncryptionKeys keys = getKeys(sphere.getId());
-		CrownstoneSetup setup = new CrownstoneSetup(getBle());
 		getBle().enableEncryption(true);
 		setup.executeSetup(device.getAddress(),
 				stone.getUid(),

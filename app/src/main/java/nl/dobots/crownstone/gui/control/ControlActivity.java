@@ -3,7 +3,6 @@ package nl.dobots.crownstone.gui.control;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
@@ -25,6 +24,7 @@ import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.cfg.Config;
+import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
 import nl.dobots.loopback.CrownstoneRestAPI;
 import nl.dobots.loopback.loopback.models.Sphere;
@@ -68,6 +68,11 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 		_app = CrownstoneDevApp.getInstance();
 		_ble = _app.getBle();
+
+//		EncryptionKeys keys = new EncryptionKeys(new byte[BleBaseEncryption.AES_BLOCK_SIZE], new byte[BleBaseEncryption.AES_BLOCK_SIZE], new byte[BleBaseEncryption.AES_BLOCK_SIZE]);
+//
+//		_ble.enableEncryption(true);
+//		_ble.getBleBase().setEncryptionKeys(keys);
 
 		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode()) {
 			Sphere sphere = _app.getSphere(_proximityUuid.toString());
@@ -204,21 +209,25 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 //				break;
 //			}
 			case R.id.action_dfu: {
+				ProgressSpinner.show(this);
 				_ble.resetToBootloader(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "success");
+						ProgressSpinner.dismiss();
 						finish();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
+						ProgressSpinner.dismiss();
 					}
 				});
 				break;
 			}
 			case R.id.action_factoryreset: {
+				ProgressSpinner.show(this);
 				_ble.writeFactoryReset(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
@@ -235,6 +244,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
 							}
 						});
+						ProgressSpinner.dismiss();
 						finish();
 					}
 
@@ -242,6 +252,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
 						Toast.makeText(ControlActivity.this, "failed to factory reset", Toast.LENGTH_LONG).show();
+						ProgressSpinner.dismiss();
 					}
 				});
 				break;

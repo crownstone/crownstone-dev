@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
-import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
 import nl.dobots.crownstone.CrownstoneDevApp;
@@ -28,6 +27,7 @@ import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.gui.control.ControlActivity;
 import nl.dobots.crownstone.gui.utils.DeviceListAdapter;
+import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 import nl.dobots.crownstone.gui.utils.SelectFragment;
 
 /**
@@ -94,6 +94,11 @@ public class SelectControlFragment extends SelectFragment {
 				final BleDevice device = _bleDeviceList.get(position);
 
 				final String address = device.getAddress();
+
+				if (!device.isStone()) {
+					Toast.makeText(getActivity(), "Can't connect, device is not a stone!", Toast.LENGTH_LONG).show();
+					return;
+				}
 
 				if (device.isSetupMode() &&
 					!Config.OFFLINE && !_app.getSettings().isOfflineMode())  {
@@ -163,6 +168,7 @@ public class SelectControlFragment extends SelectFragment {
 					builder.setMessage("Do you want to set the stone " + device.getName() + " into DFU?");
 					builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
+							ProgressSpinner.show(getActivity());
 							_app.getBle().resetToBootloader(device.getAddress(), new IStatusCallback() {
 								@Override
 								public void onSuccess() {
@@ -173,6 +179,7 @@ public class SelectControlFragment extends SelectFragment {
 											_adapter.notifyDataSetChanged();
 										}
 									});
+									ProgressSpinner.dismiss();
 								}
 
 								@Override
@@ -183,6 +190,7 @@ public class SelectControlFragment extends SelectFragment {
 											Toast.makeText(getActivity(), "failed with error: " + error, Toast.LENGTH_LONG).show();
 										}
 									});
+									ProgressSpinner.dismiss();
 								}
 							});
 						}

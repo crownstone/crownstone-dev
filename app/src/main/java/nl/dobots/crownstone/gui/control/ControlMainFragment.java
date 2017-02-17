@@ -1,8 +1,6 @@
 package nl.dobots.crownstone.gui.control;
 
-import android.app.ProgressDialog;
 import android.bluetooth.le.ScanSettings;
-import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,6 +35,7 @@ import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
+import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 
 /**
  * This example activity shows the use of the bluenet library. The library is first initialized,
@@ -89,6 +88,7 @@ public class ControlMainFragment extends Fragment {
 	private LinearLayout _layPower;
 	private boolean _led1On;
 	private boolean _led2On;
+//	private ProgressDialog _waitingDialog;
 
 	private abstract class SequentialRunner implements Runnable {
 
@@ -280,6 +280,7 @@ public class ControlMainFragment extends Fragment {
 			@Override
 			public void onClick(View view) {
 				pwmOn();
+//				toggleLed1();
 			}
 		});
 
@@ -288,6 +289,7 @@ public class ControlMainFragment extends Fragment {
 			@Override
 			public void onClick(View view) {
 				pwmOff();
+//				toggleLed2();
 			}
 		});
 
@@ -373,11 +375,18 @@ public class ControlMainFragment extends Fragment {
 		return v;
 	}
 
+	private void showProgressSpinner() {
+		ProgressSpinner.show(getActivity());
+	}
+
+	private void dismissProgressSpinner() {
+		ProgressSpinner.dismiss();
+	}
+
 	private void checkPwm() {
-		final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait...", true, true);
-		dlg.setOnCancelListener(new DialogInterface.OnCancelListener() {
+		ProgressSpinner.show(getActivity(), new ProgressSpinner.OnCancelListener() {
 			@Override
-			public void onCancel(DialogInterface dialog) {
+			public void onCancel() {
 				getActivity().finish();
 			}
 		});
@@ -421,13 +430,13 @@ public class ControlMainFragment extends Fragment {
 							public void onSuccess() {
 								// at this point we successfully disconnected and closed
 								// the device again
-								dlg.dismiss();
+								dismissProgressSpinner();
 							}
 
 							@Override
 							public void onError(int error) {
 								// an error occurred while disconnecting
-								dlg.dismiss();
+								dismissProgressSpinner();
 							}
 						});
 					}
@@ -455,13 +464,13 @@ public class ControlMainFragment extends Fragment {
 								public void onSuccess() {
 									// at this point we successfully disconnected and closed
 									// the device again.
-									dlg.dismiss();
+									dismissProgressSpinner();
 								}
 
 								@Override
 								public void onError(int error) {
 									// an error occurred while disconnecting
-									dlg.dismiss();
+									dismissProgressSpinner();
 								}
 							});
 						}
@@ -473,7 +482,7 @@ public class ControlMainFragment extends Fragment {
 			public void onError(int error) {
 				// an error occurred during connect/discover
 				Log.e(TAG, "failed to connect/discover: " + error);
-				dlg.dismiss();
+				dismissProgressSpinner();
 				if (getActivity() != null) {
 					getActivity().finish();
 				}
@@ -482,7 +491,8 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void toggleLed2() {
-		_handler.post(new SequentialRunner("pwmOff") {
+		showProgressSpinner();
+		_handler.post(new SequentialRunner("toggleLed2") {
 			@Override
 			public boolean execute() {
 					_ble.writeLed(_address, 2, !_led2On, new IStatusCallback() {
@@ -491,12 +501,14 @@ public class ControlMainFragment extends Fragment {
 							Log.i(TAG, "write led success");
 							_led2On = !_led2On;
 							done();
+							dismissProgressSpinner();
 						}
 
 						@Override
 						public void onError(int error) {
 							Log.i(TAG, "write led failed: " + error);
 							done();
+							dismissProgressSpinner();
 						}
 					});
 				return true;
@@ -506,7 +518,8 @@ public class ControlMainFragment extends Fragment {
 
 
 	private void toggleLed1() {
-		_handler.post(new SequentialRunner("pwmOff") {
+		showProgressSpinner();
+		_handler.post(new SequentialRunner("toggleLed1") {
 			@Override
 			public boolean execute() {
 					_ble.writeLed(_address, 1, !_led1On, new IStatusCallback() {
@@ -515,12 +528,14 @@ public class ControlMainFragment extends Fragment {
 							Log.i(TAG, "write led success");
 							_led1On = !_led1On;
 							done();
+							dismissProgressSpinner();
 						}
 
 						@Override
 						public void onError(int error) {
 							Log.i(TAG, "write led failed: " + error);
 							done();
+							dismissProgressSpinner();
 						}
 					});
 				return true;
@@ -529,6 +544,7 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void pwmOff() {
+		showProgressSpinner();
 		_handler.post(new SequentialRunner("pwmOff") {
 			@Override
 			public boolean execute() {
@@ -543,12 +559,14 @@ public class ControlMainFragment extends Fragment {
 //						updateLightBulb(false);
 						_sbPwm.setProgress(0);
 						done();
+						dismissProgressSpinner();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power off failed: " + error);
 						done();
+						dismissProgressSpinner();
 					}
 				});
 				return true;
@@ -557,6 +575,7 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void pwmOn() {
+		showProgressSpinner();
 		_handler.post(new SequentialRunner("pwmOn") {
 			@Override
 			public boolean execute() {
@@ -571,12 +590,14 @@ public class ControlMainFragment extends Fragment {
 //						updateLightBulb(true);
 						_sbPwm.setProgress(100);
 						done();
+						dismissProgressSpinner();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power on failed: " + error);
 						done();
+						dismissProgressSpinner();
 					}
 				});
 				return true;
@@ -585,6 +606,7 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void toggleRelay() {
+		showProgressSpinner();
 		_handler.post(new SequentialRunner("toggleRelay") {
 			@Override
 			public boolean execute() {
@@ -599,12 +621,16 @@ public class ControlMainFragment extends Fragment {
 						// power was toggled successfully, update the light bulb
 						updateLightBulb(result);
 						done();
+//						dismissProgressSpinner();
+						ProgressSpinner.dismiss();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "toggle failed: " + error);
 						done();
+//						dismissProgressSpinner();
+						ProgressSpinner.dismiss();
 					}
 				});
 				return true;
@@ -629,6 +655,7 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void relayOff() {
+		showProgressSpinner();
 		_handler.post(new SequentialRunner("relayOff") {
 			@Override
 			public boolean execute() {
@@ -642,12 +669,14 @@ public class ControlMainFragment extends Fragment {
 						// power was switch off successfully, update the light bulb
 //						updateLightBulb(false);
 						done();
+						dismissProgressSpinner();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power off failed: " + error);
 						done();
+						dismissProgressSpinner();
 					}
 				});
 				return true;
@@ -656,6 +685,7 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void relayOn() {
+		showProgressSpinner();
 		_handler.post(new SequentialRunner("relayOn") {
 			@Override
 			public boolean execute() {
@@ -669,12 +699,14 @@ public class ControlMainFragment extends Fragment {
 						// power was switch on successfully, update the light bulb
 //						updateLightBulb(true);
 						done();
+						dismissProgressSpinner();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power on failed: " + error);
 						done();
+						dismissProgressSpinner();
 					}
 				});
 				return true;
@@ -683,6 +715,7 @@ public class ControlMainFragment extends Fragment {
 	}
 
 	private void setPwm(final int pwm) {
+		showProgressSpinner();
 		_handler.post(new SequentialRunner("setPwm") {
 			@Override
 			public boolean execute() {
@@ -700,12 +733,14 @@ public class ControlMainFragment extends Fragment {
 //							updateLightBulb(false);
 //						}
 						done();
+						dismissProgressSpinner();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "set pwm failed: " + error);
 						done();
+						dismissProgressSpinner();
 					}
 				});
 				return true;
