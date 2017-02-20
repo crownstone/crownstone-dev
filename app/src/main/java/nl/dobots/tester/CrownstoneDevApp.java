@@ -1,7 +1,6 @@
 package nl.dobots.tester;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Application;
 import android.app.ProgressDialog;
 import android.bluetooth.le.ScanSettings;
@@ -13,6 +12,9 @@ import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -429,12 +431,21 @@ public class CrownstoneDevApp extends Application {
 	}
 
 	private void runSetup(Sphere sphere, Stone stone, final Activity activity, BleDevice device, final IStatusCallback callback) {
+		final CrownstoneSetup setup = new CrownstoneSetup(getBle());
+
 		final ProgressDialog dlg = new ProgressDialog(activity);
 		dlg.setTitle("Executing Setup");
 		dlg.setMessage("Please wait ...");
 		dlg.setIndeterminate(false);
 		dlg.setMax(13);
 		dlg.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		dlg.setCanceledOnTouchOutside(false);
+		dlg.setOnCancelListener(new DialogInterface.OnCancelListener() {
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				setup.cancelSetup();
+			}
+		});
 		dlg.show();
 
 		device.setProximityUuid(UUID.fromString(sphere.getUuid()));
@@ -442,7 +453,6 @@ public class CrownstoneDevApp extends Application {
 		device.setMinor(stone.getMinor());
 
 		EncryptionKeys keys = getKeys(sphere.getId());
-		CrownstoneSetup setup = new CrownstoneSetup(getBle());
 		getBle().enableEncryption(true);
 		setup.executeSetup(device.getAddress(),
 				stone.getUid(),
@@ -529,6 +539,10 @@ public class CrownstoneDevApp extends Application {
 		});
 		b.show();
 
+	}
+
+	public void setCurrentUser(User currentUser) {
+		_currentUser = currentUser;
 	}
 
 	public User getCurrentUser() {

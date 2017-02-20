@@ -1,13 +1,13 @@
 package nl.dobots.tester.gui.control;
 
-import android.app.ActionBar;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,12 +25,13 @@ import nl.dobots.tester.CrownstoneDevApp;
 import nl.dobots.tester.R;
 import nl.dobots.tester.cfg.Config;
 import nl.dobots.tester.gui.utils.ViewPagerActivity;
+import nl.dobots.tester.gui.utils.ProgressSpinner;
 import nl.dobots.loopback.CrownstoneRestAPI;
 import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.repositories.StoneRepository;
 
-public class ControlActivity extends FragmentActivity implements ViewPagerActivity {
+public class ControlActivity extends AppCompatActivity implements ViewPagerActivity {
 
 	private static final String TAG = ControlActivity.class.getCanonicalName();
 
@@ -67,6 +68,11 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 
 		_app = CrownstoneDevApp.getInstance();
 		_ble = _app.getBle();
+
+//		EncryptionKeys keys = new EncryptionKeys(new byte[BleBaseEncryption.AES_BLOCK_SIZE], new byte[BleBaseEncryption.AES_BLOCK_SIZE], new byte[BleBaseEncryption.AES_BLOCK_SIZE]);
+//
+//		_ble.enableEncryption(true);
+//		_ble.getBleBase().setEncryptionKeys(keys);
 
 		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode()) {
 			Sphere sphere = _app.getSphere(_proximityUuid.toString());
@@ -128,11 +134,11 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 					public void onPageSelected(int position) {
 						// When swiping between pages, select the
 						// corresponding tab.
-						getActionBar().setSelectedNavigationItem(position);
+						getSupportActionBar().setSelectedNavigationItem(position);
 					}
 				});
 
-		final ActionBar actionBar = getActionBar();
+		final ActionBar actionBar = getSupportActionBar();
 
 		// Specify that tabs should be displayed in the action bar.
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -203,21 +209,25 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 //				break;
 //			}
 			case R.id.action_dfu: {
+				ProgressSpinner.show(this);
 				_ble.resetToBootloader(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "success");
+						ProgressSpinner.dismiss();
 						finish();
 					}
 
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
+						ProgressSpinner.dismiss();
 					}
 				});
 				break;
 			}
 			case R.id.action_factoryreset: {
+				ProgressSpinner.show(this);
 				_ble.writeFactoryReset(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
@@ -234,6 +244,7 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
 							}
 						});
+						ProgressSpinner.dismiss();
 						finish();
 					}
 
@@ -241,6 +252,7 @@ public class ControlActivity extends FragmentActivity implements ViewPagerActivi
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
 						Toast.makeText(ControlActivity.this, "failed to factory reset", Toast.LENGTH_LONG).show();
+						ProgressSpinner.dismiss();
 					}
 				});
 				break;
