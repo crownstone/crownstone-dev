@@ -69,7 +69,7 @@
 		</activity>
 
 		<activity android:name=".gui.utils.ProgressSpinner"
-			android:theme="@style/Theme.Transparent"/>
+			android:theme="@style/Theme.Translucent"/>
 
 	</application>
 
