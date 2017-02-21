@@ -430,26 +430,24 @@ public class ControlMainFragment extends Fragment {
 						// greater than 0) or off if it is 0
 						updateLightBulb(result);
 
-						dismissProgressSpinner();
-
 						// at the end we disconnect and close the device again. you could also
 						// stay connected if you want. but it's preferable to only connect,
 						// execute and disconnect, so that the device can continue advertising
 						// again.
-//						_ble.disconnectAndClose(false, new IStatusCallback() {
-//							@Override
-//							public void onSuccess() {
-//								// at this point we successfully disconnected and closed
-//								// the device again
-//								dismissProgressSpinner();
-//							}
-//
-//							@Override
-//							public void onError(int error) {
-//								// an error occurred while disconnecting
-//								dismissProgressSpinner();
-//							}
-//						});
+						_ble.disconnectAndClose(false, new IStatusCallback() {
+							@Override
+							public void onSuccess() {
+								// at this point we successfully disconnected and closed
+								// the device again
+								dismissProgressSpinner();
+							}
+
+							@Override
+							public void onError(int error) {
+								// an error occurred while disconnecting
+								dismissProgressSpinner();
+							}
+						});
 					}
 
 					@Override
