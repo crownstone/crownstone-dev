@@ -53,13 +53,17 @@ public class DeviceListAdapter extends BaseAdapter {
 		_selection.remove(address);
 	}
 
-	public void toggleSelection(String address) {
+	public boolean toggleSelection(String address) {
+		boolean selected;
 		if (_selection.contains(address)) {
 			_selection.remove(address);
+			selected = false;
 		} else {
 			_selection.add(address);
+			selected = true;
 		}
 		notifyDataSetInvalidated();
+		return selected;
 	}
 
 	// How many items are in the data set represented by this Adapter.
@@ -96,6 +100,10 @@ public class DeviceListAdapter extends BaseAdapter {
 			result[i] = _arrayList.getDevice(_selection.get(i));
 		}
 		return result;
+	}
+
+	public int getSelectedCount() {
+		return _selection.size();
 	}
 
 	public void clear() {

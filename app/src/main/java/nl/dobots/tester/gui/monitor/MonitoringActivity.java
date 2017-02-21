@@ -10,9 +10,19 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
-import java.util.HashMap;
+import com.strongloop.android.loopback.callbacks.ObjectCallback;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.UUID;
+
+import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
+import nl.dobots.bluenet.service.BleScanService;
+import nl.dobots.crownstone.cfg.Config;
+import nl.dobots.loopback.CrownstoneRestAPI;
+import nl.dobots.loopback.loopback.models.Sphere;
+import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.tester.CrownstoneDevApp;
 import nl.dobots.tester.R;
 import nl.dobots.tester.gui.utils.ViewPagerActivity;
@@ -30,6 +40,7 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 
 	private static MonitoringActivity INSTANCE;
 	private String[] _addresses;
+	private UUID _proximityUuid;
 
 	public static MonitoringActivity getInstance() {
 		return INSTANCE;
@@ -45,12 +56,24 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 		INSTANCE = this;
 
 		_addresses = getIntent().getStringArrayExtra("addresses");
+		_proximityUuid = (UUID)getIntent().getSerializableExtra("proximityUuid");
 
 		initUI();
 
-		CrownstoneDevApp.getInstance().getScanService().
-				startIntervalScan(LOW_SCAN_INTERVAL, LOW_SCAN_PAUSE, BleDeviceFilter.anyStone);
+		CrownstoneDevApp app = CrownstoneDevApp.getInstance();
+		BleScanService scanService = app.getScanService();
 
+		if (!Config.OFFLINE && !app.getSettings().isOfflineMode()) {
+			Sphere sphere = app.getSphere(_proximityUuid.toString());
+			if (sphere != null) {
+				EncryptionKeys keys = app.getKeys(sphere.getId());
+				scanService.getBleExt().enableEncryption(true);
+				scanService.getBleExt().getBleBase().setEncryptionKeys(keys);
+			}
+		}
+
+		scanService.clearDeviceMap();
+		scanService.startIntervalScan(LOW_SCAN_INTERVAL, LOW_SCAN_PAUSE, BleDeviceFilter.anyStone);
 	}
 
 	@Override

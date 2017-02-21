@@ -9,13 +9,23 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
+import com.strongloop.android.loopback.callbacks.ObjectCallback;
+
+import java.util.UUID;
+
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
+import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceMap;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.service.callbacks.IntervalScanListener;
+import nl.dobots.loopback.CrownstoneRestAPI;
+import nl.dobots.loopback.loopback.models.Sphere;
+import nl.dobots.loopback.loopback.models.Stone;
+import nl.dobots.loopback.loopback.repositories.StoneRepository;
 import nl.dobots.tester.CrownstoneDevApp;
 import nl.dobots.tester.R;
+import nl.dobots.tester.cfg.Config;
 import nl.dobots.tester.gui.utils.AdvertisementGraph;
 
 /**
@@ -37,6 +47,7 @@ public class AdvertisementFragment extends Fragment implements IntervalScanListe
 
 	private BleScanService _scanService;
 	private AdvertisementGraph _graph;
+	private UUID _proximityUuid;
 
 	public static AdvertisementFragment newInstance(String address) {
 		AdvertisementFragment f = new AdvertisementFragment();
