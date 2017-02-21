@@ -32,26 +32,29 @@ public class ProgressSpinner extends AppCompatActivity {
 		void onCancel();
 	}
 
-	private static ProgressSpinner instance;
+	private static boolean _show = true;
+	private static ProgressSpinner _instance;
 	private static OnCancelListener _cancelListener = null;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		instance = this;
+		_instance = this;
 		setContentView(R.layout.activity_progress);
 		ProgressBar pg = (ProgressBar) findViewById(R.id.progressBar);
 		pg.setIndeterminate(true);
+
+		if (!_show) finish();
 	}
 
 	public static void show(Context context) {
-		context.startActivity(new Intent(context, ProgressSpinner.class));
-		_cancelListener = null;
+		show(context, null);
 	}
 
 	public static void show(Context context, OnCancelListener listener) {
-		context.startActivity(new Intent(context, ProgressSpinner.class));
+		_show = true;
 		_cancelListener = listener;
+		context.startActivity(new Intent(context, ProgressSpinner.class));
 	}
 
 	@Override
@@ -63,9 +66,10 @@ public class ProgressSpinner extends AppCompatActivity {
 	}
 
 	public static void dismiss() {
-		if (instance != null) {
-			instance.finish();
-			instance = null;
+		_show = false;
+		if (_instance != null) {
+			_instance.finish();
+			_instance = null;
 		}
 	}
 
