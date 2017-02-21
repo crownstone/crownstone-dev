@@ -39,7 +39,6 @@ public class ProgressSpinner extends AppCompatActivity {
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		instance = this;
-
 		setContentView(R.layout.activity_progress);
 		ProgressBar pg = (ProgressBar) findViewById(R.id.progressBar);
 		pg.setIndeterminate(true);
@@ -47,6 +46,7 @@ public class ProgressSpinner extends AppCompatActivity {
 
 	public static void show(Context context) {
 		context.startActivity(new Intent(context, ProgressSpinner.class));
+		_cancelListener = null;
 	}
 
 	public static void show(Context context, OnCancelListener listener) {
@@ -65,6 +65,7 @@ public class ProgressSpinner extends AppCompatActivity {
 	public static void dismiss() {
 		if (instance != null) {
 			instance.finish();
+			instance = null;
 		}
 	}
 

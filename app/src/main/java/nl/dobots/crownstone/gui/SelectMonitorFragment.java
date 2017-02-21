@@ -11,6 +11,8 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.UUID;
+
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
@@ -30,6 +32,7 @@ import nl.dobots.crownstone.gui.utils.SelectFragment;
 public class SelectMonitorFragment extends SelectFragment {
 
 	private static final String TAG = SelectControlFragment.class.getCanonicalName();
+	private UUID _selectedProximityUuid;
 
 //	private DeviceListAdapter _adapter;
 
@@ -43,6 +46,9 @@ public class SelectMonitorFragment extends SelectFragment {
 			@Override
 			public void onClick(View view) {
 				if (!_scanning) {
+					_selectedProximityUuid = null;
+					_adapter.clear();
+
 					// start a scan with the given filter
 					_selectedItem = BleDeviceFilter.anyStone;
 					startScan(_selectedItem);
@@ -65,6 +71,7 @@ public class SelectMonitorFragment extends SelectFragment {
 
 					Intent intent = new Intent(getActivity(), MonitoringActivity.class);
 					intent.putExtra("addresses", selection);
+					intent.putExtra("proximityUuid", _selectedProximityUuid);
 					startActivity(intent);
 				} else {
 					Toast.makeText(getActivity(), "No device(s) selected", Toast.LENGTH_LONG).show();
@@ -83,8 +90,23 @@ public class SelectMonitorFragment extends SelectFragment {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				BleDevice device = _bleDeviceList.get(position);
+				UUID proximityUuid = device.getProximityUuid();
+
 				String address = device.getAddress();
 				_adapter.toggleSelection(address);
+
+				if (_adapter.getSelectedCount() == 0) {
+					_selectedProximityUuid = null;
+				} else {
+					if (_selectedProximityUuid == null) {
+						_selectedProximityUuid = proximityUuid;
+					} else {
+						if (!_selectedProximityUuid.equals(proximityUuid)) {
+							Toast.makeText(getActivity(), "Can only select stones from same sphere", Toast.LENGTH_LONG).show();
+							_adapter.toggleSelection(address);
+						}
+					}
+				}
 			}
 		});
 

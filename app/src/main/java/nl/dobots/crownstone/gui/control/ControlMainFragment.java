@@ -83,12 +83,12 @@ public class ControlMainFragment extends Fragment {
 	private String _address;
 
 	private AdvertisementGraph _graph;
-	private boolean _pwmEnabled = false;
+	private boolean _pwmEnabled = true;
 	private LinearLayout _layPwm;
 	private LinearLayout _layPower;
 	private boolean _led1On;
 	private boolean _led2On;
-//	private ProgressDialog _waitingDialog;
+	private boolean _connected = false;
 
 	private abstract class SequentialRunner implements Runnable {
 
@@ -140,6 +140,11 @@ public class ControlMainFragment extends Fragment {
 					_ble.getBleBase().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
 					_ble.startScan(new IBleDeviceCallback() {
 						@Override
+						public void onSuccess() {
+
+						}
+
+						@Override
 						public void onDeviceScanned(BleDevice device) {
 							BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
 							if (device.getAddress().equals(_address)) {
@@ -181,6 +186,11 @@ public class ControlMainFragment extends Fragment {
 					BleLog.getInstance().LOGi(TAG, "starting scan");
 					if (!_ble.isScanning()) {
 						_ble.startScan(new IBleDeviceCallback() {
+							@Override
+							public void onSuccess() {
+
+							}
+
 							@Override
 							public void onDeviceScanned(BleDevice device) {
 								BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
@@ -229,7 +239,6 @@ public class ControlMainFragment extends Fragment {
 		HandlerThread ht = new HandlerThread("BleHandler");
 		ht.start();
 		_handler = new Handler(ht.getLooper());
-
 
 		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
@@ -371,6 +380,7 @@ public class ControlMainFragment extends Fragment {
 		});
 
 		enablePwm(_pwmEnabled);
+		_handler.postDelayed(_advStateChecker, 2000);
 
 		return v;
 	}
@@ -406,6 +416,7 @@ public class ControlMainFragment extends Fragment {
 				// once discovery is completed, this function will be called. we can now execute
 				// the functions on the device. in this case, we want to know what the current
 				// PWM state is
+				_connected = true;
 
 				// first we try and read the PWM value from the device. this call will make sure
 				// that the PWM or State characteristic is available, otherwise an error is created
@@ -418,8 +429,6 @@ public class ControlMainFragment extends Fragment {
 						// now we can update the image of the light bulb to on (if PWM value is
 						// greater than 0) or off if it is 0
 						updateLightBulb(result);
-
-						_handler.postDelayed(_advStateChecker, 2000);
 
 						// at the end we disconnect and close the device again. you could also
 						// stay connected if you want. but it's preferable to only connect,
@@ -482,10 +491,34 @@ public class ControlMainFragment extends Fragment {
 			public void onError(int error) {
 				// an error occurred during connect/discover
 				Log.e(TAG, "failed to connect/discover: " + error);
+				displayError(error);
 				dismissProgressSpinner();
-				if (getActivity() != null) {
-					getActivity().finish();
+				// device will disconnect after idle and error 19 is thrown,
+				// so only close the activity if connect fails. if already connected
+				// only log the error without closing activity
+				if (error == 19) {
+					if (getActivity() != null) {
+						getActivity().finish();
+					}
 				}
+			}
+		});
+	}
+
+	private void displayError(final int error) {
+		getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				String errorMsg;
+				switch (error) {
+				case 19: {
+					errorMsg = "Failed: Disconnected by device!";
+					break;
+				}
+				default:
+					errorMsg = "Failed with error " + error;
+				}
+				Toast.makeText(getActivity(), errorMsg, Toast.LENGTH_LONG).show();
 			}
 		});
 	}
@@ -507,6 +540,7 @@ public class ControlMainFragment extends Fragment {
 						@Override
 						public void onError(int error) {
 							Log.i(TAG, "write led failed: " + error);
+							displayError(error);
 							done();
 							dismissProgressSpinner();
 						}
@@ -534,6 +568,7 @@ public class ControlMainFragment extends Fragment {
 						@Override
 						public void onError(int error) {
 							Log.i(TAG, "write led failed: " + error);
+							displayError(error);
 							done();
 							dismissProgressSpinner();
 						}
@@ -565,6 +600,7 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power off failed: " + error);
+						displayError(error);
 						done();
 						dismissProgressSpinner();
 					}
@@ -596,6 +632,7 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power on failed: " + error);
+						displayError(error);
 						done();
 						dismissProgressSpinner();
 					}
@@ -628,6 +665,7 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "toggle failed: " + error);
+						displayError(error);
 						done();
 //						dismissProgressSpinner();
 						ProgressSpinner.dismiss();
@@ -675,6 +713,7 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power off failed: " + error);
+						displayError(error);
 						done();
 						dismissProgressSpinner();
 					}
@@ -705,6 +744,7 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "power on failed: " + error);
+						displayError(error);
 						done();
 						dismissProgressSpinner();
 					}
@@ -739,6 +779,7 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "set pwm failed: " + error);
+						displayError(error);
 						done();
 						dismissProgressSpinner();
 					}
