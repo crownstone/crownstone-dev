@@ -1,37 +1,48 @@
 package nl.dobots.crownstone.gui.monitor;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 
-import com.strongloop.android.loopback.callbacks.ObjectCallback;
-
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.service.BleScanService;
-import nl.dobots.crownstone.cfg.Config;
-import nl.dobots.loopback.CrownstoneRestAPI;
-import nl.dobots.loopback.loopback.models.Sphere;
-import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
+import nl.dobots.crownstone.cfg.Config;
 import nl.dobots.crownstone.gui.utils.ViewPagerActivity;
+import nl.dobots.loopback.loopback.models.Sphere;
 
+/**
+ * The Monitoring activity shows a set of stones in different fragments and displays the
+ * service data in separate graphs.
+ * Only stones from the same sphere (UUID) can be shown because of the encryption keys
+ *
+ * Provide parameters EXTRA_ADDRESSES and EXTRA_PROXIMITY_UUID in the intent.
+ *
+ */
 public class MonitoringActivity extends AppCompatActivity implements ViewPagerActivity {
 
 	private static final String TAG = MonitoringActivity.class.getCanonicalName();
 
+	// used for the intent extras to provide the address of the stone to control
+	public static final String EXTRA_ADDRESSES = "addresses";
+	// used for the intent extras to provide the UUID of the sphere to which the stone belongs
+	public static final String EXTRA_PROXIMITY_UUID = "proximityUuid";
+
+	// scan interval
 	public static final int LOW_SCAN_INTERVAL = 1000;
+	// scan pause
 	public static final int LOW_SCAN_PAUSE = 1000;
 
 	private FragmentPagerAdapter _pagerAdapter;
@@ -48,6 +59,19 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 
 	private HashMap<Integer, AdvertisementFragment> _fragments = new HashMap<>();
 
+	/**
+	 * Show monitoring activity
+	 * @param context the context which wants to show the activity
+	 * @param proximityUuid the proximity UUID of the sphere (to which the stones belong)
+	 * @param addresses an array of device MAC addresses
+	 */
+	public static void show(Context context, UUID proximityUuid, String[] addresses) {
+		Intent intent = new Intent(context, MonitoringActivity.class);
+		intent.putExtra(EXTRA_ADDRESSES, addresses);
+		intent.putExtra(EXTRA_PROXIMITY_UUID, proximityUuid);
+		context.startActivity(intent);
+	}
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -55,23 +79,28 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 
 		INSTANCE = this;
 
-		_addresses = getIntent().getStringArrayExtra("addresses");
-		_proximityUuid = (UUID)getIntent().getSerializableExtra("proximityUuid");
+		// get the list of addresses and the proximity uuid from the intent
+		_addresses = getIntent().getStringArrayExtra(EXTRA_ADDRESSES);
+		_proximityUuid = (UUID)getIntent().getSerializableExtra(EXTRA_PROXIMITY_UUID);
 
+		// set up the user interface
 		initUI();
 
 		CrownstoneDevApp app = CrownstoneDevApp.getInstance();
 		BleScanService scanService = app.getScanService();
 
+		// retrieve the sphere by proximity uuid
 		if (!Config.OFFLINE && !app.getSettings().isOfflineMode()) {
 			Sphere sphere = app.getSphere(_proximityUuid.toString());
 			if (sphere != null) {
+				// and set the encryption keys
 				EncryptionKeys keys = app.getKeys(sphere.getId());
 				scanService.getBleExt().enableEncryption(true);
 				scanService.getBleExt().getBleBase().setEncryptionKeys(keys);
 			}
 		}
 
+		// clear the device map and start scanning
 		scanService.clearDeviceMap();
 		scanService.startIntervalScan(LOW_SCAN_INTERVAL, LOW_SCAN_PAUSE, BleDeviceFilter.anyStone);
 	}
@@ -79,7 +108,7 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-
+		// stop scanning
 		CrownstoneDevApp.getInstance().getScanService().stopIntervalScan();
 	}
 

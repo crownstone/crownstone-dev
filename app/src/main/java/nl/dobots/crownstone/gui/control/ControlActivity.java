@@ -1,5 +1,7 @@
 package nl.dobots.crownstone.gui.control;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -31,9 +33,21 @@ import nl.dobots.loopback.loopback.models.Sphere;
 import nl.dobots.loopback.loopback.models.Stone;
 import nl.dobots.loopback.loopback.repositories.StoneRepository;
 
+/**
+ * Control activity for a stone. Provides switching PWM and relay. Shows service data of
+ * received advertisements. Provides also a graph for power measurements.
+ *
+ * Created on 1-10-15
+ * @author Dominik Egger
+ */
 public class ControlActivity extends AppCompatActivity implements ViewPagerActivity {
 
 	private static final String TAG = ControlActivity.class.getCanonicalName();
+
+	// used for the intent extras to provide the address of the stone to control
+	public static final String EXTRA_ADDRESS = "address";
+	// used for the intent extras to provide the UUID of the sphere to which the stone belongs
+	public static final String EXTRA_PROXIMITY_UUID = "proximityUuid";
 
 	private FragmentPagerAdapter _pagerAdapter;
 
@@ -47,7 +61,6 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	private UUID _proximityUuid;
 	private StoneRepository _stoneRepository;
 	private Stone _currentStone;
-	private boolean _pwmEnabled;
 
 	public static ControlActivity getInstance() {
 		return INSTANCE;
@@ -55,7 +68,20 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 	private String _address;
 	private BleExt _ble;
-	
+
+	/**
+	 * Show the Control activity
+	 * @param context the context which wants to show the activity
+	 * @param proximityUuid the proximity uuid of the sphere to which the stone belongs
+	 * @param address the MAC address of the stone
+	 */
+	public static void show(Context context, UUID proximityUuid, String address) {
+		Intent intent = new Intent(context, ControlActivity.class);
+		intent.putExtra(EXTRA_ADDRESS, address);
+		intent.putExtra(EXTRA_PROXIMITY_UUID, proximityUuid);
+		context.startActivity(intent);
+	}
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -63,25 +89,25 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 		INSTANCE = this;
 
-		_address = getIntent().getStringExtra("address");
-		_proximityUuid = (UUID)getIntent().getSerializableExtra("proximityUuid");
+		// retrieve address and proximity uuid from the intent
+		_address = getIntent().getStringExtra(EXTRA_ADDRESS);
+		_proximityUuid = (UUID)getIntent().getSerializableExtra(EXTRA_PROXIMITY_UUID);
 
 		_app = CrownstoneDevApp.getInstance();
 		_ble = _app.getBle();
 
-//		EncryptionKeys keys = new EncryptionKeys(new byte[BleBaseEncryption.AES_BLOCK_SIZE], new byte[BleBaseEncryption.AES_BLOCK_SIZE], new byte[BleBaseEncryption.AES_BLOCK_SIZE]);
-//
-//		_ble.enableEncryption(true);
-//		_ble.getBleBase().setEncryptionKeys(keys);
-
+		// retrieve the sphere by proximity uuid
 		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode()) {
 			Sphere sphere = _app.getSphere(_proximityUuid.toString());
 			if (sphere != null) {
+				// get the encryption keys of the sphere
 				EncryptionKeys keys = _app.getKeys(sphere.getId());
 
+				// set the keys on the library
 				_ble.enableEncryption(true);
 				_ble.getBleBase().setEncryptionKeys(keys);
 
+				// get the stone object from the cloud
 				_stoneRepository = CrownstoneRestAPI.getStoneRepository();
 				_stoneRepository.findByAddress(_address, new ObjectCallback<Stone>() {
 					@Override
@@ -103,6 +129,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		// disable encryption again
 		_ble.enableEncryption(false);
 	}
 
@@ -204,10 +231,6 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		int id = item.getItemId();
 
 		switch(id) {
-//			case R.id.action_pwm: {
-//				enablePwm(!_pwmEnabled);
-//				break;
-//			}
 			case R.id.action_dfu: {
 				ProgressSpinner.show(this);
 				_ble.resetToBootloader(_address, new IStatusCallback() {
@@ -261,9 +284,5 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 		return super.onOptionsItemSelected(item);
 	}
-
-//	private void enablePwm(boolean enable) {
-//		_pwmEnabled = enable;
-//	}
 
 }

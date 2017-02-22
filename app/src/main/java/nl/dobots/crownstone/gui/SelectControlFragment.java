@@ -2,7 +2,6 @@ package nl.dobots.crownstone.gui;
 
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -43,7 +42,6 @@ public class SelectControlFragment extends SelectFragment {
 
 	private Spinner _spFilter;
 	private CrownstoneDevApp _app;
-//	private BleExt _bleExt;
 
 	@Nullable
 	@Override
@@ -51,7 +49,6 @@ public class SelectControlFragment extends SelectFragment {
 		View v = inflater.inflate(R.layout.frag_select_control, container, false);
 
 		_app = CrownstoneDevApp.getInstance();
-//		_bleExt = _app.getBle();
 
 		_btnScan = (Button) v.findViewById(R.id.btnScan);
 		_btnScan.setOnClickListener(new View.OnClickListener() {
@@ -92,14 +89,15 @@ public class SelectControlFragment extends SelectFragment {
 				}
 
 				final BleDevice device = _bleDeviceList.get(position);
-
 				final String address = device.getAddress();
 
+				// check if device is a stone, otherwise don't try to connect
 				if (!device.isStone()) {
 					Toast.makeText(getActivity(), "Can't connect, device is not a stone!", Toast.LENGTH_LONG).show();
 					return;
 				}
 
+				// if stone is in setup mode, ask to set it up
 				if (device.isSetupMode() &&
 					!Config.OFFLINE && !_app.getSettings().isOfflineMode())  {
 
@@ -111,16 +109,17 @@ public class SelectControlFragment extends SelectFragment {
 							setupStone(device, new IStatusCallback() {
 								@Override
 				  				public void onSuccess() {
+									// if setup was successful, try to connect
 									final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Connecting", "Please wait ...");
+									// use a delay to make sure stone had time to finish the setup
+									// and reboot
 									_app.getBle().getHandler().postDelayed(new Runnable() {
 										@Override
 										public void run() {
 											UUID proximityUuid = device.getProximityUuid();
 											// start the control activity to switch the device
-											Intent intent = new Intent(getActivity(), ControlActivity.class);
-											intent.putExtra("address", address);
-											intent.putExtra("proximityUuid", proximityUuid);
-											startActivity(intent);
+
+											ControlActivity.show(getActivity(), proximityUuid, address);
 											dlg.dismiss();
 										}
 									}, 2000);
@@ -133,25 +132,21 @@ public class SelectControlFragment extends SelectFragment {
 							});
 						}
 					});
+					// if user cancels the setup try to connect
 					builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int id) {
 							UUID proximityUuid = device.getProximityUuid();
 							// start the control activity to switch the device
-							Intent intent = new Intent(getActivity(), ControlActivity.class);
-							intent.putExtra("address", address);
-							intent.putExtra("proximityUuid", proximityUuid);
-							startActivity(intent);
+							ControlActivity.show(getActivity(), proximityUuid, address);
 						}
 					});
 					builder.show();
 
 				} else {
+					// get the proximity uuid from the device
 					UUID proximityUuid = device.getProximityUuid();
-					// start the control activity to switch the device
-					Intent intent = new Intent(getActivity(), ControlActivity.class);
-					intent.putExtra("address", address);
-					intent.putExtra("proximityUuid", proximityUuid);
-					startActivity(intent);
+					// and start the control activity to switch the device
+					ControlActivity.show(getActivity(), proximityUuid, address);
 				}
 
 			}
@@ -160,7 +155,10 @@ public class SelectControlFragment extends SelectFragment {
 			@Override
 			public boolean onItemLongClick(final AdapterView<?> parent, final View view, final int position, long id) {
 
+				// on a long item click ...
 				final BleDevice device = _bleDeviceList.get(position);
+
+				// if the device is in setup mode, ask user if he wants to put it in DFU
 				if (device.isSetupMode()) {
 
 					final AlertDialog.Builder builder = new AlertDialog.Builder(parent.getContext());
@@ -204,7 +202,9 @@ public class SelectControlFragment extends SelectFragment {
 					builder.show();
 
 					return true;
+
 				} else if (device.isStone()) {
+					// if device is a stone (but not in setup) ask user if he wants to recover it
 
 					final AlertDialog.Builder builder = new AlertDialog.Builder(parent.getContext());
 					builder.setTitle("Recover Stone");
@@ -232,6 +232,10 @@ public class SelectControlFragment extends SelectFragment {
 		return v;
 	}
 
+	/**
+	 * Start Recovery of a Stone
+	 * @param device the device to be recovered
+	 */
 	private void recoverStone(final BleDevice device) {
 		final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Recovering Stone " + device.getName(), "Please wait ...", true);
 		_app.getBle().recover(device.getAddress(), new IStatusCallback() {
@@ -242,10 +246,10 @@ public class SelectControlFragment extends SelectFragment {
 				getActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-//						_bleDeviceList.clear();
+						// remove the device from the list (to make sure it is cleared and correctly
+						// detected in setup mode afterwards)
 						_bleDeviceList.remove(device);
 						_adapter.notifyDataSetChanged();
-//						_lvScanList.invalidate();
 						Toast.makeText(getActivity(), "Stone successfully recovered", Toast.LENGTH_LONG).show();
 					}
 				});
@@ -265,6 +269,11 @@ public class SelectControlFragment extends SelectFragment {
 		});
 	}
 
+	/**
+	 * Start setup of a stone
+	 * @param device the device to be set up
+	 * @param callback callback on success / failure
+	 */
 	private void setupStone(final BleDevice device, final IStatusCallback callback) {
 		_app.executeSetup(getActivity(), device, new IStatusCallback() {
 			@Override
@@ -272,9 +281,10 @@ public class SelectControlFragment extends SelectFragment {
 				getActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
+						// remove the device from the list (to make sure it is cleared and correctly
+						// detected in normal mode afterwards)
 						_bleDeviceList.remove(device);
 						_adapter.notifyDataSetChanged();
-//						_lvScanList.invalidate();
 						callback.onSuccess();
 					}
 				});

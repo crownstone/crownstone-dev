@@ -1,6 +1,5 @@
 package nl.dobots.crownstone.gui;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -24,6 +23,7 @@ import nl.dobots.crownstone.gui.utils.SelectFragment;
 
 /**
  * Select crownstones to monitor their advertisement data. multiple crownstones can be selected.
+ * but only if they belong to the same sphere (because of the encryption keys)
  * only crownstones are shown
  *
  * Created on 1-10-15
@@ -32,9 +32,9 @@ import nl.dobots.crownstone.gui.utils.SelectFragment;
 public class SelectMonitorFragment extends SelectFragment {
 
 	private static final String TAG = SelectControlFragment.class.getCanonicalName();
-	private UUID _selectedProximityUuid;
 
-//	private DeviceListAdapter _adapter;
+	// the currently selected proximity UUID. only stones with the same UUID can be selected
+	private UUID _selectedProximityUuid;
 
 	@Nullable
 	@Override
@@ -46,6 +46,7 @@ public class SelectMonitorFragment extends SelectFragment {
 			@Override
 			public void onClick(View view) {
 				if (!_scanning) {
+					// clear
 					_selectedProximityUuid = null;
 					_adapter.clear();
 
@@ -68,11 +69,7 @@ public class SelectMonitorFragment extends SelectFragment {
 				String[] selection;
 				if ((selection = _adapter.getSelection()).length > 0) {
 					stopScan();
-
-					Intent intent = new Intent(getActivity(), MonitoringActivity.class);
-					intent.putExtra("addresses", selection);
-					intent.putExtra("proximityUuid", _selectedProximityUuid);
-					startActivity(intent);
+					MonitoringActivity.show(getActivity(), _selectedProximityUuid, selection);
 				} else {
 					Toast.makeText(getActivity(), "No device(s) selected", Toast.LENGTH_LONG).show();
 				}
@@ -96,11 +93,14 @@ public class SelectMonitorFragment extends SelectFragment {
 				_adapter.toggleSelection(address);
 
 				if (_adapter.getSelectedCount() == 0) {
+					// if last selected was cleared, also clear uuid
 					_selectedProximityUuid = null;
 				} else {
 					if (_selectedProximityUuid == null) {
+						// if no uuid set so far, use uuid of selected stone
 						_selectedProximityUuid = proximityUuid;
 					} else {
+						// otherwise, only allow selection of stones from same sphere (same uuid)
 						if (!_selectedProximityUuid.equals(proximityUuid)) {
 							Toast.makeText(getActivity(), "Can only select stones from same sphere", Toast.LENGTH_LONG).show();
 							_adapter.toggleSelection(address);

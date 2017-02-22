@@ -38,17 +38,12 @@ import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
 import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 
 /**
- * This example activity shows the use of the bluenet library. The library is first initialized,
- * which enables the bluetooth adapter. It shows the following steps:
- *
- * 1. Connect to a device and discover the available services / characteristics
- * 2. Read a characteristic (PWM characteristic)
- * 3. Write a characteristic (PWM characteristic)
- * 4. Disconnect and close the device
- * 5. And how to do the 3 steps (connectDiscover, execute and disconnectClose) with one
- *    function call
- *
- * For an example of how to scan for devices see MainActivity.java or MainActivity.java
+ * This fragment is part of the ControlActivity and provides the page to control the crownstone
+ *  - switch PWM
+ *  - switch Relay
+ *  - Factory Reset (menu)
+ *  - goTo DFU (menu)
+ *  - graph with service data
  *
  * Created on 1-10-15
  * @author Dominik Egger
@@ -89,6 +84,21 @@ public class ControlMainFragment extends Fragment {
 	private boolean _led1On;
 	private boolean _led2On;
 	private boolean _connected = false;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
+
+		HandlerThread ht = new HandlerThread("BleHandler");
+		ht.start();
+		_handler = new Handler(ht.getLooper());
+
+		_ble = ControlActivity.getInstance().getBle();
+		_address = ControlActivity.getInstance().getAddress();
+
+		checkPwm();
+	}
 
 	private abstract class SequentialRunner implements Runnable {
 
@@ -230,21 +240,6 @@ public class ControlMainFragment extends Fragment {
 			}
 		}
 	};
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setHasOptionsMenu(true);
-
-		HandlerThread ht = new HandlerThread("BleHandler");
-		ht.start();
-		_handler = new Handler(ht.getLooper());
-
-		_ble = ControlActivity.getInstance().getBle();
-		_address = ControlActivity.getInstance().getAddress();
-
-		checkPwm();
-	}
 
 	@Override
 	public void onDestroy() {
@@ -457,6 +452,7 @@ public class ControlMainFragment extends Fragment {
 
 						if (error == BleErrors.ERROR_CHARACTERISTIC_NOT_FOUND) {
 
+							dismissProgressSpinner();
 							// return an error and exit if the PWM characteristic is not available
 							getActivity().runOnUiThread(new Runnable() {
 								@Override

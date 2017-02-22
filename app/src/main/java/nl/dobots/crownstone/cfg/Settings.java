@@ -22,6 +22,9 @@ import android.content.SharedPreferences;
  */
 public class Settings {
 
+	// store username and password to provide in Login activity or to try automatic login if
+	// access token expires
+
 	private static final String SHARED_PREFS = "settings";
 
 	private static final String LOGIN_USER_NAME = "prefs_username";
