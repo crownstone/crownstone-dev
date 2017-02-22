@@ -26,7 +26,7 @@ import android.widget.Toast;
 
 import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.extended.BleExt;
@@ -38,17 +38,12 @@ import nl.dobots.tester.gui.utils.AdvertisementGraph;
 import nl.dobots.tester.gui.utils.ProgressSpinner;
 
 /**
- * This example activity shows the use of the bluenet library. The library is first initialized,
- * which enables the bluetooth adapter. It shows the following steps:
- *
- * 1. Connect to a device and discover the available services / characteristics
- * 2. Read a characteristic (PWM characteristic)
- * 3. Write a characteristic (PWM characteristic)
- * 4. Disconnect and close the device
- * 5. And how to do the 3 steps (connectDiscover, execute and disconnectClose) with one
- *    function call
- *
- * For an example of how to scan for devices see MainActivity.java or MainActivity.java
+ * This fragment is part of the ControlActivity and provides the page to control the crownstone
+ *  - switch PWM
+ *  - switch Relay
+ *  - Factory Reset (menu)
+ *  - goTo DFU (menu)
+ *  - graph with service data
  *
  * Created on 1-10-15
  * @author Dominik Egger
@@ -71,7 +66,7 @@ public class ControlMainFragment extends Fragment {
 	private ImageButton _btnZoomOut;
 	private ImageButton _btnZoomReset;
 
-	private RelativeLayout _layStatistics;
+	private RelativeLayout _layContainer;
 	private RelativeLayout _layControl;
 
 	private Handler _handler;
@@ -89,6 +84,21 @@ public class ControlMainFragment extends Fragment {
 	private boolean _led1On;
 	private boolean _led2On;
 	private boolean _connected = false;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
+
+		HandlerThread ht = new HandlerThread("BleHandler");
+		ht.start();
+		_handler = new Handler(ht.getLooper());
+
+		_ble = ControlActivity.getInstance().getBle();
+		_address = ControlActivity.getInstance().getAddress();
+
+		checkPwm();
+	}
 
 	private abstract class SequentialRunner implements Runnable {
 
@@ -232,21 +242,6 @@ public class ControlMainFragment extends Fragment {
 	};
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setHasOptionsMenu(true);
-
-		HandlerThread ht = new HandlerThread("BleHandler");
-		ht.start();
-		_handler = new Handler(ht.getLooper());
-
-		_ble = ControlActivity.getInstance().getBle();
-		_address = ControlActivity.getInstance().getAddress();
-
-		checkPwm();
-	}
-
-	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		_closing = true;
@@ -348,7 +343,7 @@ public class ControlMainFragment extends Fragment {
 		_layPwm = (LinearLayout) v.findViewById(R.id.layPwm);
 		_layPower = (LinearLayout) v.findViewById(R.id.layPower);
 		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
-		_layStatistics = (RelativeLayout) v.findViewById(R.id.layStatistics);
+		_layContainer = (RelativeLayout) v.findViewById(R.id.layContainer);
 
 		_layGraph = (RelativeLayout) v.findViewById(R.id.graph);
 		_graph = new AdvertisementGraph(getActivity());
@@ -358,7 +353,7 @@ public class ControlMainFragment extends Fragment {
 		_btnZoomIn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+				_layContainer.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 				_layControl.setVisibility(View.INVISIBLE);
 			}
 		});
@@ -367,7 +362,7 @@ public class ControlMainFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				int pixels = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());
-				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
+				_layContainer.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
 				_layControl.setVisibility(View.VISIBLE);
 			}
 		});
@@ -457,6 +452,7 @@ public class ControlMainFragment extends Fragment {
 
 						if (error == BleErrors.ERROR_CHARACTERISTIC_NOT_FOUND) {
 
+							dismissProgressSpinner();
 							// return an error and exit if the PWM characteristic is not available
 							getActivity().runOnUiThread(new Runnable() {
 								@Override

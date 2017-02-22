@@ -20,9 +20,9 @@ import com.strongloop.android.loopback.callbacks.VoidCallback;
 
 import java.util.List;
 
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.extended.callbacks.EventListener;
 import nl.dobots.bluenet.service.BleScanService;
-import nl.dobots.bluenet.service.callbacks.EventListener;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.bluenet.utils.FileLogger;
 import nl.dobots.tester.CrownstoneDevApp;
@@ -83,13 +83,15 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 //			_fileLogger.requestPermissions(this);
 //		}
 
+		// initialize user interface
 		initUI();
 
-		if (!CrownstoneDevApp.getInstance().isServiceBound()) {
-			CrownstoneDevApp.getInstance().registerServiceBindListener(this);
+		// if service is not yet bound, register as service bind listener
+		if (!_app.isServiceBound()) {
+			_app.registerServiceBindListener(this);
 		} else {
 			// otherwise get the service
-			onBind();
+			onBind(_app.getScanService());
 		}
 	}
 
@@ -97,16 +99,19 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 	protected void onResume() {
 		super.onResume();
 
+		// if app is resumed, make sure a user is logged in (or app is in offline mode)
 		if (!Config.OFFLINE) {
 			_userRepository = CrownstoneRestAPI.getUserRepository();
 
 			if (!_settings.isOfflineMode()) {
 
+				// no user is logged in, show login activity
 				if (!_userRepository.isLoggedIn()) {
 					startActivityForResult(new Intent(this, LoginActivity.class), LoginActivity.LOGIN_RESULT);
 					return;
 				}
 
+				// retrieve user data from cloud if none is cached
 				if (_app.getCurrentUser() == null) {
 					_app.retrieveCurrentUserData();
 				}
@@ -117,6 +122,7 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// if user cancels the login, continue in offline mode
 		if (requestCode == LoginActivity.LOGIN_RESULT) {
 			_settings.setOfflineMode(resultCode != RESULT_OK);
 		}
@@ -260,16 +266,18 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 	}
 
 	@Override
-	public void onBind() {
-		_bleService = CrownstoneDevApp.getInstance().getScanService();
+	public void onBind(BleScanService service) {
+		// get the service object
+		_bleService = service;
+		// register activity as event listener
 		_bleService.registerEventListener(this);
-//		_bleExt = _bleService.getBleExt();
 	}
 
 	@Override
 	public void onEvent(EventListener.Event event) {
 		switch(event) {
 			case BLE_PERMISSIONS_MISSING: {
+				// try to request permissions for BLE
 				_bleService.requestPermissions(this);
 			}
 		}
@@ -278,6 +286,7 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
+		// handle permission results
 		if (!_bleService.getBleExt().handlePermissionResult(requestCode, permissions, grantResults,
 				new IStatusCallback() {
 

@@ -28,12 +28,4 @@ public class Config {
 
 	public static final boolean OFFLINE = false;
 
-//	public static final int PRESENCE_THRESHOLD = -70;
-//
-//	public static final int LOW_SCAN_INTERVAL = 2000; // milli seconds scanning
-//	public static final int LOW_SCAN_PAUSE = 5000; //  milli seconds pause
-//
-//	public static final int GUI_UPDATE_INTERVAL = 1000;
-//
-//	public static final long WATCHDOG_INTERVAL = 5000;
 }

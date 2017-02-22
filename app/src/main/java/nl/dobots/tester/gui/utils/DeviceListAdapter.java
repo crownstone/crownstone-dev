@@ -34,10 +34,11 @@ public class DeviceListAdapter extends BaseAdapter {
 
 	private static final String TAG = DeviceListAdapter.class.getCanonicalName();
 
+	// the context associated with the adapter
 	private Context _context;
+	// the list of devices in the adapter
 	private BleDeviceList _arrayList;
-//	private String _selection = "";
-
+	// the list of selected devices (MAC address)
 	private ArrayList<String> _selection = new ArrayList<>();
 
 	public DeviceListAdapter(Context context, BleDeviceList array) {
@@ -45,14 +46,29 @@ public class DeviceListAdapter extends BaseAdapter {
 		_arrayList = array;
 	}
 
+	/**
+	 * Select a device
+	 * @param address the mac address of the device to be selected
+	 */
 	public void select(String address) {
 		_selection.add(address);
+		notifyDataSetInvalidated();
 	}
 
+	/**
+	 * DeSelect a device
+	 * @param address the mac address of the device to be deselected
+	 */
 	public void deselect(String address) {
 		_selection.remove(address);
+		notifyDataSetInvalidated();
 	}
 
+	/**
+	 * Toggle the selection state of a device
+	 * @param address the mac address of the device to be deselected
+	 * @return true if the device was selected, false otherwise
+	 */
 	public boolean toggleSelection(String address) {
 		boolean selected;
 		if (_selection.contains(address)) {
@@ -66,34 +82,58 @@ public class DeviceListAdapter extends BaseAdapter {
 		return selected;
 	}
 
-	// How many items are in the data set represented by this Adapter.
+	/**
+	 * How many items are in the data set represented by this Adapter.
+ 	 */
 	@Override
 	public int getCount() {
 		return _arrayList.size();
 	}
 
-	// Get the data item associated with the specified position in the data set.
+	/**
+	 * Get the data item associated with the specified position in the data set.
+	 * @param position the position of the device
+	 * @return the device
+	 */
 	@Override
 	public Object getItem(int position) {
 		Log.i(TAG, String.valueOf(_arrayList.get(position)));
 		return _arrayList.get(position);
 	}
 
+	/**
+	 * Return the id of the device at the position (which is the same as the position)
+	 * @param position the position
+	 * @return the id (position)
+	 */
 	@Override
 	public long getItemId(int position) {
 		return position;
 	}
 
+	/**
+	 * Update the adapter with a new list of devices
+	 * @param list the new list
+	 */
 	public void updateList(BleDeviceList list) {
 		_arrayList = list;
+		notifyDataSetInvalidated();
 	}
 
+	/**
+	 * Get the list of selected devices as a list of MAC addresses
+	 * @return list of MAC addresses
+	 */
 	public String[] getSelection() {
 		String[] result = new String[_selection.size()];
 		_selection.toArray(result);
 		return result;
 	}
 
+	/**
+	 * Get the list of selected devices
+	 * @return list of selected devices
+	 */
 	public BleDevice[] getSelectedDevices() {
 		BleDevice[] result = new BleDevice[_selection.size()];
 		for (int i = 0; i < _selection.size(); ++i) {
@@ -102,25 +142,33 @@ public class DeviceListAdapter extends BaseAdapter {
 		return result;
 	}
 
+	/**
+	 * Get the number of selected devices
+	 * @return
+	 */
 	public int getSelectedCount() {
 		return _selection.size();
 	}
 
+	/**
+	 * Clear the adapter
+	 */
 	public void clear() {
 		_selection.clear();
 		_arrayList.clear();
 	}
 
+	// View Holder improves display of list view elements
 	private class ViewHolder {
 
-		protected TextView devName;
-		protected TextView devAddress;
-		protected TextView devRssi;
-		protected TextView devUUID;
-		protected TextView devMajor;
-		protected TextView devMinor;
-		protected LinearLayout layIBeacon;
-		protected TextView devDistance;
+		TextView devName;
+		TextView devAddress;
+		TextView devRssi;
+		TextView devUUID;
+		TextView devMajor;
+		TextView devMinor;
+		LinearLayout layIBeacon;
+		TextView devDistance;
 
 	}
 

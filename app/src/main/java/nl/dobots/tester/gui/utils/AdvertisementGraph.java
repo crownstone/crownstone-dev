@@ -26,30 +26,56 @@ import java.util.Date;
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 
 /**
+ * Creates a graph used to display advertisements
+ * currently displayed data:
  *
+ * 	- Power Usage
+ * 	- Accumulated Energy
+ * 	- Temperature
+ * 	- Resets
+ * 	- Relay State
+ * 	- PWM State
+ *
+ * 	The x axis of the graph is adjusted to the last time an update is called so
+ * 	the graph is updated live as long as new advertisements are coming in. the
+ * 	newest advertisement is always at the most right point in the graph.
+ * 	Unless the user zoomed or panned, in which case the x axis is not adjusted
+ * 	until the user resets the graph
  *
  * @author Dominik Egger <dominik@dobots.nl>
  */
 public class AdvertisementGraph implements ZoomListener, PanListener {
 	private static final String TAG = AdvertisementGraph.class.getCanonicalName();
 
+	// duration of the x axis in minuts (default number of minutes shown on the x axis)
 	public static final int STATISTICS_X_TIME = 5;
 
+	// the number of series to be displayed in the graph. increase if a new series should be added
+	public static final int NUMBER_OF_SERIES = 6;
+
+	// the activity associated with this graph
 	private Activity _activity;
 
+	// the view holding the graph
 	private GraphicalView _graphView;
 
+	// flag if zoom is applied. as long as zoom is applied, x axis is not adjusted.
 	private boolean _zoomApplied = false;
 	private boolean _panApplied = false;
+
+	// keep track of resets (if the stone is using the reset counter in the name)
 	private int resetCounter = -1;
 
+	// the following values are used to rescale the graph dynamically based on the min and max
+	// values
 	private long _maxPowerUsage;
 	private long _minPowerUsage;
 	private long _maxAccumulatedEnergy;
 	private long _minAccumulatedEnergy;
+	private long _minTemp;
+	private long _maxTemp;
 
-	private int _resetCounterSeries;
-
+	// graph objects
 	private XYMultipleSeriesRenderer _multipleSeriesRenderer;
 	private XYMultipleSeriesDataset _dataSet;
 
@@ -59,39 +85,51 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	private static final int[] listOfSeriesColors = new int[] { 0xFF00BFFF, Color.DKGRAY, Color.GREEN, Color.YELLOW,
 			Color.MAGENTA, Color.CYAN, Color.WHITE };
 
-	private long _liveMinTime;
-	private long _maxTime;
-	private long _minTemp;
-	private long _maxTemp;
-	private int _currentSeries = 0;
+	// the index of the next series to be added
+	private int _nextSeries = 0;
+	// the indices of the different series
 	private int _temperatureSeries;
-	private int _switchStateSeries;
 	private int _powerUsageSeries;
 	private int _accumulatedEnergySeries;
 	private int _relayStateSeries;
 	private int _pwmSeries;
+	private int _resetCounterSeries;
 
 	public AdvertisementGraph(Activity activity) {
 		_activity = activity;
 		createGraph();
 	}
 
+	/**
+	 * Assign a layout to be used for the graph
+	 *
+	 * @param layGraph the RelativeLayout to be used to contain the graph
+	 */
 	public void setView(RelativeLayout layGraph) {
 		layGraph.addView(_graphView);
 	}
 
+	/**
+	 * Remove the view from the graph. will not be used anymore
+	 * @param layGraph the RelativeLayout to be removed
+	 */
 	public void removeView(RelativeLayout layGraph) {
 		layGraph.removeView(_graphView);
 	}
 
+	/**
+	 * Function to be called if service data of an advertisement is received
+	 * @param name the name of the stone which sent the advertisement data
+	 * @param serviceData the service data received
+	 */
 	public void onServiceData(String name, CrownstoneServiceData serviceData) {
-//		onSwitchState(serviceData.getSwitchState());
 		onPwm(serviceData.getPwm());
 		onRelayState(serviceData.getRelayState());
 		onTemperature(serviceData.getTemperature());
 		onPowerUsage(serviceData.getPowerUsage());
 		onAccumulatedEnergy(serviceData.getAccumulatedEnergy());
 
+		// check if the stone reset
 		String[] split = name.split("_");
 		if (split.length > 1) {
 			int counter = Integer.valueOf(split[split.length - 1]);
@@ -103,31 +141,18 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 			}
 		}
 
+		// update the range (x axis) based on the current time
 		updateRange();
-	}
-
-	void onSwitchState(int switchState) {
-
-		if (switchState > 100) {
-			switchState = 100;
-		}
-
-		// add new point
-//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
-//		series.add(new Date(), switchState);
-		XYSeries series = _dataSet.getSeriesAt(_switchStateSeries);
-		series.add(new Date().getTime(), switchState);
 	}
 
 	void onPwm(int pwm) {
 
+		// cap pwm to 100
 		if (pwm > 100) {
 			pwm = 100;
 		}
 
 		// add new point
-//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
-//		series.add(new Date(), pwm);
 		XYSeries series = _dataSet.getSeriesAt(_pwmSeries);
 		series.add(new Date().getTime(), pwm);
 	}
@@ -135,17 +160,17 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	void onRelayState(boolean relayState) {
 
 		// add new point
-//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
-//		series.add(new Date(), relayState);
 		XYSeries series = _dataSet.getSeriesAt(_relayStateSeries);
 		series.add(new Date().getTime(), relayState ? 1 : 0);
 	}
 
+	/**
+	 * creates a vertical line for the reset counter series at the
+	 * current time to indicate a reset
+	 */
 	void onResetCounterChange() {
 
 		// add new point
-//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_switchStateSeries);
-//		series.add(new Date(), relayState);
 		XYSeries series = _dataSet.getSeriesAt(_resetCounterSeries);
 		series.add(new Date().getTime(), 0);
 		series.add(new Date().getTime(), 1);
@@ -155,8 +180,6 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	void onTemperature(int temperature) {
 
 		// add new point
-//		TimeSeries series = (TimeSeries)_dataSet.getSeriesAt(_temperatureSeries);
-//		series.add(new Date(), temperature);
 		XYSeries series = _dataSet.getSeriesAt(_temperatureSeries);
 		series.add(new Date().getTime(), temperature);
 
@@ -199,36 +222,40 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		}
 	}
 
-
+	/**
+	 * Update the range (x axis) based on the current time. Should also be called in regular
+	 * intervals even if no advertisement is received to show that the graph is "live"
+	 */
 	public void updateRange() {
 
 		// update x-axis range
-		_maxTime = new Date().getTime() + 1 * 60 * 1000;
-		_liveMinTime = _maxTime - STATISTICS_X_TIME * 60 * 1000;
+		// use as max time (time at the furthest right of the graph) as current time + 1 minute
+		// makes the graph look a bit nicer than if the current value was added at the edge
+		long maxTime = new Date().getTime() + 60 * 1000;
+		// use as min time the max time minus the time duration which should be displayed
+		long liveMinTime = maxTime - STATISTICS_X_TIME * 60 * 1000;
 
-		// update range
+		// update range only if user has not zoomed or panned the graph
+		// update range for every series
 		if (!(_zoomApplied || _panApplied)) {
 
-//			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _switchStateSeries);
-//			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _switchStateSeries);
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, 0, 100}, _pwmSeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, 0, 100}, _pwmSeries);
 
-			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _pwmSeries);
-			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 100}, _pwmSeries);
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, 0, 1}, _relayStateSeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, 0, 1}, _relayStateSeries);
 
-			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _relayStateSeries);
-			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _relayStateSeries);
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, 0, 1}, _resetCounterSeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, 0, 1}, _resetCounterSeries);
 
-			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _resetCounterSeries);
-			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, 0, 1}, _resetCounterSeries);
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, _minTemp, _maxTemp}, _temperatureSeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, _minTemp, _maxTemp}, _temperatureSeries);
 
-			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minTemp, _maxTemp}, _temperatureSeries);
-			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minTemp, _maxTemp}, _temperatureSeries);
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
 
-			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
-			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minPowerUsage, _maxPowerUsage}, _powerUsageSeries);
-
-			_multipleSeriesRenderer.setInitialRange(new double[]{_liveMinTime, _maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
-			_multipleSeriesRenderer.setRange(new double[]{_liveMinTime, _maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
 		}
 
 		// redraw
@@ -242,10 +269,9 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		}
 	}
 
-
 	private void createResetCounterSeries() {
 
-		_resetCounterSeries = _currentSeries++;
+		_resetCounterSeries = _nextSeries++;
 
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("SwitchState");
@@ -276,7 +302,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 	private void createRelayStateSeries() {
 
-		_relayStateSeries = _currentSeries++;
+		_relayStateSeries = _nextSeries++;
 
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("SwitchState");
@@ -306,7 +332,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 	private void createPowerUsageSeries() {
 
-		_powerUsageSeries = _currentSeries++;
+		_powerUsageSeries = _nextSeries++;
 
 		_minPowerUsage = 0;
 		_maxPowerUsage = 100;
@@ -343,7 +369,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 	private void createAccumulatedEnergySeries() {
 
-		_accumulatedEnergySeries = _currentSeries++;
+		_accumulatedEnergySeries = _nextSeries++;
 
 		_minAccumulatedEnergy = 0;
 		_maxAccumulatedEnergy = 100;
@@ -380,7 +406,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 	private void createTemperatureSeries() {
 
-		_temperatureSeries = _currentSeries++;
+		_temperatureSeries = _nextSeries++;
 
 		_minTemp = 20;
 		_maxTemp = 50;
@@ -413,38 +439,9 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 //		_multipleSeriesRenderer.setYTitle("Temperature [°C]", 0);
 	}
 
-	private void createSwitchStateSeries() {
-
-		_switchStateSeries = _currentSeries++;
-
-		// create time series (series with x = timestamp, y = temperature)
-//		TimeSeries series = new TimeSeries("SwitchState");
-		XYSeries series = new XYSeries("SwitchState", _switchStateSeries);
-
-		_dataSet.addSeries(series);
-
-		// create new renderer for the new series
-		XYSeriesRenderer renderer = new XYSeriesRenderer();
-		_multipleSeriesRenderer.addSeriesRenderer(renderer);
-
-		renderer.setPointStyle(listOfPointStyles[_switchStateSeries]);
-		renderer.setColor(listOfSeriesColors[_switchStateSeries]);
-		renderer.setFillPoints(false);
-		renderer.setDisplayChartValues(true);
-//		renderer.setDisplayChartValuesDistance(50);
-		renderer.setChartValuesTextSize(convertDpToPixel(10, _activity));
-		renderer.setShowLegendItem(true);
-
-		_multipleSeriesRenderer.setYAxisAlign(Paint.Align.LEFT, _switchStateSeries);
-		_multipleSeriesRenderer.setYLabelsAlign(Paint.Align.LEFT, _switchStateSeries);
-		_multipleSeriesRenderer.setAxisTitleTextSize(convertDpToPixel(10, _activity));
-		_multipleSeriesRenderer.setYLabelsColor(_switchStateSeries, listOfSeriesColors[_switchStateSeries]);
-//		_multipleSeriesRenderer.setYTitle("Switch State", 1);
-	}
-
 	private void createPwmSeries() {
 
-		_pwmSeries = _currentSeries++;
+		_pwmSeries = _nextSeries++;
 
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("SwitchState");
@@ -471,15 +468,17 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 //		_multipleSeriesRenderer.setYTitle("Switch State", 1);
 	}
 
+	/**
+	 * Create the graph, which will create the series and the view
+	 */
 	void createGraph() {
 
 		// get graph renderer
-		_multipleSeriesRenderer = getRenderer(6);
+		_multipleSeriesRenderer = getRenderer(NUMBER_OF_SERIES);
 		_dataSet = new XYMultipleSeriesDataset();
 
 		createTemperatureSeries();
 		createResetCounterSeries();
-//		createSwitchStateSeries();
 		createPwmSeries();
 		createRelayStateSeries();
 		createPowerUsageSeries();
@@ -515,6 +514,12 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 	}
 
+	/**
+	 * Convert dp to pixel to account for different display sizes
+	 * @param dp the size in dp
+	 * @param context the current context
+	 * @return the size in pixels
+	 */
 	public static float convertDpToPixel(float dp, Context context){
 		Resources resources = context.getResources();
 		DisplayMetrics metrics = resources.getDisplayMetrics();
@@ -522,6 +527,12 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		return px;
 	}
 
+	/**
+	 * Convert pixes to dp to account for different display sizes
+	 * @param px size in pixels
+	 * @param context the current context
+	 * @return the size in dp
+	 */
 	public static float convertPixelsToDp(float px, Context context){
 		Resources resources = context.getResources();
 		DisplayMetrics metrics = resources.getDisplayMetrics();

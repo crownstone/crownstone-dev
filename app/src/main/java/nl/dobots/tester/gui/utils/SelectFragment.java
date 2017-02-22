@@ -5,10 +5,10 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
+import nl.dobots.bluenet.ble.extended.callbacks.EventListener;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
 import nl.dobots.bluenet.service.BleScanService;
-import nl.dobots.bluenet.service.callbacks.EventListener;
 import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
 import nl.dobots.tester.CrownstoneDevApp;
 import nl.dobots.tester.R;
@@ -112,7 +112,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 	}
 
 	@Override
-	public void onBind() {
+	public void onBind(BleScanService service) {
 		_bleService = CrownstoneDevApp.getInstance().getScanService();
 		_bleService.registerEventListener(SelectFragment.this);
 		_btnScan.setEnabled(true);

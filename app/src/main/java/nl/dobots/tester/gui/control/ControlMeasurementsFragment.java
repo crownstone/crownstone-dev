@@ -26,14 +26,15 @@ import org.achartengine.renderer.XYSeriesRenderer;
 
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IPowerSamplesCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.PowerSamples;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.tester.CrownstoneDevApp;
 import nl.dobots.tester.R;
 
 /**
- * Request power samples from device and display in graph
+ * This fragment is part of the ControlActivity to request the power samples from device and
+ * display in graph
  *
  * Created on 1-10-15
  * @author Dominik Egger
@@ -42,64 +43,65 @@ public class ControlMeasurementsFragment extends Fragment {
 
 	private static final String TAG = ControlMeasurementsFragment.class.getCanonicalName();
 
-	private static final int TEMP_UPDATE_TIME = 5000;
-	public static final int STATISTICS_X_TIME = 5;
-
-	private GraphicalView _graphView;
-
+	// the mac address of the stone
 	private String _address;
 	private BleExt _ble;
 
+	// the view to display the graph
+	private GraphicalView _graphView;
+	// the layout to hold the graph + controls
+	private RelativeLayout _layContainer;
+	// the layout to hold the graph view
 	private RelativeLayout _layGraph;
+	// the layout to hold the controls
+	private RelativeLayout _layControl;
+	// the buttons to control zoom level
 	private ImageButton _btnZoomIn;
 	private ImageButton _btnZoomOut;
 	private ImageButton _btnZoomReset;
-
-//	private int _zoomLevel;
-
-//	private Handler _handler;
-
-//	private long _liveMinTime;
-//	private long _maxTime;
-//	private long _minTemp;
-//	private long _maxTemp;
-	private RelativeLayout _layStatistics;
-	private RelativeLayout _layControl;
-	private int _currentSeries = 0;
-//	private int _temperatureSeries;
-	private int _currentPointStyle = 0;
-	private int _currentSeriesColor = 0;
-//	private int _switchStateSeries;
+	// the sample and subscribe power buttons
 	private Button _btnSamplePower;
 	private Button _btnSubscribePower;
 
+	// the index of the next series to be added
+	private int _nextSeries = 0;
+	// index of the current series
 	private int _currentSampleSeries;
+	// index of the voltage series
 	private int _voltageSampleSeries;
+
+	// the four following values are used to scale the graph at runtime based on the received values
+	// minimum current value
 	private int _minCurrentSample;
+	// maximum current value
 	private int _maxCurrentSample;
+	// minimum voltage value
 	private int _minVoltageSample;
+	// maximum voltage value
 	private int _maxVoltageSample;
 
+	// is subscribed to power samples
 	private boolean _subscribedPowerSamples;
+
+	// graph objects
+	private XYMultipleSeriesRenderer _multipleSeriesRenderer;
+	private XYMultipleSeriesDataset _dataSet;
+
+	private PointStyle[] listOfPointStyles = new PointStyle[] { PointStyle.CIRCLE, PointStyle.DIAMOND,
+			PointStyle.POINT, PointStyle.SQUARE, PointStyle.TRIANGLE, PointStyle.X };
+
+	private int[] listOfSeriesColors = new int[] { 0xFF00BFFF, Color.GREEN, Color.RED, Color.YELLOW,
+			Color.MAGENTA, Color.CYAN, Color.WHITE };
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		_ble = CrownstoneDevApp.getInstance().getBle();
+		// get the address of the stone
 		_address = ControlActivity.getInstance().getAddress();
 
-	}
-
-	@Override
-	public void onStart() {
-		super.onStart();
-
-	}
-
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
 	}
 
 	@Nullable
@@ -108,14 +110,14 @@ public class ControlMeasurementsFragment extends Fragment {
 		View v = inflater.inflate(R.layout.frag_control_measurements, container, false);
 
 		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
-		_layStatistics = (RelativeLayout) v.findViewById(R.id.layStatistics);
+		_layContainer = (RelativeLayout) v.findViewById(R.id.layContainer);
 		_layGraph = (RelativeLayout) v.findViewById(R.id.graph);
 
 		_btnZoomIn = (ImageButton) v.findViewById(R.id.zoomIn);
 		_btnZoomIn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+				_layContainer.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 				_layControl.setVisibility(View.INVISIBLE);
 //				_graphView.zoomIn();
 //				_zoomLevel++;
@@ -126,7 +128,7 @@ public class ControlMeasurementsFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				int pixels = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 300, getResources().getDisplayMetrics());
-				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
+				_layContainer.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
 				_layControl.setVisibility(View.VISIBLE);
 //				_graphView.zoomOut();
 //				_zoomLevel--;
@@ -166,11 +168,13 @@ public class ControlMeasurementsFragment extends Fragment {
 		});
 
 		createGraph();
-//		_layStatistics.setVisibility(View.GONE);
 
 		return v;
 	}
 
+	/**
+	 * Request the power samples (current + voltage) from the stone and display them in the graph
+	 */
 	void samplePower() {
 
 		final ProgressDialog dlg = ProgressDialog.show(getActivity(), "Retrieving samples", "Please wait...", true, true);
@@ -201,6 +205,10 @@ public class ControlMeasurementsFragment extends Fragment {
 		});
 	}
 
+	/**
+	 * Connect to the stone and subscribe for power samples. every time a new list of samples is
+	 * received, the graph is updated
+	 */
 	private void subscribePowerSamples() {
 
 		_ble.connectAndDiscover(_address, new IDiscoveryCallback() {
@@ -238,6 +246,9 @@ public class ControlMeasurementsFragment extends Fragment {
 		});
 	}
 
+	/**
+	 * unsubscribe from the power samples and disconnect
+	 */
 	private void unsubscribePowerSamples() {
 		_ble.unsubscribePowerSamples(new IStatusCallback() {
 			@Override
@@ -263,23 +274,36 @@ public class ControlMeasurementsFragment extends Fragment {
 		});
 	}
 
+	/**
+	 * Display the received power samples
+	 * @param powerSamples list of (current + voltage) samples
+	 */
 	private void onPowerSamples(PowerSamples powerSamples) {
-
 		onCurrentSamples(powerSamples.getCurrentSamples(), powerSamples.getCurrentTimestamps());
 		onVoltageSamples(powerSamples.getVoltageSamples(), powerSamples.getVoltageTimestamps());
-
 	}
 
+	/**
+	 * Update the Y axis for the current based on the max and min received current values
+	 */
 	private void updateCurrentSamplesRange() {
 		_multipleSeriesRenderer.setYAxisMin(_minCurrentSample - Math.max((double)(_maxCurrentSample - _minCurrentSample) / 10, 10), _currentSampleSeries);
 		_multipleSeriesRenderer.setYAxisMax(_maxCurrentSample + Math.max((double)(_maxCurrentSample - _minCurrentSample) / 10, 10), _currentSampleSeries);
 	}
 
+	/**
+	 * Update the Y axis for the voltage based on the max and min received current voltage
+	 */
 	private void updateVoltageSamplesRange() {
 		_multipleSeriesRenderer.setYAxisMin(_minVoltageSample - Math.max((double)(_maxVoltageSample - _minVoltageSample) / 10, 10), _voltageSampleSeries);
 		_multipleSeriesRenderer.setYAxisMax(_maxVoltageSample + Math.max((double)(_maxVoltageSample - _minVoltageSample) / 10, 10), _voltageSampleSeries);
 	}
 
+	/**
+	 * add the current samples to the graph and rescale
+	 * @param currentSamples list of current samples
+	 * @param currentTimestamps list of timestamps
+	 */
 	private void onCurrentSamples(PowerSamples.Samples currentSamples, PowerSamples.Timestamps currentTimestamps) {
 
 		XYSeries series = _dataSet.getSeriesAt(_currentSampleSeries);
@@ -288,6 +312,8 @@ public class ControlMeasurementsFragment extends Fragment {
 		_minCurrentSample = Integer.MAX_VALUE;
 		_maxCurrentSample = Integer.MIN_VALUE;
 
+		// go through the list and add point by point. keep track of min/max values for adjusting
+		// the y axis (rescale)
 		for (int i = 0; i < currentSamples.getCount(); ++i) {
 			int sample = currentSamples.getSample(i);
 			series.add(currentTimestamps.getTimestamp(i) - currentTimestamps.getFirst(), sample);
@@ -311,6 +337,11 @@ public class ControlMeasurementsFragment extends Fragment {
 
 	}
 
+	/**
+	 * add the voltage samples to the graph and rescale
+	 * @param voltageSamples list of voltage samples
+	 * @param voltageTimestamps list of timestamps
+	 */
 	private void onVoltageSamples(PowerSamples.Samples voltageSamples, PowerSamples.Timestamps voltageTimestamps) {
 
 		XYSeries series = _dataSet.getSeriesAt(_voltageSampleSeries);
@@ -319,6 +350,8 @@ public class ControlMeasurementsFragment extends Fragment {
 		_minVoltageSample = Integer.MAX_VALUE;
 		_maxVoltageSample = Integer.MIN_VALUE;
 
+		// go through the list and add point by point. keep track of min/max values for adjusting
+		// the y axis (rescale)
 		for (int i = 0; i < voltageSamples.getCount(); ++i) {
 			int sample = voltageSamples.getSample(i);
 
@@ -343,26 +376,20 @@ public class ControlMeasurementsFragment extends Fragment {
 
 	}
 
-	private XYMultipleSeriesRenderer _multipleSeriesRenderer;
-	private XYMultipleSeriesDataset _dataSet;
-
-	private PointStyle[] listOfPointStyles = new PointStyle[] { PointStyle.CIRCLE, PointStyle.DIAMOND,
-			PointStyle.POINT, PointStyle.SQUARE, PointStyle.TRIANGLE, PointStyle.X };
-
-	private int[] listOfSeriesColors = new int[] { 0xFF00BFFF, Color.GREEN, Color.RED, Color.YELLOW,
-			Color.MAGENTA, Color.CYAN, Color.WHITE };
-
-
+	/**
+	 * Create the series (current + voltage)
+	 */
 	private void createPowerSamplesSeries() {
-
 		createCurrentSamplesSeries();
 		createVoltageSamplesSeries();
-
 	}
 
+	/**
+	 * Create the current series
+	 */
 	private void createCurrentSamplesSeries() {
 
-		_currentSampleSeries = _currentSeries++;
+		_currentSampleSeries = _nextSeries++;
 
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("SwitchState");
@@ -391,9 +418,12 @@ public class ControlMeasurementsFragment extends Fragment {
 		_multipleSeriesRenderer.setYAxisMax(300, _currentSampleSeries);
 	}
 
+	/**
+	 * Create the voltage series
+	 */
 	private void createVoltageSamplesSeries() {
 
-		_voltageSampleSeries = _currentSeries++;
+		_voltageSampleSeries = _nextSeries++;
 
 		// create time series (series with x = timestamp, y = temperature)
 //		TimeSeries series = new TimeSeries("SwitchState");
@@ -423,6 +453,9 @@ public class ControlMeasurementsFragment extends Fragment {
 
 	}
 
+	/**
+	 * Create the graph
+	 */
 	void createGraph() {
 
 		// get graph renderer
@@ -500,13 +533,4 @@ public class ControlMeasurementsFragment extends Fragment {
 		return renderer;
 	}
 
-//	@Override
-//	public void zoomApplied(ZoomEvent zoomEvent) {
-////		_zoomLevel = 100;
-//	}
-//
-//	@Override
-//	public void zoomReset() {
-////		_zoomLevel = 0;
-//	}
 }
