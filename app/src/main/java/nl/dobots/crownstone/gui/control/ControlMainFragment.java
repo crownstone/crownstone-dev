@@ -26,7 +26,7 @@ import android.widget.Toast;
 
 import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.extended.BleExt;
@@ -66,7 +66,7 @@ public class ControlMainFragment extends Fragment {
 	private ImageButton _btnZoomOut;
 	private ImageButton _btnZoomReset;
 
-	private RelativeLayout _layStatistics;
+//	private RelativeLayout _layStatistics;
 	private RelativeLayout _layControl;
 
 	private Handler _handler;
@@ -343,7 +343,7 @@ public class ControlMainFragment extends Fragment {
 		_layPwm = (LinearLayout) v.findViewById(R.id.layPwm);
 		_layPower = (LinearLayout) v.findViewById(R.id.layPower);
 		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
-		_layStatistics = (RelativeLayout) v.findViewById(R.id.layStatistics);
+//		_layStatistics = (RelativeLayout) v.findViewById(R.id.layStatistics);
 
 		_layGraph = (RelativeLayout) v.findViewById(R.id.graph);
 		_graph = new AdvertisementGraph(getActivity());
@@ -353,7 +353,7 @@ public class ControlMainFragment extends Fragment {
 		_btnZoomIn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+//				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
 				_layControl.setVisibility(View.INVISIBLE);
 			}
 		});
@@ -362,7 +362,7 @@ public class ControlMainFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				int pixels = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());
-				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
+//				_layStatistics.setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, pixels));
 				_layControl.setVisibility(View.VISIBLE);
 			}
 		});

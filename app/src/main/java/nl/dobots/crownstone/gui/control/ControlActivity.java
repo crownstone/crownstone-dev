@@ -20,7 +20,7 @@ import com.strongloop.android.loopback.callbacks.VoidCallback;
 
 import java.util.UUID;
 
-import nl.dobots.bluenet.ble.base.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.crownstone.CrownstoneDevApp;
