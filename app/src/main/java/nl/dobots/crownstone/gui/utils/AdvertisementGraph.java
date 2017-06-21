@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -24,6 +25,8 @@ import org.achartengine.tools.ZoomListener;
 import java.util.Date;
 
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
+import nl.dobots.bluenet.ble.extended.structs.BleDevice;
+import nl.dobots.bluenet.utils.BleUtils;
 
 /**
  * Creates a graph used to display advertisements
@@ -123,6 +126,14 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	 * @param serviceData the service data received
 	 */
 	public void onServiceData(String name, CrownstoneServiceData serviceData) {
+		String str = name;
+		str += " bitmask=" + BleUtils.toUint8(serviceData.getEventBitmask());
+		str += " isNewData=" + serviceData.isNewData();
+		str += " isExternalData=" + serviceData.isExternalData();
+		str += " isError=" + serviceData.isErrorBit();
+		str += " temp=" + serviceData.getTemperature();
+		Log.d(TAG, str);
+
 		onPwm(serviceData.getPwm());
 		onRelayState(serviceData.getRelayState());
 		onTemperature(serviceData.getTemperature());

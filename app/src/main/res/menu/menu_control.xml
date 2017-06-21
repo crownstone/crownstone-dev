@@ -19,4 +19,15 @@
 		android:title="Factory Reset ..."
 		app:showAsAction="never"/>
 
+	<item
+		android:id="@+id/action_errorstate"
+		android:orderInCategory="100"
+		android:title="Get error state"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_reseterrorstate"
+		android:orderInCategory="100"
+		android:title="Reset error state"
+		app:showAsAction="never"/>
 </menu>

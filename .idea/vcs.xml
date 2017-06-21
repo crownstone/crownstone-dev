@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="VcsDirectoryMappings">
-    <mapping directory="/work/Projects/dobots/Crownstone/apps/crownstone-dev" vcs="Git" />
-    <mapping directory="/work/Projects/dobots/Crownstone/libs/bluenet-lib-android" vcs="Git" />
-    <mapping directory="/work/Projects/dobots/Crownstone/libs/crownstone-loopback-sdk" vcs="Git" />
-    <mapping directory="/work/Projects/dobots/Crownstone/third/loopback-sdk-android" vcs="Git" />
+    <mapping directory="/mnt/work/dev/crownstone/bluenet-lib-android" vcs="Git" />
+    <mapping directory="/mnt/work/dev/crownstone/crownstone-dev-app" vcs="Git" />
+    <mapping directory="/mnt/work/dev/crownstone/crownstone-loopback-sdk" vcs="Git" />
+    <mapping directory="/mnt/work/dev/loopback-sdk-android" vcs="Git" />
   </component>
 </project>

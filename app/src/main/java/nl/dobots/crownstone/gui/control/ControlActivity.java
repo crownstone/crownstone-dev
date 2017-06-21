@@ -20,9 +20,11 @@ import com.strongloop.android.loopback.callbacks.VoidCallback;
 
 import java.util.UUID;
 
+import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
+import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.cfg.Config;
@@ -55,6 +57,8 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 	private ControlMainFragment _fragControlMain;
 	private ControlMeasurementsFragment _fragControlMeasurements;
+	private ControlConfigFragment _fragControlConfig;
+	private ControlMeshFragment _fragControlMesh;
 
 	private static ControlActivity INSTANCE;
 	private CrownstoneDevApp _app;
@@ -97,7 +101,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		_ble = _app.getBle();
 
 		// retrieve the sphere by proximity uuid
-		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode()) {
+		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode() && _proximityUuid != null) {
 			Sphere sphere = _app.getSphere(_proximityUuid.toString());
 			if (sphere != null) {
 				// get the encryption keys of the sphere
@@ -136,20 +140,29 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	private void initUI() {
 		_fragControlMain = new ControlMainFragment();
 		_fragControlMeasurements = new ControlMeasurementsFragment();
+		_fragControlConfig = new ControlConfigFragment();
+		_fragControlMesh = new ControlMeshFragment();
 
 		_pagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
 			@Override
 			public Fragment getItem(int position) {
-				if (position == 0) {
-					return _fragControlMain;
-				} else {
-					return _fragControlMeasurements;
+				switch (position) {
+					case 0:
+						return _fragControlMain;
+					case 1:
+						return _fragControlMeasurements;
+					case 2:
+						return _fragControlConfig;
+					case 3:
+						return _fragControlMesh;
+					default:
+						return null;
 				}
 			}
 
 			@Override
 			public int getCount() {
-				return 2;
+				return 4;
 			}
 		};
 
@@ -196,6 +209,16 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 						.setText("Measure")
 						.setTabListener(tabListener));
 
+		actionBar.addTab(
+				actionBar.newTab()
+						.setText("Config")
+						.setTabListener(tabListener));
+
+		actionBar.addTab(
+				actionBar.newTab()
+						.setText("Mesh")
+						.setTabListener(tabListener));
+
 	}
 
 	public BleExt getBle() {
@@ -237,6 +260,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "success");
+						showToast("Set dfu mode");
 						ProgressSpinner.dismiss();
 						finish();
 					}
@@ -244,6 +268,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
+						showToast("Failed to set dfu mode");
 						ProgressSpinner.dismiss();
 					}
 				});
@@ -256,15 +281,18 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					public void onSuccess() {
 						Log.i(TAG, "success");
 						Toast.makeText(ControlActivity.this, "success", Toast.LENGTH_SHORT).show();
+						showToast("Factory reset successful");
 						_currentStone.destroy(new VoidCallback() {
 							@Override
 							public void onSuccess() {
-								Toast.makeText(ControlActivity.this, "Stone removed from DB", Toast.LENGTH_SHORT).show();
+//								Toast.makeText(ControlActivity.this, "Stone removed from DB", Toast.LENGTH_SHORT).show();
+								showToast("Stone removed from DB");
 							}
 
 							@Override
 							public void onError(Throwable t) {
-								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
+//								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
+								showToast("Failed to remove Stone from DB");
 							}
 						});
 						ProgressSpinner.dismiss();
@@ -274,7 +302,45 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					@Override
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
-						Toast.makeText(ControlActivity.this, "failed to factory reset", Toast.LENGTH_LONG).show();
+						showToast("Failed to factory reset");
+						ProgressSpinner.dismiss();
+					}
+				});
+				break;
+			}
+			case R.id.action_errorstate: {
+				BleLog.getInstance().LOGd(TAG, "read error state");
+				ProgressSpinner.show(this);
+				_ble.getBleExtState().getErrorState(_address, new IIntegerCallback() {
+					@Override
+					public void onSuccess(int result) {
+						String stateErrorStr = Integer.toBinaryString(result);
+						Log.i(TAG, "state errors: " + result + " ("  + stateErrorStr + ")");
+						showToast("State errors: " + stateErrorStr);
+						ProgressSpinner.dismiss();
+					}
+
+					@Override
+					public void onError(int error) {
+						showToast("Failed to read state errors");
+						ProgressSpinner.dismiss();
+					}
+				});
+				break;
+			}
+			case R.id.action_reseterrorstate: {
+				BleLog.getInstance().LOGd(TAG, "reset error state");
+				ProgressSpinner.show(this);
+				_ble.writeResetStateErrors(_address, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						showToast("State errors reset");
+						ProgressSpinner.dismiss();
+					}
+
+					@Override
+					public void onError(int error) {
+						showToast("Failed to reset state errors");
 						ProgressSpinner.dismiss();
 					}
 				});
@@ -283,6 +349,15 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void showToast(final String str) {
+		INSTANCE.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(ControlActivity.this, str, Toast.LENGTH_LONG).show();
+			}
+		});
 	}
 
 }

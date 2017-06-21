@@ -1,6 +1,7 @@
 package nl.dobots.crownstone.gui.utils;
 
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -10,6 +11,7 @@ import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
+import nl.dobots.bluenet.utils.BleUtils;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.SelectControlFragment;
@@ -86,6 +88,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		// get the list of devices from the service
 
 		_bleDeviceList = _bleService.getDeviceMap().getRssiSortedList();
+
 		if (!_bleDeviceList.isEmpty()) {
 			getActivity().runOnUiThread(new Runnable() {
 				@Override

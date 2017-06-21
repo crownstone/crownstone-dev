@@ -167,7 +167,7 @@ public class ControlMeasurementsFragment extends Fragment {
 			}
 		});
 
-		createGraph();
+		createGraphView();
 
 		return v;
 	}
@@ -456,12 +456,12 @@ public class ControlMeasurementsFragment extends Fragment {
 	/**
 	 * Create the graph
 	 */
-	void createGraph() {
+	void createGraphView() {
 
 		// get graph renderer
 		_multipleSeriesRenderer = getRenderer(2);
+		_nextSeries = 0;
 		_dataSet = new XYMultipleSeriesDataset();
-
 		createPowerSamplesSeries();
 
 //		_maxTime = new Date().getTime();

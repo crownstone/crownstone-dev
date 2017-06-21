@@ -38,6 +38,7 @@ import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.CrownstoneSetup;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
+import nl.dobots.bluenet.ble.extended.structs.BleDeviceMap;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.crownstone.cfg.Config;
@@ -127,6 +128,10 @@ public class CrownstoneDevApp extends Application {
 		// create and bind to the BleScanService
 		Intent intent = new Intent(this, BleScanService.class);
 		bindService(intent, _connection, Context.BIND_AUTO_CREATE);
+
+		_ble.getLogger().setLogLevel(Log.DEBUG);
+		_ble.getBleBase().getLogger().setLogLevel(Log.DEBUG);
+		BleLog.getInstance().setLogLevelPerTag(BleDevice.TAG, Log.DEBUG);
 	}
 
 	@Override

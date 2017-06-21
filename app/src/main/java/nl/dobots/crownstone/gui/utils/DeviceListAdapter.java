@@ -211,26 +211,35 @@ public class DeviceListAdapter extends BaseAdapter {
 				viewHolder.devMajor.setText("Major: " + String.valueOf(device.getMajor()));
 				viewHolder.devMinor.setText("Minor: " + String.valueOf(device.getMinor()));
 				viewHolder.devDistance.setText("Distance: " + String.valueOf(device.getDistance()));
-
-				// a guidestone is also an iBeacon
-				if (device.isGuidestone()) {
-					convertView.setBackgroundColor(0x66FFFF00);
-				} else {
-					convertView.setBackgroundColor(0x660000FF);
-				}
-			} else {
+			}
+			else {
 				viewHolder.layIBeacon.setVisibility(View.GONE);
-				// is it a crownstone?
-				if (device.isCrownstonePlug()) {
-					convertView.setBackgroundColor(0x6600FF00);
-				} else if (device.isCrownstoneBuiltin()) {
-					convertView.setBackgroundColor(0x66008800);
-				} else {
-					convertView.setBackgroundColor(0x00000000);
-				}
+			}
+
+			// Color based on type of stone and mode
+			if (device.isDfuMode()) {
+				convertView.setBackgroundColor(0xFF8000A0); // Purple
+			}
+			else if (device.isSetupMode()) {
+				convertView.setBackgroundColor(0xFF0080D0); // Blue
+			}
+			else if (device.isCrownstonePlug()) {
+				convertView.setBackgroundColor(0xFF60A000); // Light green
+			}
+			else if (device.isCrownstoneBuiltin()) {
+				convertView.setBackgroundColor(0xFF008000); // Green
+			}
+			else if (device.isGuidestone()) {
+				convertView.setBackgroundColor(0xFFA0E000); // Yellow green
+			}
+			else if (device.isIBeacon()) {
+				convertView.setBackgroundColor(0xFFA0A000); // Yellow
+			}
+			else {
+				convertView.setBackgroundColor(0xFF000000); // Black
 			}
 			if (_selection.contains(device.getAddress())) {
-				convertView.setBackgroundColor(0x66FF0000);
+				convertView.setBackgroundColor(0xFF800000); // Red
 			}
 		}
 
