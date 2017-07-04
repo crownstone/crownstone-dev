@@ -25,7 +25,6 @@ import org.achartengine.tools.ZoomListener;
 import java.util.Date;
 
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
-import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.utils.BleUtils;
 
 /**
@@ -54,7 +53,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	public static final int STATISTICS_X_TIME = 5;
 
 	// the number of series to be displayed in the graph. increase if a new series should be added
-	public static final int NUMBER_OF_SERIES = 6;
+	public static final int NUMBER_OF_SERIES = 7;
 
 	// the activity associated with this graph
 	private Activity _activity;
@@ -97,6 +96,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	private int _relayStateSeries;
 	private int _pwmSeries;
 	private int _resetCounterSeries;
+	private int _errorStateSeries;
 
 	public AdvertisementGraph(Activity activity) {
 		_activity = activity;
@@ -134,11 +134,15 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		str += " temp=" + serviceData.getTemperature();
 		Log.d(TAG, str);
 
+		if (serviceData.isExternalData()) {
+			return;
+		}
 		onPwm(serviceData.getPwm());
 		onRelayState(serviceData.getRelayState());
 		onTemperature(serviceData.getTemperature());
 		onPowerUsage(serviceData.getPowerUsage());
 		onAccumulatedEnergy(serviceData.getAccumulatedEnergy());
+		onErrorState(serviceData.isErrorBit());
 
 		// check if the stone reset
 		String[] split = name.split("_");
@@ -156,8 +160,13 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		updateRange();
 	}
 
-	void onPwm(int pwm) {
+	void onErrorState(boolean isError) {
+		// add new point
+		XYSeries series = _dataSet.getSeriesAt(_errorStateSeries);
+		series.add(new Date().getTime(), isError ? 1 : 0);
+	}
 
+	void onPwm(int pwm) {
 		// cap pwm to 100
 		if (pwm > 100) {
 			pwm = 100;
@@ -169,7 +178,6 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	}
 
 	void onRelayState(boolean relayState) {
-
 		// add new point
 		XYSeries series = _dataSet.getSeriesAt(_relayStateSeries);
 		series.add(new Date().getTime(), relayState ? 1 : 0);
@@ -267,6 +275,9 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
 			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, _minAccumulatedEnergy, _maxAccumulatedEnergy}, _accumulatedEnergySeries);
+
+			_multipleSeriesRenderer.setInitialRange(new double[]{liveMinTime, maxTime, 0, 1}, _errorStateSeries);
+			_multipleSeriesRenderer.setRange(new double[]{liveMinTime, maxTime, 0, 1}, _errorStateSeries);
 		}
 
 		// redraw
@@ -297,7 +308,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		renderer.setPointStyle(PointStyle.POINT);
 		renderer.setColor(Color.RED);
 		renderer.setFillPoints(false);
-		renderer.setDisplayChartValues(true);
+		renderer.setDisplayChartValues(false);
 //		renderer.setDisplayChartValuesDistance(50);
 		renderer.setChartValuesTextSize(convertDpToPixel(10, _activity));
 		renderer.setShowLegendItem(true);
@@ -316,7 +327,6 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		_relayStateSeries = _nextSeries++;
 
 		// create time series (series with x = timestamp, y = temperature)
-//		TimeSeries series = new TimeSeries("SwitchState");
 		XYSeries series = new XYSeries("RelayState", _relayStateSeries);
 
 		_dataSet.addSeries(series);
@@ -329,7 +339,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		renderer.setPointStyle(PointStyle.POINT);
 		renderer.setColor(listOfSeriesColors[_relayStateSeries]);
 		renderer.setFillPoints(false);
-		renderer.setDisplayChartValues(true);
+		renderer.setDisplayChartValues(false);
 //		renderer.setDisplayChartValuesDistance(50);
 		renderer.setChartValuesTextSize(convertDpToPixel(10, _activity));
 		renderer.setShowLegendItem(true);
@@ -339,6 +349,29 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 //		_multipleSeriesRenderer.setAxisTitleTextSize(0);
 		_multipleSeriesRenderer.setYLabelsColor(_relayStateSeries, Color.TRANSPARENT);
 //		_multipleSeriesRenderer.setYTitle("Relay State", 1);
+	}
+
+	private void createErrorStateSeries() {
+
+		_errorStateSeries = _nextSeries++;
+
+		// create time series (series with x = timestamp, y = temperature)
+		XYSeries series = new XYSeries("Error", _errorStateSeries);
+
+		_dataSet.addSeries(series);
+
+		// create new renderer for the new series
+		XYSeriesRenderer renderer = new XYSeriesRenderer();
+		_multipleSeriesRenderer.addSeriesRenderer(renderer);
+
+		renderer.setPointStyle(PointStyle.POINT);
+		renderer.setColor(Color.argb(255, 255, 128, 0)); // Orange
+		renderer.setFillPoints(false);
+		renderer.setDisplayChartValues(false);
+		renderer.setChartValuesTextSize(convertDpToPixel(10, _activity));
+		renderer.setShowLegendItem(true);
+
+		_multipleSeriesRenderer.setYLabelsColor(_errorStateSeries, Color.TRANSPARENT);
 	}
 
 	private void createPowerUsageSeries() {
@@ -494,6 +527,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		createRelayStateSeries();
 		createPowerUsageSeries();
 		createAccumulatedEnergySeries();
+		createErrorStateSeries();
 
 //		_maxTime = new Date().getTime();
 //		_liveMinTime = new Date().getTime() - STATISTICS_X_TIME * 60 * 1000;
