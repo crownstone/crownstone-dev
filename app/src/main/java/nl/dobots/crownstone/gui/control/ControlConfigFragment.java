@@ -16,19 +16,19 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import nl.dobots.bluenet.ble.base.BleConfiguration;
+import nl.dobots.bluenet.ble.base.callbacks.IConfigurationCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IExecStatusCallback;
+import nl.dobots.bluenet.ble.base.callbacks.IFloatCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.base.callbacks.ILongCallback;
 import nl.dobots.bluenet.ble.base.callbacks.SimpleExecStatusCallback;
+import nl.dobots.bluenet.ble.base.structs.ConfigurationMsg;
+import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.cfg.BluenetConfig;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.BleExtState;
 import nl.dobots.bluenet.ble.extended.callbacks.IExecuteCallback;
-import nl.dobots.bluenet.ble.mesh.structs.MeshControlMsg;
-import nl.dobots.bluenet.ble.mesh.structs.MeshKeepAlivePacket;
-import nl.dobots.bluenet.ble.mesh.structs.MeshMultiSwitchPacket;
-import nl.dobots.bluenet.ble.mesh.structs.cmd.MeshControlPacket;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.bluenet.utils.BleUtils;
 import nl.dobots.crownstone.R;
@@ -60,10 +60,42 @@ public class ControlConfigFragment extends Fragment {
 	private EditText _txtConfigPwmPeriod;
 	private Button   _btnConfigPwmPeriodGet;
 	private Button   _btnConfigPwmPeriodSet;
+	private EditText _txtConfigBootDelay;
+	private Button   _btnConfigBootDelayGet;
+	private Button   _btnConfigBootDelaySet;
+	private EditText _txtConfigTxPower;
+	private Button   _btnConfigTxPowerGet;
+	private Button   _btnConfigTxPowerSet;
 	private EditText _txtConfigTime;
 	private Button   _btnConfigTimeGet;
 	private Button   _btnConfigTimeSet;
-
+	private EditText _txtConfigCurrentThreshold;
+	private Button   _btnConfigCurrentThresholdGet;
+	private Button   _btnConfigCurrentThresholdSet;
+	private EditText _txtConfigCurrentThresholdDimmer;
+	private Button   _btnConfigCurrentThresholdDimmerGet;
+	private Button   _btnConfigCurrentThresholdDimmerSet;
+	private EditText _txtConfigMaxChipTemp;
+	private Button   _btnConfigMaxChipTempGet;
+	private Button   _btnConfigMaxChipTempSet;
+	private EditText _txtConfigDimmerTempThresholdUp;
+	private Button   _btnConfigDimmerTempThresholdUpGet;
+	private Button   _btnConfigDimmerTempThresholdUpSet;
+	private EditText _txtConfigDimmerTempThresholdDown;
+	private Button   _btnConfigDimmerTempThresholdDownGet;
+	private Button   _btnConfigDimmerTempThresholdDownSet;
+	private EditText _txtConfigVoltageMultiplier;
+	private Button   _btnConfigVoltageMultiplierGet;
+	private Button   _btnConfigVoltageMultiplierSet;
+	private EditText _txtConfigCurrentMultiplier;
+	private Button   _btnConfigCurrentMultiplierGet;
+	private Button   _btnConfigCurrentMultiplierSet;
+	private EditText _txtConfigVoltageZero;
+	private Button   _btnConfigVoltageZeroGet;
+	private Button   _btnConfigVoltageZeroSet;
+	private EditText _txtConfigCurrentZero;
+	private Button   _btnConfigCurrentZeroGet;
+	private Button   _btnConfigCurrentZeroSet;
 
 
 	// Other stuff
@@ -136,6 +168,22 @@ public class ControlConfigFragment extends Fragment {
 			}
 		});
 
+		_txtConfigBootDelay    = (EditText) v.findViewById(R.id.txtConfigBootDelay);
+		_btnConfigBootDelayGet = (Button)   v.findViewById(R.id.btnConfigBootDelayGet);
+		_btnConfigBootDelaySet = (Button)   v.findViewById(R.id.btnConfigBootDelaySet);
+		_btnConfigBootDelayGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getBootDelay();
+			}
+		});
+		_btnConfigBootDelaySet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setBootDelay();
+			}
+		});
+
 		_txtConfigPwmPeriod    = (EditText) v.findViewById(R.id.txtConfigPwmPeriod);
 		_btnConfigPwmPeriodGet = (Button)   v.findViewById(R.id.btnConfigPwmPeriodGet);
 		_btnConfigPwmPeriodSet = (Button)   v.findViewById(R.id.btnConfigPwmPeriodSet);
@@ -149,6 +197,22 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				setPwmPeriod();
+			}
+		});
+
+		_txtConfigTxPower         = (EditText) v.findViewById(R.id.txtConfigTxPower);
+		_btnConfigTxPowerGet      = (Button)   v.findViewById(R.id.btnConfigTxPowerGet);
+		_btnConfigTxPowerSet      = (Button)   v.findViewById(R.id.btnConfigTxPowerSet);
+		_btnConfigTxPowerGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getTxPower();
+			}
+		});
+		_btnConfigTxPowerSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setTxPower();
 			}
 		});
 
@@ -168,11 +232,211 @@ public class ControlConfigFragment extends Fragment {
 			}
 		});
 
+		_txtConfigCurrentThreshold    = (EditText) v.findViewById(R.id.txtConfigCurrentThreshold);
+		_btnConfigCurrentThresholdGet = (Button)   v.findViewById(R.id.btnConfigCurrentThresholdGet);
+		_btnConfigCurrentThresholdSet = (Button)   v.findViewById(R.id.btnConfigCurrentThresholdSet);
+		_btnConfigCurrentThresholdGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getCurrentThreshold();
+			}
+		});
+		_btnConfigCurrentThresholdSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setCurrentThreshold();
+			}
+		});
+
+		_txtConfigCurrentThresholdDimmer    = (EditText) v.findViewById(R.id.txtConfigCurrentThresholdDimmer);
+		_btnConfigCurrentThresholdDimmerGet = (Button)   v.findViewById(R.id.btnConfigCurrentThresholdDimmerGet);
+		_btnConfigCurrentThresholdDimmerSet = (Button)   v.findViewById(R.id.btnConfigCurrentThresholdDimmerSet);
+		_btnConfigCurrentThresholdDimmerGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getCurrentThresholdDimmer();
+			}
+		});
+		_btnConfigCurrentThresholdDimmerSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setCurrentThresholdDimmer();
+			}
+		});
+
+		_txtConfigMaxChipTemp    = (EditText) v.findViewById(R.id.txtConfigMaxChipTemp);
+		_btnConfigMaxChipTempGet = (Button)   v.findViewById(R.id.btnConfigMaxChipTempGet);
+		_btnConfigMaxChipTempSet = (Button)   v.findViewById(R.id.btnConfigMaxChipTempSet);
+		_btnConfigMaxChipTempGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getMaxChipTemp();
+			}
+		});
+		_btnConfigMaxChipTempSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setMaxChipTemp();
+			}
+		});
+
+		_txtConfigDimmerTempThresholdUp    = (EditText) v.findViewById(R.id.txtConfigDimmerTempThresholdUp);
+		_btnConfigDimmerTempThresholdUpGet = (Button)   v.findViewById(R.id.btnConfigDimmerTempThresholdUpGet);
+		_btnConfigDimmerTempThresholdUpSet = (Button)   v.findViewById(R.id.btnConfigDimmerTempThresholdUpSet);
+		_btnConfigDimmerTempThresholdUpGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getDimmerTempThresholdUp();
+			}
+		});
+		_btnConfigDimmerTempThresholdUpSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setDimmerTempThresholdUp();
+			}
+		});
+
+		_txtConfigDimmerTempThresholdDown    = (EditText) v.findViewById(R.id.txtConfigDimmerTempThresholdDown);
+		_btnConfigDimmerTempThresholdDownGet = (Button)   v.findViewById(R.id.btnConfigDimmerTempThresholdDownGet);
+		_btnConfigDimmerTempThresholdDownSet = (Button)   v.findViewById(R.id.btnConfigDimmerTempThresholdDownSet);
+		_btnConfigDimmerTempThresholdDownGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getDimmerTempThresholdDown();
+			}
+		});
+		_btnConfigDimmerTempThresholdDownSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setDimmerTempThresholdDown();
+			}
+		});
+
+		_txtConfigVoltageMultiplier    = (EditText) v.findViewById(R.id.txtConfigVoltageMultiplier);
+		_btnConfigVoltageMultiplierGet = (Button)   v.findViewById(R.id.btnConfigVoltageMultiplierGet);
+		_btnConfigVoltageMultiplierSet = (Button)   v.findViewById(R.id.btnConfigVoltageMultiplierSet);
+		_btnConfigVoltageMultiplierGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getVoltageMultiplier();
+			}
+		});
+		_btnConfigVoltageMultiplierSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setVoltageMultiplier();
+			}
+		});
+
+		_txtConfigCurrentMultiplier    = (EditText) v.findViewById(R.id.txtConfigCurrentMultiplier);
+		_btnConfigCurrentMultiplierGet = (Button)   v.findViewById(R.id.btnConfigCurrentMultiplierGet);
+		_btnConfigCurrentMultiplierSet = (Button)   v.findViewById(R.id.btnConfigCurrentMultiplierSet);
+		_btnConfigCurrentMultiplierGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getCurrentMultiplier();
+			}
+		});
+		_btnConfigCurrentMultiplierSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setCurrentMultiplier();
+			}
+		});
+
+		_txtConfigVoltageZero    = (EditText) v.findViewById(R.id.txtConfigVoltageZero);
+		_btnConfigVoltageZeroGet = (Button)   v.findViewById(R.id.btnConfigVoltageZeroGet);
+		_btnConfigVoltageZeroSet = (Button)   v.findViewById(R.id.btnConfigVoltageZeroSet);
+		_btnConfigVoltageZeroGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getVoltageZero();
+			}
+		});
+		_btnConfigVoltageZeroSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setVoltageZero();
+			}
+		});
+
+		_txtConfigCurrentZero    = (EditText) v.findViewById(R.id.txtConfigCurrentZero);
+		_btnConfigCurrentZeroGet = (Button)   v.findViewById(R.id.btnConfigCurrentZeroGet);
+		_btnConfigCurrentZeroSet = (Button)   v.findViewById(R.id.btnConfigCurrentZeroSet);
+		_btnConfigCurrentZeroGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getCurrentZero();
+			}
+		});
+		_btnConfigCurrentZeroSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setCurrentZero();
+			}
+		});
 
 
 //		return super.onCreateView(inflater, container, savedInstanceState);
 		return v;
 	}
+
+
+
+	/////////////////////////
+	// RELAY HIGH DURATION //
+	/////////////////////////
+
+	private void getRelayHigh() {
+		getUint16("RelayHigh", _txtConfigRelayHigh, BluenetConfig.CONFIG_RELAY_HIGH_DURATION);
+	}
+
+	private void setRelayHigh() {
+		setUint16("RelayHigh", _txtConfigRelayHigh, BluenetConfig.CONFIG_RELAY_HIGH_DURATION);
+	}
+
+
+
+	////////////////
+	// PWM PERIOD //
+	////////////////
+
+	private void getPwmPeriod() {
+		getUint32("PwmPeriod", _txtConfigPwmPeriod, BluenetConfig.CONFIG_PWM_PERIOD);
+	}
+
+	private void setPwmPeriod() {
+		setUint32("PwmPeriod", _txtConfigPwmPeriod, BluenetConfig.CONFIG_PWM_PERIOD);
+	}
+
+
+
+	////////////////
+	// BOOT DELAY //
+	////////////////
+
+	private void getBootDelay() {
+		getUint16("BootDelay", _txtConfigBootDelay, BluenetConfig.CONFIG_BOOT_DELAY);
+	}
+
+	private void setBootDelay() {
+		setUint16("BootDelay", _txtConfigBootDelay, BluenetConfig.CONFIG_BOOT_DELAY);
+	}
+
+
+
+	//////////////////
+	//   TX POWER   //
+	//////////////////
+
+	private void getTxPower() {
+		getInt8("TxPower", _txtConfigTxPower, BluenetConfig.CONFIG_TX_POWER);
+	}
+
+	private void setTxPower() {
+		setInt8("TxPower", _txtConfigTxPower, BluenetConfig.CONFIG_TX_POWER);
+	}
+
 
 
 	//////////////
@@ -248,29 +512,178 @@ public class ControlConfigFragment extends Fragment {
 	}
 
 
-	/////////////////////////
-	// RELAY HIGH DURATION //
-	/////////////////////////
 
-	private void getRelayHigh() {
+	///////////////////////////
+	//   CURRENT THRESHOLD   //
+	///////////////////////////
+
+	private void getCurrentThreshold() {
+		getUint16("CurrentThreshold", _txtConfigCurrentThreshold, BluenetConfig.CONFIG_CURRENT_THRESHOLD);
+	}
+
+	private void setCurrentThreshold() {
+		setUint16("CurrentThreshold", _txtConfigCurrentThreshold, BluenetConfig.CONFIG_CURRENT_THRESHOLD);
+	}
+
+
+
+	//////////////////////////////////
+	//   CURRENT THRESHOLD DIMMER   //
+	//////////////////////////////////
+
+	private void getCurrentThresholdDimmer() {
+		getUint16("CurrentThresholdDimmer", _txtConfigCurrentThresholdDimmer, BluenetConfig.CONFIG_CURRENT_THRESHOLD_DIMMER);
+	}
+
+	private void setCurrentThresholdDimmer() {
+		setUint16("CurrentThresholdDimmer", _txtConfigCurrentThresholdDimmer, BluenetConfig.CONFIG_CURRENT_THRESHOLD_DIMMER);
+	}
+
+
+
+	///////////////////////
+	//   MAX CHIP TEMP   //
+	///////////////////////
+
+	private void getMaxChipTemp() {
+		getInt8("MaxChipTemp", _txtConfigMaxChipTemp, BluenetConfig.CONFIG_MAX_CHIP_TEMP);
+	}
+
+	private void setMaxChipTemp() {
+		setInt8("MaxChipTemp", _txtConfigMaxChipTemp, BluenetConfig.CONFIG_MAX_CHIP_TEMP);
+	}
+
+
+
+	//////////////////////////////////
+	//   DIMMER TEMP THRESHOLD UP   //
+	//////////////////////////////////
+
+	private void getDimmerTempThresholdUp() {
+		getFloat("DimmerTempThresholdUp", _txtConfigDimmerTempThresholdUp, BluenetConfig.CONFIG_DIMMER_TEMP_UP);
+	}
+
+	private void setDimmerTempThresholdUp() {
+		setFloat("DimmerTempThresholdUp", _txtConfigDimmerTempThresholdUp, BluenetConfig.CONFIG_DIMMER_TEMP_UP);
+	}
+
+
+
+	////////////////////////////////////
+	//   DIMMER TEMP THRESHOLD DOWN   //
+	////////////////////////////////////
+
+	private void getDimmerTempThresholdDown() {
+		getFloat("DimmerTempThresholdDown", _txtConfigDimmerTempThresholdDown, BluenetConfig.CONFIG_DIMMER_TEMP_DOWN);
+	}
+
+	private void setDimmerTempThresholdDown() {
+		setFloat("DimmerTempThresholdDown", _txtConfigDimmerTempThresholdDown, BluenetConfig.CONFIG_DIMMER_TEMP_DOWN);
+	}
+
+
+
+	////////////////////////////
+	//   VOLTAGE MULTIPLIER   //
+	////////////////////////////
+
+	private void getVoltageMultiplier() {
+		getFloat("VoltageMultiplier", _txtConfigVoltageMultiplier, BluenetConfig.CONFIG_VOLTAGE_MULTIPLIER);
+	}
+
+	private void setVoltageMultiplier() {
+		setFloat("VoltageMultiplier", _txtConfigVoltageMultiplier, BluenetConfig.CONFIG_VOLTAGE_MULTIPLIER);
+	}
+
+
+
+	////////////////////////////
+	//   CURRENT MULTIPLIER   //
+	////////////////////////////
+
+	private void getCurrentMultiplier() {
+		getFloat("CurrentMultiplier", _txtConfigCurrentMultiplier, BluenetConfig.CONFIG_CURRENT_MULTIPLIER);
+	}
+
+	private void setCurrentMultiplier() {
+		setFloat("CurrentMultiplier", _txtConfigCurrentMultiplier, BluenetConfig.CONFIG_CURRENT_MULTIPLIER);
+	}
+
+
+
+	/////////////////////
+	//   VOTAGE ZERO   //
+	/////////////////////
+
+	private void getVoltageZero() {
+		getInt32("VoltageZero", _txtConfigVoltageZero, BluenetConfig.CONFIG_VOLTAGE_ZERO);
+	}
+
+	private void setVoltageZero() {
+		setInt32("VoltageZero", _txtConfigVoltageZero, BluenetConfig.CONFIG_VOLTAGE_ZERO);
+	}
+
+
+
+	//////////////////////
+	//   CURRENT ZERO   //
+	//////////////////////
+
+	private void getCurrentZero() {
+		getInt32("CurrentZero", _txtConfigCurrentZero, BluenetConfig.CONFIG_CURRENT_ZERO);
+	}
+
+	private void setCurrentZero() {
+		setInt32("CurrentZero", _txtConfigCurrentZero, BluenetConfig.CONFIG_CURRENT_ZERO);
+	}
+
+
+
+
+
+
+
+
+	////////////////////////
+	// TEMPLATE FUNCTIONS //
+	////////////////////////
+
+	private void getUint16(final String name, final EditText outputEditText, final int configurationType) {
 		showProgressSpinner();
-		_handler.post(new ControlConfigFragment.SequentialRunner("getRelayHigh") {
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
 
 				_ble.connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_bleConfiguration.getRelayHighDuration(_address, execCallback);
+						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+							@Override
+							public void onSuccess(ConfigurationMsg configuration) {
+								if (configuration.getLength() != 2) {
+									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
+									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
+								} else {
+									int value = configuration.getShortValue();
+									Log.i(TAG, name + ": " + value);
+									execCallback.onSuccess(value);
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								execCallback.onError(error);
+							}
+						});
 					}
 				}, new SimpleExecStatusCallback(new IIntegerCallback() {
 					@Override
 					public void onSuccess(final int result) {
-						Log.i(TAG, "get relay high duration success");
+						Log.i(TAG, "get " + name + " success");
 						getActivity().runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								_txtConfigRelayHigh.setText(Integer.toString(result));
+								outputEditText.setText(Integer.toString(result));
 							}
 						});
 						done();
@@ -279,7 +692,7 @@ public class ControlConfigFragment extends Fragment {
 
 					@Override
 					public void onError(int error) {
-						Log.i(TAG, "get relay high duration failed: " + error);
+						Log.i(TAG, "get " + name + " failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
@@ -290,31 +703,33 @@ public class ControlConfigFragment extends Fragment {
 		});
 	}
 
-	private void setRelayHigh() {
+	private void setUint16(final String name, final EditText outputEditText, final int configurationType) {
 		showProgressSpinner();
 
-		final int relayHighDurationMs;
-		String configStr = _txtConfigRelayHigh.getText().toString();
+		final int value;
+		String configStr = outputEditText.getText().toString();
 		try {
-			relayHighDurationMs = Integer.parseInt(configStr);
+			value = Integer.parseInt(configStr);
 		} catch (NumberFormatException e) {
 			showToast("Invalid number");
 			return;
 		}
-		BleLog.getInstance().LOGi(TAG, "setRelayHigh: " + configStr + " = " + relayHighDurationMs);
+		BleLog.getInstance().LOGi(TAG, "set " + name + ": " + configStr + " = " + value);
 
-		_handler.post(new ControlConfigFragment.SequentialRunner("setRelayHigh") {
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
 				_ble.connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_bleConfiguration.setRelayHighDuration(_address, relayHighDurationMs, execCallback);
+						byte[] valArr = BleUtils.shortToByteArray(value);
+						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
+						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
 					public void onSuccess() {
-						Log.i(TAG, "set relay high duration success");
+						Log.i(TAG, "set " + name + " success");
 						showToast("Success");
 						done();
 						dismissProgressSpinner();
@@ -322,41 +737,54 @@ public class ControlConfigFragment extends Fragment {
 
 					@Override
 					public void onError(int error) {
-						Log.i(TAG, "set relay high duration failed: " + error);
+						Log.i(TAG, "set " + name + " failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
 					}
 				}));
-			return true;
+				return true;
 			}
 		});
 	}
 
 
-	////////////////
-	// PWM PERIOD //
-	////////////////
-
-	private void getPwmPeriod() {
+	private void getUint32(final String name, final EditText outputEditText, final int configurationType) {
 		showProgressSpinner();
-		_handler.post(new ControlConfigFragment.SequentialRunner("getPwmPeriod") {
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
 
 				_ble.connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_bleConfiguration.getPwmPeriod(_address, execCallback);
+						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+							@Override
+							public void onSuccess(ConfigurationMsg configuration) {
+								if (configuration.getLength() != 4) {
+									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
+									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
+								} else {
+									long value = BleUtils.toUint32(configuration.getIntValue());
+									Log.i(TAG, name + ": " + value);
+									execCallback.onSuccess(value);
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								execCallback.onError(error);
+							}
+						});
 					}
 				}, new SimpleExecStatusCallback(new ILongCallback() {
 					@Override
 					public void onSuccess(final long result) {
-						Log.i(TAG, "get pwm period success");
+						Log.i(TAG, "get " + name + " success");
 						getActivity().runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								_txtConfigPwmPeriod.setText(Long.toString(result));
+								outputEditText.setText(Long.toString(result));
 							}
 						});
 						done();
@@ -365,7 +793,7 @@ public class ControlConfigFragment extends Fragment {
 
 					@Override
 					public void onError(int error) {
-						Log.i(TAG, "get pwm period failed: " + error);
+						Log.i(TAG, "get " + name + " failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
@@ -376,31 +804,33 @@ public class ControlConfigFragment extends Fragment {
 		});
 	}
 
-	private void setPwmPeriod() {
+	private void setUint32(final String name, final EditText outputEditText, final int configurationType) {
 		showProgressSpinner();
 
-		final long pwmPeriod;
-		String configStr = _txtConfigPwmPeriod.getText().toString();
+		final long value;
+		String configStr = outputEditText.getText().toString();
 		try {
-			pwmPeriod = Long.parseLong(configStr);
+			value = Long.parseLong(configStr);
 		} catch (NumberFormatException e) {
 			showToast("Invalid number");
 			return;
 		}
-		BleLog.getInstance().LOGi(TAG, "setPwmPeriod: " + configStr + " = " + pwmPeriod);
+		BleLog.getInstance().LOGi(TAG, "set " + name + ": " + configStr + " = " + value);
 
-		_handler.post(new ControlConfigFragment.SequentialRunner("setPwmPeriod") {
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
 				_ble.connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_bleConfiguration.setPwmPeriod(_address, pwmPeriod, execCallback);
+						byte[] valArr = BleUtils.uint32ToByteArray(value);
+						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
+						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
 					public void onSuccess() {
-						Log.i(TAG, "set pwm period success");
+						Log.i(TAG, "set " + name + " success");
 						showToast("Success");
 						done();
 						dismissProgressSpinner();
@@ -408,7 +838,7 @@ public class ControlConfigFragment extends Fragment {
 
 					@Override
 					public void onError(int error) {
-						Log.i(TAG, "set pwm period failed: " + error);
+						Log.i(TAG, "set " + name + " failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
@@ -419,6 +849,310 @@ public class ControlConfigFragment extends Fragment {
 		});
 	}
 
+
+	private void getInt8(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+							@Override
+							public void onSuccess(ConfigurationMsg configuration) {
+								if (configuration.getLength() != 1) {
+									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
+									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
+								} else {
+									int value = configuration.getByteValue();
+									Log.i(TAG, name + ": " + value);
+									execCallback.onSuccess(value);
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								execCallback.onError(error);
+							}
+						});
+					}
+				}, new SimpleExecStatusCallback(new IIntegerCallback() {
+					@Override
+					public void onSuccess(final int result) {
+						Log.i(TAG, "get " + name + " success");
+						getActivity().runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								outputEditText.setText(Integer.toString(result));
+							}
+						});
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "get " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+	private void setInt8(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+
+		final int value;
+		String configStr = outputEditText.getText().toString();
+		try {
+			value = Integer.parseInt(configStr);
+		} catch (NumberFormatException e) {
+			showToast("Invalid number");
+			return;
+		}
+		BleLog.getInstance().LOGi(TAG, "set " + name + ": " + configStr + " = " + value);
+
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						byte[] valArr = new byte[]{(byte)value};
+						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
+						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+					}
+				}, new SimpleExecStatusCallback(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "set " + name + " success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "set " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+
+
+
+	private void getInt32(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+							@Override
+							public void onSuccess(ConfigurationMsg configuration) {
+								if (configuration.getLength() != 4) {
+									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
+									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
+								} else {
+									int value = configuration.getIntValue();
+									Log.i(TAG, name + ": " + value);
+									execCallback.onSuccess(value);
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								execCallback.onError(error);
+							}
+						});
+					}
+				}, new SimpleExecStatusCallback(new IIntegerCallback() {
+					@Override
+					public void onSuccess(final int result) {
+						Log.i(TAG, "get " + name + " success");
+						getActivity().runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								outputEditText.setText(Integer.toString(result));
+							}
+						});
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "get " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+	private void setInt32(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+
+		final int value;
+		String configStr = outputEditText.getText().toString();
+		try {
+			value = Integer.parseInt(configStr);
+		} catch (NumberFormatException e) {
+			showToast("Invalid number");
+			return;
+		}
+		BleLog.getInstance().LOGi(TAG, "set " + name + ": " + configStr + " = " + value);
+
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						byte[] valArr = BleUtils.intToByteArray(value);
+						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
+						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+					}
+				}, new SimpleExecStatusCallback(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "set " + name + " success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "set " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+
+	private void getFloat(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+							@Override
+							public void onSuccess(ConfigurationMsg configuration) {
+								if (configuration.getLength() != 4) {
+									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
+									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
+								} else {
+									float value = configuration.getFloatValue();
+									Log.i(TAG, name + ": " + value);
+									execCallback.onSuccess(value);
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								execCallback.onError(error);
+							}
+						});
+					}
+				}, new SimpleExecStatusCallback(new IFloatCallback() {
+					@Override
+					public void onSuccess(final float result) {
+						Log.i(TAG, "get " + name + " success");
+						getActivity().runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								outputEditText.setText(Float.toString(result));
+							}
+						});
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "get " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+	private void setFloat(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+
+		final float value;
+		String configStr = outputEditText.getText().toString();
+		try {
+			value = Float.parseFloat(configStr);
+		} catch (NumberFormatException e) {
+			showToast("Invalid number");
+			return;
+		}
+		BleLog.getInstance().LOGi(TAG, "set " + name + ": " + configStr + " = " + value);
+
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						byte[] valArr = BleUtils.floatToByteArray(value);
+						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
+						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+					}
+				}, new SimpleExecStatusCallback(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "set " + name + " success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "set " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
 
 
 	//////////////////////

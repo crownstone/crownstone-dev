@@ -19,6 +19,7 @@
 		android:paddingBottom="16dp"
 		>
 
+
 		<TextView
 			android:id="@+id/textConfigRelayHigh"
 			android:layout_width="match_parent"
@@ -86,7 +87,7 @@
 				android:layout_marginBottom="0dp"
 				android:layout_weight="2"
 				android:ems="10"
-				android:inputType="textPersonName|number"
+				android:inputType="number"
 				android:text=""
 				/>
 
@@ -100,6 +101,94 @@
 
 			<Button
 				android:id="@+id/btnConfigPwmPeriodSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigBootDelay"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Boot delay (ms)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigBootDelay"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigBootDelay"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigBootDelayGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigBootDelaySet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigTxPower"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="TxPower (-40, -30, -20, -16, -12, -8, -4, 0, 4)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigTxPower"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigTxPower"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="numberSigned"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigTxPowerGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigTxPowerSet"
 				android:layout_width="0dp"
 				android:layout_weight="1"
 				android:layout_height="wrap_content"
@@ -152,7 +241,400 @@
 		</LinearLayout>
 
 
+		<TextView
+			android:id="@+id/textConfigCurrentThreshold"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="CurrentThreshold (mA)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigCurrentThreshold"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
 
+			<EditText
+				android:id="@+id/txtConfigCurrentThreshold"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentThresholdGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentThresholdSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigCurrentThresholdDimmer"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="CurrentThresholdDimmer (mA)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigCurrentThresholdDimmer"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigCurrentThresholdDimmer"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentThresholdDimmerGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentThresholdDimmerSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigMaxChipTemp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Max chip temperature (°C)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigMaxChipTemp"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigMaxChipTemp"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="numberSigned"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigMaxChipTempGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigMaxChipTempSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigDimmerTempThresholdUp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Dimmer temperature up threshold (V)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigDimmerTempThresholdUp"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigDimmerTempThresholdUp"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigDimmerTempThresholdUpGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigDimmerTempThresholdUpSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigDimmerTempThresholdDown"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Dimmer temperature down threshold (V)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigDimmerTempThresholdDown"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigDimmerTempThresholdDown"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigDimmerTempThresholdDownGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigDimmerTempThresholdDownSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigVoltageMultiplier"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Voltage gain (float)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigVoltageMultiplier"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigCurrentMultiplier"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="numberDecimal"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentMultiplierGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentMultiplierSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigCurrentMultiplier"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Current gain (float)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigCurrentMultiplier"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigVoltageMultiplier"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="numberDecimal"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigVoltageMultiplierGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigVoltageMultiplierSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigVoltageZero"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Voltage zero (adc value)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigVoltageZero"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigVoltageZero"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigVoltageZeroGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigVoltageZeroSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigCurrentZero"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Current zero (adc value)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigCurrentZero"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+
+			<EditText
+				android:id="@+id/txtConfigCurrentZero"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentZeroGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+
+			<Button
+				android:id="@+id/btnConfigCurrentZeroSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
 
 
 	</LinearLayout>

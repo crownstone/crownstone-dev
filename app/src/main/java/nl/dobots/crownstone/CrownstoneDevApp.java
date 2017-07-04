@@ -383,7 +383,8 @@ public class CrownstoneDevApp extends Application {
 						// if the stone was already added, use that to setup
 						if (stone != null && sphere.getId().equals(stone.getSphereId())) {
 							runSetup(sphere, stone, activity, device, callback);
-						} else {
+						}
+						else {
 							// if a wrong stone object was returned, create a new stone in the cloud
 							sphere.createStone(device.getAddress(), device.getName(), new ObjectCallback<Stone>() {
 								@Override
