@@ -2,9 +2,9 @@
 	  xmlns:app="http://schemas.android.com/apk/res-auto"
 	  xmlns:tools="http://schemas.android.com/tools">
 	<item
-		android:id="@+id/action_pwm"
+		android:id="@+id/action_reset"
 		android:orderInCategory="100"
-		android:title="PWM Enable"
+		android:title="reset"
 		app:showAsAction="never"/>
 
 	<item
@@ -17,6 +17,12 @@
 		android:id="@+id/action_factoryreset"
 		android:orderInCategory="100"
 		android:title="Factory Reset ..."
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_pwm"
+		android:orderInCategory="100"
+		android:title="PWM Enable"
 		app:showAsAction="never"/>
 
 	<item

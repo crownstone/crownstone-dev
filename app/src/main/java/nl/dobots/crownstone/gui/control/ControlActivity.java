@@ -254,6 +254,25 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		int id = item.getItemId();
 
 		switch(id) {
+			case R.id.action_reset: {
+				ProgressSpinner.show(this);
+				_ble.resetDevice(_address, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "success");
+						showToast("Reset device");
+						ProgressSpinner.dismiss();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.e(TAG, "error" + error);
+						showToast("Failed to reset");
+						ProgressSpinner.dismiss();
+					}
+				});
+				break;
+			}
 			case R.id.action_dfu: {
 				ProgressSpinner.show(this);
 				_ble.resetToBootloader(_address, new IStatusCallback() {
