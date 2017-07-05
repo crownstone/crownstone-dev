@@ -15,6 +15,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+
 import nl.dobots.bluenet.ble.base.BleConfiguration;
 import nl.dobots.bluenet.ble.base.callbacks.IConfigurationCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IExecStatusCallback;
@@ -231,6 +233,36 @@ public class ControlConfigFragment extends Fragment {
 				setTime();
 			}
 		});
+		v.findViewById(R.id.btnConfigTimeSetNow).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setTimeNow();
+			}
+		});
+//		v.findViewById(R.id.btnConfigTimeSetPlusMinute).setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				setTimeNow(60);
+//			}
+//		});
+//		v.findViewById(R.id.btnConfigTimeSetMinMinute).setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				setTimeNow(-60);
+//			}
+//		});
+//		v.findViewById(R.id.btnConfigTimeSetPlusHour).setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				setTimeNow(60*60);
+//			}
+//		});
+//		v.findViewById(R.id.btnConfigTimeSetMinHour).setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				setTimeNow(-60*60);
+//			}
+//		});
 
 		_txtConfigCurrentThreshold    = (EditText) v.findViewById(R.id.txtConfigCurrentThreshold);
 		_btnConfigCurrentThresholdGet = (Button)   v.findViewById(R.id.btnConfigCurrentThresholdGet);
@@ -482,17 +514,52 @@ public class ControlConfigFragment extends Fragment {
 	}
 
 	private void setTime() {
+		// Get time from edit text and set it
+		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
+		java.util.Date time = null;
+		try {
+			time = dateFormat.parse(_txtConfigTime.getText().toString());
+		} catch (java.text.ParseException e) {
+			showToast("Invalid timestamp");
+			return;
+		}
+		setTime(time.getTime() / 1000);
+	}
+
+	private void setTimeNow() {
+		setTimeNow(0L);
+	}
+
+	private void setTimeNow(long diff) {
+		setTime(diff, true);
+	}
+
+	private void setTime(long unixTime) {
+		setTime(unixTime, false);
+	}
+
+	// Set time to given time, or if isDifference = true, to current time + given time
+	private void setTime(final long time, final boolean isDifference) {
 		showProgressSpinner();
 		_handler.post(new ControlConfigFragment.SequentialRunner("setTime") {
 			@Override
 			public boolean execute() {
 
-				// Or use Calendar.getInstance().getTime() / 1000;
-				long unixTime = System.currentTimeMillis() / 1000;
+				long unixTime = time;
+				if (isDifference) {
+					unixTime += System.currentTimeMillis() / 1000;
+				}
+				final java.util.Date date = new java.util.Date(unixTime*1000);
 				_ble.writeSetTime(_address, unixTime, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "set time success");
+						getActivity().runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								_txtConfigTime.setText(date.toString());
+							}
+						});
 						showToast("Success");
 						done();
 						dismissProgressSpinner();
@@ -510,8 +577,6 @@ public class ControlConfigFragment extends Fragment {
 			}
 		});
 	}
-
-
 
 	///////////////////////////
 	//   CURRENT THRESHOLD   //

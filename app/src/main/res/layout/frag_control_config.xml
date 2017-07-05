@@ -35,7 +35,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigRelayHigh"
 				android:layout_width="0dp"
@@ -45,7 +44,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigRelayHighGet"
 				android:layout_width="0dp"
@@ -53,7 +51,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigRelayHighSet"
 				android:layout_width="0dp"
@@ -79,7 +76,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigPwmPeriod"
 				android:layout_width="0dp"
@@ -90,7 +86,6 @@
 				android:inputType="number"
 				android:text=""
 				/>
-
 			<Button
 				android:id="@+id/btnConfigPwmPeriodGet"
 				android:layout_width="0dp"
@@ -98,7 +93,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigPwmPeriodSet"
 				android:layout_width="0dp"
@@ -124,7 +118,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigBootDelay"
 				android:layout_width="0dp"
@@ -134,7 +127,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigBootDelayGet"
 				android:layout_width="0dp"
@@ -142,7 +134,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigBootDelaySet"
 				android:layout_width="0dp"
@@ -168,7 +159,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigTxPower"
 				android:layout_width="0dp"
@@ -178,7 +168,6 @@
 				android:ems="10"
 				android:inputType="numberSigned"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigTxPowerGet"
 				android:layout_width="0dp"
@@ -186,7 +175,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigTxPowerSet"
 				android:layout_width="0dp"
@@ -206,23 +194,27 @@
 			android:layout_marginStart="0dp"
 			android:text="time"
 			android:textAlignment="center"/>
+		<EditText
+			android:id="@+id/txtConfigTime"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="0dp"
+			android:ems="10"
+			android:inputType="text"
+			android:text=""/>
 		<LinearLayout
 			android:id="@+id/layConfigTime"
 			android:orientation="horizontal"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
-			<EditText
-				android:id="@+id/txtConfigTime"
+			<Button
+				android:id="@+id/btnConfigTimeSetNow"
 				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_marginBottom="0dp"
 				android:layout_weight="2"
-				android:ems="10"
-				android:inputType="text"
-				android:text=""/>
-
+				android:layout_height="wrap_content"
+				android:text="set to current"
+				/>
 			<Button
 				android:id="@+id/btnConfigTimeGet"
 				android:layout_width="0dp"
@@ -230,7 +222,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigTimeSet"
 				android:layout_width="0dp"
@@ -239,7 +230,43 @@
 				android:text="set"
 				/>
 		</LinearLayout>
-
+<!--
+		<LinearLayout
+			android:id="@+id/layConfigTimeAdjust"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<Button
+				android:id="@+id/btnConfigTimeSetMinHour"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="-1 hour"
+				/>
+			<Button
+				android:id="@+id/btnConfigTimeSetMinMinute"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="-1 min"
+				/>
+			<Button
+				android:id="@+id/btnConfigTimeSetPlusMinute"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="+1 min"
+				/>
+			<Button
+				android:id="@+id/btnConfigTimeSetPlusHour"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="+1 hour"
+				/>
+		</LinearLayout>
+-->
 
 		<TextView
 			android:id="@+id/textConfigCurrentThreshold"
@@ -256,7 +283,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigCurrentThreshold"
 				android:layout_width="0dp"
@@ -266,7 +292,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentThresholdGet"
 				android:layout_width="0dp"
@@ -274,7 +299,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentThresholdSet"
 				android:layout_width="0dp"
@@ -300,7 +324,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigCurrentThresholdDimmer"
 				android:layout_width="0dp"
@@ -310,7 +333,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentThresholdDimmerGet"
 				android:layout_width="0dp"
@@ -318,7 +340,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentThresholdDimmerSet"
 				android:layout_width="0dp"
@@ -344,7 +365,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigMaxChipTemp"
 				android:layout_width="0dp"
@@ -354,7 +374,6 @@
 				android:ems="10"
 				android:inputType="numberSigned"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigMaxChipTempGet"
 				android:layout_width="0dp"
@@ -362,7 +381,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigMaxChipTempSet"
 				android:layout_width="0dp"
@@ -388,7 +406,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigDimmerTempThresholdUp"
 				android:layout_width="0dp"
@@ -398,7 +415,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigDimmerTempThresholdUpGet"
 				android:layout_width="0dp"
@@ -406,7 +422,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigDimmerTempThresholdUpSet"
 				android:layout_width="0dp"
@@ -432,7 +447,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigDimmerTempThresholdDown"
 				android:layout_width="0dp"
@@ -442,7 +456,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigDimmerTempThresholdDownGet"
 				android:layout_width="0dp"
@@ -450,7 +463,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigDimmerTempThresholdDownSet"
 				android:layout_width="0dp"
@@ -476,7 +488,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigCurrentMultiplier"
 				android:layout_width="0dp"
@@ -486,7 +497,6 @@
 				android:ems="10"
 				android:inputType="numberDecimal"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentMultiplierGet"
 				android:layout_width="0dp"
@@ -494,7 +504,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentMultiplierSet"
 				android:layout_width="0dp"
@@ -520,7 +529,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigVoltageMultiplier"
 				android:layout_width="0dp"
@@ -530,7 +538,6 @@
 				android:ems="10"
 				android:inputType="numberDecimal"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigVoltageMultiplierGet"
 				android:layout_width="0dp"
@@ -538,7 +545,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigVoltageMultiplierSet"
 				android:layout_width="0dp"
@@ -564,7 +570,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigVoltageZero"
 				android:layout_width="0dp"
@@ -574,7 +579,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigVoltageZeroGet"
 				android:layout_width="0dp"
@@ -582,7 +586,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigVoltageZeroSet"
 				android:layout_width="0dp"
@@ -608,7 +611,6 @@
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			>
-
 			<EditText
 				android:id="@+id/txtConfigCurrentZero"
 				android:layout_width="0dp"
@@ -618,7 +620,6 @@
 				android:ems="10"
 				android:inputType="number"
 				android:text=""/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentZeroGet"
 				android:layout_width="0dp"
@@ -626,7 +627,6 @@
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
-
 			<Button
 				android:id="@+id/btnConfigCurrentZeroSet"
 				android:layout_width="0dp"
