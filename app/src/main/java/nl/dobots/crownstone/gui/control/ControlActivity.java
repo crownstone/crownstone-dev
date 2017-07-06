@@ -58,6 +58,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	private ControlMainFragment _fragControlMain;
 	private ControlMeasurementsFragment _fragControlMeasurements;
 	private ControlConfigFragment _fragControlConfig;
+	private ControlScheduleFragment _fragControlSchedule;
 	private ControlMeshFragment _fragControlMesh;
 
 	private static ControlActivity INSTANCE;
@@ -141,6 +142,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		_fragControlMain = new ControlMainFragment();
 		_fragControlMeasurements = new ControlMeasurementsFragment();
 		_fragControlConfig = new ControlConfigFragment();
+		_fragControlSchedule = new ControlScheduleFragment();
 		_fragControlMesh = new ControlMeshFragment();
 
 		_pagerAdapter = new FragmentPagerAdapter(getSupportFragmentManager()) {
@@ -154,6 +156,8 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					case 2:
 						return _fragControlConfig;
 					case 3:
+						return _fragControlSchedule;
+					case 4:
 						return _fragControlMesh;
 					default:
 						return null;
@@ -162,7 +166,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 			@Override
 			public int getCount() {
-				return 4;
+				return 5;
 			}
 		};
 
@@ -212,6 +216,11 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		actionBar.addTab(
 				actionBar.newTab()
 						.setText("Config")
+						.setTabListener(tabListener));
+
+		actionBar.addTab(
+				actionBar.newTab()
+						.setText("Schedule")
 						.setTabListener(tabListener));
 
 		actionBar.addTab(

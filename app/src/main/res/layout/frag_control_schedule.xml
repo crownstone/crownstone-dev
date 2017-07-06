@@ -1,0 +1,419 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+				xmlns:tools="http://schemas.android.com/tools"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				tools:context=".gui.control.ControlActivity">
+
+<LinearLayout
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+	<!-- ****** -->
+	<!-- packet -->
+	<!-- ****** -->
+	<TextView
+		android:id="@+id/textSchedulePacket"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="10dp"
+		android:layout_marginBottom="0dp"
+		android:layout_marginStart="0dp"
+		android:text="Packet"
+		android:textAlignment="center"/>
+	<EditText
+		android:id="@+id/txtSchedulePacket"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="0dp"
+		android:ems="10"
+		android:inputType="text"
+		android:text=""/>
+	<Button
+		android:id="@+id/btnSchedulePacketSet"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="send packet"
+		/>
+
+	<ScrollView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+	<LinearLayout
+		android:id="@+id/layControlSchedule"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="vertical"
+		android:paddingLeft="@dimen/activity_horizontal_margin"
+		android:paddingRight="@dimen/activity_horizontal_margin"
+		android:paddingTop="@dimen/activity_vertical_margin"
+		android:paddingBottom="@dimen/activity_vertical_margin"
+		>
+
+		<!-- ** -->
+		<!-- ID -->
+		<!-- ** -->
+		<TextView
+			android:id="@+id/textScheduleId"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Schedule id"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleId"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleId"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnScheduleIdSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- ************* -->
+		<!-- Override mask -->
+		<!-- ************* -->
+		<TextView
+			android:id="@+id/textScheduleOverrideMask"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Override mask"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleOverrideMask"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleOverrideMask"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text="00000001"/>
+			<Button
+				android:id="@+id/btnScheduleOverrideMaskSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- ************** -->
+		<!-- Next timestamp -->
+		<!-- ************** -->
+		<TextView
+			android:id="@+id/textScheduleTimestamp"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Next timestamp"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleTimestamp"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleTimestamp"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="text"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnScheduleTimestampSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- ************ -->
+		<!-- Repeat types -->
+		<!-- ************ -->
+		<TextView
+			android:id="@+id/textScheduleRepeat"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:layout_marginTop="40dp"
+			android:text="REPEAT TYPES"
+			android:textAlignment="center"
+			android:gravity="center"
+			android:textSize="18sp"/>
+
+		<!-- ********************** -->
+		<!-- Repeat every X minutes -->
+		<!-- ********************** -->
+		<TextView
+			android:id="@+id/textScheduleRepeatMinute"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Repeat every X minutes"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleRepeatMinute"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleRepeatMinute"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnScheduleRepeatMinuteSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- **************** -->
+		<!-- Repeat every day -->
+		<!-- **************** -->
+		<TextView
+			android:id="@+id/textScheduleRepeatDay"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Repeat every day"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleRepeatDay"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleRepeatDay"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text="10000000"/>
+			<Button
+				android:id="@+id/btnScheduleRepeatDaySet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- *********** -->
+		<!-- Repeat once -->
+		<!-- *********** -->
+		<TextView
+			android:id="@+id/textScheduleRepeatOnce"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Do not repeat"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleRepeatOnce"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<Button
+				android:id="@+id/btnScheduleRepeatOnceSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<!-- ************ -->
+		<!-- Action types -->
+		<!-- ************ -->
+		<TextView
+			android:id="@+id/textScheduleAction"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:layout_marginTop="40dp"
+			android:text="ACTION TYPES"
+			android:textAlignment="center"
+			android:gravity="center"
+			android:textSize="18sp"/>
+
+		<!-- ************* -->
+		<!-- Action switch -->
+		<!-- ************* -->
+		<TextView
+			android:id="@+id/textScheduleActionSwitch"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Action switch"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleActionSwitch"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleActionSwitch"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnScheduleActionSwitchSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- *********** -->
+		<!-- Action fade -->
+		<!-- *********** -->
+		<TextView
+			android:id="@+id/textScheduleActionFade"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Action fade"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleActionFadeSwitch"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleActionFadeSwitch"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text="switch value"/>
+			<Button
+				android:id="@+id/btnScheduleActionFadeSwitchSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+		<LinearLayout
+			android:id="@+id/layScheduleActionFadeDuration"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtScheduleActionFadeDuration"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text="duration seconds"/>
+			<Button
+				android:id="@+id/btnScheduleActionFadeDurationSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+		<!-- ************* -->
+		<!-- Action toggle -->
+		<!-- ************* -->
+		<TextView
+			android:id="@+id/textScheduleActionToggle"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Action toggle"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layScheduleActionToggle"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<Button
+				android:id="@+id/btnScheduleActionToggleSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+	</LinearLayout>
+	</ScrollView>
+
+
+</LinearLayout>
+
+</RelativeLayout>
