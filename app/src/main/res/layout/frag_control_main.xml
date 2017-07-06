@@ -44,13 +44,11 @@
 			android:layout_alignParentBottom="true"
 			android:orientation="horizontal"
 			>
-
 			<CheckBox
 				android:id="@+id/cbPwmEnable"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				/>
-
 			<SeekBar
 				android:id="@+id/sbPwm"
 				android:layout_width="0dp"
@@ -67,7 +65,6 @@
 			android:layout_above="@id/layPwm"
 			android:orientation="horizontal"
 			>
-
 			<Button
 				android:id="@+id/btnRelayOn"
 				android:layout_width="0dp"
@@ -75,7 +72,6 @@
 				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
 				android:text="@string/control_relay_on"/>
-
 			<Button
 				android:id="@+id/btnRelayOff"
 				android:layout_width="0dp"
@@ -92,7 +88,6 @@
 			android:layout_above="@id/layRelay"
 			android:orientation="horizontal"
 			>
-
 			<Button
 				android:id="@+id/btnPwmOn"
 				android:layout_width="0dp"
@@ -100,7 +95,6 @@
 				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
 				android:text="@string/control_power_on"/>
-
 			<Button
 				android:id="@+id/btnPwmOff"
 				android:layout_width="0dp"
@@ -110,42 +104,6 @@
 				/>
 		</LinearLayout>
 
-		<!--LinearLayout
-			android:id="@+id/layConfig"
-			android:orientation="horizontal"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_above="@id/layPower"
-			>
-
-			<EditText
-				android:id="@+id/txtConfig"
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_weight="2"
-				android:layout_marginBottom="0dp"
-				android:ems="10"
-				android:inputType="text"
-				android:text=""
-				/>
-
-			<Button
-				android:id="@+id/btnConfigGet"
-				android:layout_width="0dp"
-				android:layout_weight="1"
-				android:layout_height="wrap_content"
-				android:text="get"
-				/>
-
-			<Button
-				android:id="@+id/btnConfigSet"
-				android:layout_width="0dp"
-				android:layout_weight="1"
-				android:layout_height="wrap_content"
-				android:text="set"
-				/>
-		</LinearLayout-->
-
 		<ImageView
 			android:id="@+id/imgLightBulb"
 			android:layout_width="50dp"
@@ -153,42 +111,6 @@
 			android:layout_alignParentTop="true"
 			android:src="@drawable/light_bulb_off"
 			/>
-
-		<LinearLayout
-			android:id="@+id/layTime"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_above="@id/layPower"
-			android:orientation="horizontal"
-			>
-			<EditText
-				android:id="@+id/txtTime"
-				android:layout_width="0dp"
-				android:layout_weight="2"
-				android:layout_height="wrap_content"
-				android:layout_marginBottom="0dp"
-				android:ems="10"
-				android:inputType="text"
-				android:text=""
-				/>
-			<Button
-				android:id="@+id/btnGetTime"
-				android:layout_width="0dp"
-				android:layout_weight="1"
-				android:layout_height="wrap_content"
-				android:text="Get time"
-				android:layout_above="@+id/layPower"
-				android:layout_alignParentEnd="true"/>
-
-			<Button
-				android:id="@+id/btnSetTime"
-				android:layout_width="0dp"
-				android:layout_weight="1"
-				android:layout_height="wrap_content"
-				android:text="Set time"
-				android:layout_above="@+id/layPower"
-				android:layout_alignParentEnd="true"/>
-		</LinearLayout>
 
 	</RelativeLayout>
 
