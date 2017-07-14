@@ -19,7 +19,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -30,21 +29,13 @@ import android.widget.Toast;
 import nl.dobots.bluenet.ble.base.BleConfiguration;
 import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IExecStatusCallback;
-import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
-import nl.dobots.bluenet.ble.base.callbacks.SimpleExecStatusCallback;
-import nl.dobots.bluenet.ble.base.structs.ConfigurationMsg;
-import nl.dobots.bluenet.ble.cfg.BluenetConfig;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.extended.BleExt;
-import nl.dobots.bluenet.ble.extended.BleExtState;
 import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
-import nl.dobots.bluenet.ble.extended.callbacks.IExecuteCallback;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.utils.BleLog;
-import nl.dobots.bluenet.utils.BleUtils;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
 import nl.dobots.crownstone.gui.utils.ProgressSpinner;
@@ -64,7 +55,7 @@ public class ControlMainFragment extends Fragment {
 
 	private static final String TAG = ControlMainFragment.class.getCanonicalName();
 
-	private static final int TEMP_UPDATE_TIME = 2000;
+	private static final int GRAPH_UPDATE_TIME = 2000;
 
 	private ImageView _lightBulb;
 	private CheckBox _cbPwmEnable;
@@ -161,14 +152,13 @@ public class ControlMainFragment extends Fragment {
 	private SequentialRunner _advStateChecker = new SequentialRunner("_advStateChecker") {
 		@Override
 		public boolean execute() {
-			// update graph, to move x axis along even if device is not scanned, or currently
-			// connected
+			// update graph, to move x axis along even if device is not scanned, or currently connected
 
 			if (Build.VERSION.SDK_INT >= 24) {
-				if (!_ble.isConnected(null)) {
+				if (_ble.isDisconnected(null)) {
 					BleLog.getInstance().LOGi(TAG, "starting scan");
 					if (!_ble.isScanning()) {
-						_ble.getBleBase().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER);
+						_ble.getBleBase().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
 						_ble.startScan(new IBleDeviceCallback() {
 							@Override
 							public void onSuccess() {
@@ -177,49 +167,47 @@ public class ControlMainFragment extends Fragment {
 
 							@Override
 							public void onDeviceScanned(BleDevice device) {
-//								BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
 								if (device.getAddress().equals(_address)) {
-									if (System.nanoTime() - _lastUpdate > TEMP_UPDATE_TIME * 1000000) {
-										_lastUpdate = System.nanoTime();
+									BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
+
+									// Draw a point at most every GRAPH_UPDATE_TIME ms.
+									if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME * 1000000) {
 										CrownstoneServiceData serviceData = device.getServiceData();
-										if (serviceData != null) {
+
+										// Only use the data when it has serviceData which is not external data
+										if (serviceData != null && !serviceData.isExternalData()) {
+											_lastUpdate = System.nanoTime();
 											_graph.onServiceData(device.getName(), serviceData);
 											updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
-											// once an advertisement is received for the device, stop the
-											// scan again
-//										_ble.stopScan(null);
-//										done();
 										} else {
 											_graph.updateRange();
 										}
 									}
 								}
-//							if (_closing) {
-//								_ble.stopScan(null);
-//								done();
-//							}
 							}
 
 							@Override
 							public void onError(int error) {
 								BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
-//							_handler.postDelayed(this, 100);
-//							done();
 							}
 						});
 
 					}
 					done();
-//				_handler.postDelayed(this, TEMP_UPDATE_TIME);
 					return true;
 				}
+				// When connected, keep updating range
 				else {
+					BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
 					_graph.updateRange();
 					_handler.postDelayed(this, 100);
 					return false;
 				}
-			} else {
-				if (!_ble.isConnected(null)) {
+			}
+			// On older versions we can stop scanning each time we got an advertisement,
+			// and start again after GRAPH_UPDATE_TIME
+			else {
+				if (_ble.isDisconnected(null)) {
 					BleLog.getInstance().LOGi(TAG, "starting scan");
 					if (!_ble.isScanning()) {
 						_ble.startScan(new IBleDeviceCallback() {
@@ -230,21 +218,28 @@ public class ControlMainFragment extends Fragment {
 
 							@Override
 							public void onDeviceScanned(BleDevice device) {
-								BleLog.getInstance().LOGd(TAG, "onDeviceScanned %s", device.getName());
 								if (device.getAddress().equals(_address)) {
-									CrownstoneServiceData serviceData = device.getServiceData();
-									if (serviceData != null) {
-										_graph.onServiceData(device.getName(), serviceData);
-										updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
-										// once an advertisement is received for the device, stop the
-										// scan again
-										_ble.stopScan(null);
-										done();
-									} else {
-										_graph.updateRange();
+									BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
+
+									// Draw a point at most every GRAPH_UPDATE_TIME ms.
+									if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME * 1000000) {
+										CrownstoneServiceData serviceData = device.getServiceData();
+
+										// Only use the data when it has serviceData which is not external data
+										if (serviceData != null && !serviceData.isExternalData()) {
+											_lastUpdate = System.nanoTime();
+											_graph.onServiceData(device.getName(), serviceData);
+											updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
+											// Once an advertisement is received for the device, stop the scan again
+											_ble.stopScan(null);
+											done();
+										} else {
+											_graph.updateRange();
+										}
 									}
 								}
 								if (_closing) {
+									BleLog.getInstance().LOGd(TAG, "closing: stop scanning");
 									_ble.stopScan(null);
 									done();
 								}
@@ -257,9 +252,12 @@ public class ControlMainFragment extends Fragment {
 							}
 						});
 					}
-					_handler.postDelayed(this, TEMP_UPDATE_TIME);
+					_handler.postDelayed(this, GRAPH_UPDATE_TIME);
 					return true;
-				} else {
+				}
+				// When connected, keep updating range
+				else {
+					BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
 					_graph.updateRange();
 					_handler.postDelayed(this, 100);
 					return false;
