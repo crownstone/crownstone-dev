@@ -129,8 +129,9 @@ public class CrownstoneDevApp extends Application {
 		Intent intent = new Intent(this, BleScanService.class);
 		bindService(intent, _connection, Context.BIND_AUTO_CREATE);
 
-		_ble.getLogger().setLogLevel(Log.DEBUG);
-		_ble.getBleBase().getLogger().setLogLevel(Log.DEBUG);
+		_ble.setLogger(BleLog.getInstance());
+		_ble.getLogger().setLogLevel(Log.VERBOSE);
+		_ble.getBleBase().getLogger().setLogLevel(Log.VERBOSE);
 		BleLog.getInstance().setLogLevelPerTag(BleDevice.TAG, Log.DEBUG);
 	}
 
