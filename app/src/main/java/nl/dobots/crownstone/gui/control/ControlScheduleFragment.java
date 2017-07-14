@@ -10,27 +10,26 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import nl.dobots.bluenet.ble.base.callbacks.IByteArrayCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IExecStatusCallback;
 import nl.dobots.bluenet.ble.base.callbacks.SimpleExecStatusCallback;
-import nl.dobots.bluenet.ble.base.structs.ConfigurationMsg;
 import nl.dobots.bluenet.ble.base.structs.ControlMsg;
+import nl.dobots.bluenet.ble.base.structs.ScheduleCommandPacket;
 import nl.dobots.bluenet.ble.base.structs.ScheduleEntryPacket;
+import nl.dobots.bluenet.ble.base.structs.ScheduleListPacket;
+import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.cfg.BluenetConfig;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.callbacks.IExecuteCallback;
-import nl.dobots.bluenet.ble.mesh.structs.MeshControlMsg;
-import nl.dobots.bluenet.ble.mesh.structs.MeshKeepAlivePacket;
-import nl.dobots.bluenet.ble.mesh.structs.MeshMultiSwitchPacket;
-import nl.dobots.bluenet.ble.mesh.structs.cmd.MeshControlPacket;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.bluenet.utils.BleUtils;
 import nl.dobots.crownstone.R;
@@ -66,7 +65,8 @@ public class ControlScheduleFragment extends Fragment {
 	private EditText _txtScheduleActionSwitch;
 	private EditText _txtScheduleActionFadeSwitch;
 	private EditText _txtScheduleActionFadeDuration;
-	private ScheduleEntryPacket _packet;
+	private TextView _textScheduleList;
+	private ScheduleCommandPacket _packet;
 
 	// Other stuff
 	private BleExt _ble;
@@ -84,7 +84,7 @@ public class ControlScheduleFragment extends Fragment {
 
 		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
-		_packet = new ScheduleEntryPacket();
+		_packet = new ScheduleCommandPacket();
 	}
 
 	@Override
@@ -122,7 +122,21 @@ public class ControlScheduleFragment extends Fragment {
 		v.findViewById(R.id.btnSchedulePacketSet).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				sendPacket();
+				setEntry();
+			}
+		});
+		v.findViewById(R.id.btnSchedulePacketClear).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				clearEntry();
+			}
+		});
+
+		_textScheduleList = (TextView) v.findViewById(R.id.textScheduleList);
+		v.findViewById(R.id.btnScheduleListGet).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getList();
 			}
 		});
 
@@ -218,24 +232,36 @@ public class ControlScheduleFragment extends Fragment {
 		BleLog.getInstance().LOGd(TAG, "packet:\n" + _packet.toString());
 	}
 
-	private void sendPacket() {
+	private void setEntry() {
 		showProgressSpinner();
-		BleLog.getInstance().LOGi(TAG, "sendPacket");
+		BleLog.getInstance().LOGi(TAG, "setEntry");
 
-		_handler.post(new ControlScheduleFragment.SequentialRunner("sendPacket") {
+		String text = _txtSchedulePacket.getText().toString();
+		text = text.replace("[", ""); // Remove all [
+		text = text.replace("]", ""); // Remove all ]
+		String[] textArr = text.split("[ ,]+"); // Split by space and/or comma
+		byte[] msgBytes = new byte[textArr.length];
+		for (int i=0; i<textArr.length; i++) {
+			msgBytes[i] = (byte)Integer.parseInt(textArr[i]);
+		}
+		BleLog.getInstance().LOGd(TAG, "txt=" + text);
+		BleLog.getInstance().LOGd(TAG, "msg=" + BleUtils.bytesToString(msgBytes));
+		final byte[] array = msgBytes;
+
+
+		_handler.post(new ControlScheduleFragment.SequentialRunner("setEntry") {
 			@Override
 			public boolean execute() {
 				_ble.connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						byte[] array = _packet.toArray();
-						ControlMsg msg = new ControlMsg(BluenetConfig.CMD_SCHEDULE_ENTRY, array.length, array);
+						ControlMsg msg = new ControlMsg(BluenetConfig.CMD_SCHEDULE_ENTRY_SET, array.length, array);
 						_ble.writeControl(_address, msg, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
 					public void onSuccess() {
-						Log.i(TAG, "sendPacket success");
+						Log.i(TAG, "setEntry success");
 						showToast("Success");
 						done();
 						dismissProgressSpinner();
@@ -243,7 +269,108 @@ public class ControlScheduleFragment extends Fragment {
 
 					@Override
 					public void onError(int error) {
-						Log.i(TAG, "sendPacket failed: " + error);
+						Log.i(TAG, "setEntry failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+	private void clearEntry() {
+		showProgressSpinner();
+		BleLog.getInstance().LOGi(TAG, "clearEntry");
+
+		String text = _txtSchedulePacket.getText().toString();
+		text = text.replace("[", ""); // Remove all [
+		text = text.replace("]", ""); // Remove all ]
+		String[] textArr = text.split("[ ,]+"); // Split by space and/or comma
+		byte[] msgBytes = new byte[textArr.length];
+		for (int i=0; i<textArr.length; i++) {
+			msgBytes[i] = (byte)Integer.parseInt(textArr[i]);
+		}
+		BleLog.getInstance().LOGd(TAG, "txt=" + text);
+		BleLog.getInstance().LOGd(TAG, "msg=" + BleUtils.bytesToString(msgBytes));
+		final byte[] array = new byte[] {msgBytes[0]};
+
+		_handler.post(new ControlScheduleFragment.SequentialRunner("setEntry") {
+			@Override
+			public boolean execute() {
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						ControlMsg msg = new ControlMsg(BluenetConfig.CMD_SCHEDULE_ENTRY_CLEAR, array.length, array);
+						_ble.writeControl(_address, msg, execCallback);
+					}
+				}, new SimpleExecStatusCallback(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "clearEntry success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "clearEntry failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+	private void getList() {
+		showProgressSpinner();
+		BleLog.getInstance().LOGi(TAG, "getList");
+
+		_handler.post(new ControlScheduleFragment.SequentialRunner("getList") {
+			@Override
+			public boolean execute() {
+				_ble.connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						_ble.getBleExtState().getSchedule(_address, execCallback);
+					}
+				}, new SimpleExecStatusCallback(new IByteArrayCallback() {
+					@Override
+					public void onSuccess(byte[] bytes) {
+						Log.i(TAG, "getList success");
+						ScheduleListPacket schedule = new ScheduleListPacket();
+						if (!schedule.fromArray(bytes)) {
+							displayError(BleErrors.ERROR_MSG_PARSING);
+							BleLog.getInstance().LOGw(TAG, "Invalid schedule: " + BleUtils.bytesToString(bytes));
+							done();
+							dismissProgressSpinner();
+							return;
+						}
+						showToast("Success");
+						final String scheduleStr = schedule.toString();
+						Log.i(TAG, scheduleStr);
+						Activity activity = getActivity();
+						if (activity == null) {
+							return;
+						}
+						activity.runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								_textScheduleList.setText(scheduleStr);
+							}
+						});
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "getList failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
@@ -257,7 +384,7 @@ public class ControlScheduleFragment extends Fragment {
 	private void setId() {
 		Integer value = getInt(_txtScheduleId);
 		if (value == null) return;
-		_packet._id = value;
+		_packet._index = value;
 		updatePacket();
 	}
 
@@ -268,28 +395,41 @@ public class ControlScheduleFragment extends Fragment {
 			showToast("Invalid number");
 			return;
 		}
-		_packet._overrideMask = (byte)((long)value);
+		_packet._entry._overrideMask = (byte)((long)value);
 		updatePacket();
 	}
 
 	private void setTime() {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
-		java.util.Date time = null;
-		try {
-			time = dateFormat.parse(_txtScheduleTimestamp.getText().toString());
-		} catch (java.text.ParseException e) {
-			showToast("Invalid timestamp");
-			return;
+		String timeString = _txtScheduleTimestamp.getText().toString();
+		if (android.text.TextUtils.isDigitsOnly(timeString)) {
+			long value;
+			try {
+				value = Long.parseLong(timeString);
+			} catch (NumberFormatException e) {
+				showToast("Invalid number");
+				return;
+			}
+			_packet._entry._timestamp = value;
 		}
-		_packet._timestamp = time.getTime() / 1000;
+		else {
+			SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd kk:mm:ss z yyyy");
+			java.util.Date time = null;
+			try {
+				time = dateFormat.parse(timeString);
+			} catch (java.text.ParseException e) {
+				showToast("Invalid timestamp");
+				return;
+			}
+			_packet._entry._timestamp = time.getTime() / 1000;
+		}
 		updatePacket();
 	}
 
 	private void setRepeatMinute() {
 		Integer value = getInt(_txtScheduleRepeatMinute);
 		if (value == null) return;
-		_packet._repeatType = ScheduleEntryPacket.SCHEDULE_REPEAT_MINUTES;
-		_packet._minutes = value;
+		_packet._entry._repeatType = ScheduleEntryPacket.REPEAT_MINUTES;
+		_packet._entry._minutes = value;
 		updatePacket();
 	}
 
@@ -300,28 +440,28 @@ public class ControlScheduleFragment extends Fragment {
 			showToast("Invalid number");
 			return;
 		}
-		_packet._repeatType = ScheduleEntryPacket.SCHEDULE_REPEAT_DAY;
-		_packet._dayOfWeekMask = (byte)((long)value);
+		_packet._entry._repeatType = ScheduleEntryPacket.REPEAT_DAY;
+		_packet._entry._dayOfWeekMask = (byte)((long)value);
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(new Date());
 		calendar.setFirstDayOfWeek(Calendar.SUNDAY); // Make the week start at sunday
 		calendar.add(Calendar.DATE, 1); // Add a day
 		int dayTomorrow = calendar.get(Calendar.DAY_OF_WEEK) - 1; // Calendar days are 1-7, we need 0-6
-		_packet._dayOfWeekNext = (byte)dayTomorrow;
+		_packet._entry._dayOfWeekNext = (byte)dayTomorrow;
 		updatePacket();
 	}
 
 	private void setRepeatOnce() {
-		_packet._repeatType = ScheduleEntryPacket.SCHEDULE_REPEAT_ONCE;
+		_packet._entry._repeatType = ScheduleEntryPacket.REPEAT_ONCE;
 		updatePacket();
 	}
 
 	private void setActionSwitch() {
 		Integer value = getInt(_txtScheduleActionSwitch);
 		if (value == null) return;
-		_packet._switchVal = value;
-		_packet._actionType = ScheduleEntryPacket.SCHEDULE_ACTION_SWITCH;
+		_packet._entry._switchVal = value;
+		_packet._entry._actionType = ScheduleEntryPacket.ACTION_SWITCH;
 		updatePacket();
 	}
 
@@ -332,12 +472,12 @@ public class ControlScheduleFragment extends Fragment {
 	private void setActionFadeSwitch(boolean setDuration) {
 		Integer value = getInt(_txtScheduleActionFadeSwitch);
 		if (value == null) return;
-		_packet._switchVal = value;
+		_packet._entry._switchVal = value;
 		if (setDuration) {
 			setActionFadeDuration(false);
 		}
 		else {
-			_packet._actionType = ScheduleEntryPacket.SCHEDULE_ACTION_FADE;
+			_packet._entry._actionType = ScheduleEntryPacket.ACTION_FADE;
 			updatePacket();
 		}
 	}
@@ -349,18 +489,18 @@ public class ControlScheduleFragment extends Fragment {
 	private void setActionFadeDuration(boolean setSwitch) {
 		Integer value = getInt(_txtScheduleActionFadeDuration);
 		if (value == null) return;
-		_packet._fadeDuration = value;
+		_packet._entry._fadeDuration = value;
 		if (setSwitch) {
 			setActionFadeSwitch(false);
 		}
 		else {
-			_packet._actionType = ScheduleEntryPacket.SCHEDULE_ACTION_FADE;
+			_packet._entry._actionType = ScheduleEntryPacket.ACTION_FADE;
 			updatePacket();
 		}
 	}
 
 	private void setActionToggle() {
-		_packet._actionType = ScheduleEntryPacket.SCHEDULE_ACTION_TOGGLE;
+		_packet._entry._actionType = ScheduleEntryPacket.ACTION_TOGGLE;
 		updatePacket();
 	}
 
