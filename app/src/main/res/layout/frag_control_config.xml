@@ -151,7 +151,7 @@
 			android:layout_marginTop="10dp"
 			android:layout_marginBottom="0dp"
 			android:layout_marginStart="0dp"
-			android:text="TxPower (-40, -30, -20, -16, -12, -8, -4, 0, 4)"
+			android:text="TxPower (-40, -20, -16, -12, -8, -4, 0, 4)"
 			android:textAlignment="center"/>
 		<LinearLayout
 			android:id="@+id/layConfigTxPower"
@@ -489,7 +489,7 @@
 			android:layout_height="wrap_content"
 			>
 			<EditText
-				android:id="@+id/txtConfigCurrentMultiplier"
+				android:id="@+id/txtConfigVoltageMultiplier"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_marginBottom="0dp"
@@ -498,14 +498,14 @@
 				android:inputType="numberDecimal"
 				android:text=""/>
 			<Button
-				android:id="@+id/btnConfigCurrentMultiplierGet"
+				android:id="@+id/btnConfigVoltageMultiplierGet"
 				android:layout_width="0dp"
 				android:layout_weight="1"
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
 			<Button
-				android:id="@+id/btnConfigCurrentMultiplierSet"
+				android:id="@+id/btnConfigVoltageMultiplierSet"
 				android:layout_width="0dp"
 				android:layout_weight="1"
 				android:layout_height="wrap_content"
@@ -530,7 +530,7 @@
 			android:layout_height="wrap_content"
 			>
 			<EditText
-				android:id="@+id/txtConfigVoltageMultiplier"
+				android:id="@+id/txtConfigCurrentMultiplier"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_marginBottom="0dp"
@@ -539,14 +539,14 @@
 				android:inputType="numberDecimal"
 				android:text=""/>
 			<Button
-				android:id="@+id/btnConfigVoltageMultiplierGet"
+				android:id="@+id/btnConfigCurrentMultiplierGet"
 				android:layout_width="0dp"
 				android:layout_weight="1"
 				android:layout_height="wrap_content"
 				android:text="get"
 				/>
 			<Button
-				android:id="@+id/btnConfigVoltageMultiplierSet"
+				android:id="@+id/btnConfigCurrentMultiplierSet"
 				android:layout_width="0dp"
 				android:layout_weight="1"
 				android:layout_height="wrap_content"
@@ -629,6 +629,47 @@
 				/>
 			<Button
 				android:id="@+id/btnConfigCurrentZeroSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigPowerZero"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Power zero (mW)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigPowerZero"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtConfigPowerZero"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnConfigPowerZeroGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+			<Button
+				android:id="@+id/btnConfigPowerZeroSet"
 				android:layout_width="0dp"
 				android:layout_weight="1"
 				android:layout_height="wrap_content"

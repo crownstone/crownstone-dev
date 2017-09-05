@@ -98,6 +98,9 @@ public class ControlConfigFragment extends Fragment {
 	private EditText _txtConfigCurrentZero;
 	private Button   _btnConfigCurrentZeroGet;
 	private Button   _btnConfigCurrentZeroSet;
+	private EditText _txtConfigPowerZero;
+	private Button   _btnConfigPowerZeroGet;
+	private Button   _btnConfigPowerZeroSet;
 
 
 	// Other stuff
@@ -408,6 +411,21 @@ public class ControlConfigFragment extends Fragment {
 			}
 		});
 
+		_txtConfigPowerZero    = (EditText) v.findViewById(R.id.txtConfigPowerZero);
+		_btnConfigPowerZeroGet = (Button)   v.findViewById(R.id.btnConfigPowerZeroGet);
+		_btnConfigPowerZeroSet = (Button)   v.findViewById(R.id.btnConfigPowerZeroSet);
+		_btnConfigPowerZeroGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getPowerZero();
+			}
+		});
+		_btnConfigPowerZeroSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setPowerZero();
+			}
+		});
 
 //		return super.onCreateView(inflater, container, savedInstanceState);
 		return v;
@@ -702,6 +720,19 @@ public class ControlConfigFragment extends Fragment {
 		setInt32("CurrentZero", _txtConfigCurrentZero, BluenetConfig.CONFIG_CURRENT_ZERO);
 	}
 
+
+
+	//////////////////////
+	//   POWER ZERO   //
+	//////////////////////
+
+	private void getPowerZero() {
+		getInt32("PowerZero", _txtConfigPowerZero, BluenetConfig.CONFIG_POWER_ZERO);
+	}
+
+	private void setPowerZero() {
+		setInt32("PowerZero", _txtConfigPowerZero, BluenetConfig.CONFIG_POWER_ZERO);
+	}
 
 
 
