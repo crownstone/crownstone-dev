@@ -1,8 +1,8 @@
-#Crownstone DEV
+# Crownstone Development App
 
-This app is designed to be used for developement of crownstone. 
+This app is designed to be used for (internal) development of crownstone technology. If you're a capable programmer you can compile it yourself and play around with it. For example, to obtain current curves on a high sample rate. However, we can't provide support on this development app. If you find issues, please report to https://github.com/crownstone/crownstone-dev/issues. These will have a lower priority however than issues on the [consumer app](https://github.com/crownstone/CrownstoneApp/issues) or the [bluenet](https://github.com/crownstone/bluenet/issues) firmware.
 
-##Installation
+## Installation
 
 To install the project follow these steps:
 
@@ -28,16 +28,16 @@ To install the project follow these steps:
 3. Import the project in Android Studio
 
         File > New > Import Project ...
-Choose the crownstone-dev dir
+        Choose the crownstone-dev dir
 
 4. Build and run
 
-##Copyrights
+## Copyrights
 
-The copyrights (2015) for this code belongs to [DoBots](http://dobots.nl) and are provided under an noncontagious open-source license:
+The copyrights (2015) for this code belongs to [Crownstone](https://crownstone.rocks) and are provided under an noncontagious open-source license:
 
-* Author: Dominik Egger
+* Author: Crownstone Team
 * Date: 05.07.2016
-* License: LGPL v3
-* Distributed Organisms B.V. (DoBots), http://www.dobots.nl
+* License: LGPL v3, Apache License 2.0, MIT
+* Crownstone B.V., https://crownstone.rocks
 * Rotterdam, The Netherlands
