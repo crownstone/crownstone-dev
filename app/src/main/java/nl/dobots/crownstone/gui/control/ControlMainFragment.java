@@ -20,11 +20,14 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import nl.dobots.bluenet.ble.base.BleConfiguration;
 import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
@@ -57,7 +60,6 @@ public class ControlMainFragment extends Fragment {
 
 	private static final int GRAPH_UPDATE_TIME = 2000;
 
-	private ImageView _lightBulb;
 	private CheckBox _cbPwmEnable;
 
 	private Button _btnRelayOff;
@@ -69,6 +71,12 @@ public class ControlMainFragment extends Fragment {
 	private ImageButton _btnZoomIn;
 	private ImageButton _btnZoomOut;
 	private ImageButton _btnZoomReset;
+
+	private TextView _txtLastScanResponse;
+	private TextView _txtPowerUsage;
+	private TextView _txtEnergyUsage;
+	private TextView _txtChipTemp;
+	private TextView _txtName;
 
 	private RelativeLayout _layStatistics;
 	private RelativeLayout _layControl;
@@ -107,8 +115,6 @@ public class ControlMainFragment extends Fragment {
 		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
 		_bleConfiguration = new BleConfiguration(_ble.getBleBase());
-
-		checkPwm();
 	}
 
 	private abstract class SequentialRunner implements Runnable {
@@ -178,10 +184,19 @@ public class ControlMainFragment extends Fragment {
 										if (serviceData != null && !serviceData.isExternalData()) {
 											_lastUpdate = System.nanoTime();
 											_graph.onServiceData(device.getName(), serviceData);
-											updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
 										} else {
 											_graph.updateRange();
 										}
+									}
+
+									// Update text views
+									CrownstoneServiceData serviceData = device.getServiceData();
+									if (serviceData != null && !serviceData.isExternalData()) {
+										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
+										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " mW");
+										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
+										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
+										_txtName.setText("Name: " + device.getName());
 									}
 								}
 							}
@@ -229,7 +244,6 @@ public class ControlMainFragment extends Fragment {
 										if (serviceData != null && !serviceData.isExternalData()) {
 											_lastUpdate = System.nanoTime();
 											_graph.onServiceData(device.getName(), serviceData);
-											updateLightBulb(serviceData.getPwm() > 0 || serviceData.getRelayState());
 											// Once an advertisement is received for the device, stop the scan again
 											_ble.stopScan(null);
 											done();
@@ -297,14 +311,6 @@ public class ControlMainFragment extends Fragment {
 		Log.i(TAG, "onCreateView");
 		View v = inflater.inflate(R.layout.frag_control_main, container, false);
 
-		_lightBulb = (ImageView) v.findViewById(R.id.imgLightBulb);
-		_lightBulb.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				toggleRelay();
-			}
-		});
-
 		_btnPwmOn = (Button) v.findViewById(R.id.btnPwmOn);
 		_btnPwmOn.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -367,7 +373,7 @@ public class ControlMainFragment extends Fragment {
 		});
 
 		_layPwm = (LinearLayout) v.findViewById(R.id.layPwm);
-		_layPower = (LinearLayout) v.findViewById(R.id.layPower);
+		_layPower = (LinearLayout) v.findViewById(R.id.layPwmOnOff);
 		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
 		_layStatistics = (RelativeLayout) v.findViewById(R.id.layContainer);
 
@@ -402,6 +408,12 @@ public class ControlMainFragment extends Fragment {
 
 		enablePwm(_pwmEnabled);
 		_handler.postDelayed(_advStateChecker, 2000);
+
+		_txtLastScanResponse = (TextView) v.findViewById(R.id.textLastScanResponse);
+		_txtPowerUsage       = (TextView) v.findViewById(R.id.textPowerUsage);
+		_txtEnergyUsage      = (TextView) v.findViewById(R.id.textEnergyUsage);
+		_txtChipTemp         = (TextView) v.findViewById(R.id.textChipTemp);
+		_txtName             = (TextView) v.findViewById(R.id.textName);
 
 		return v;
 	}
@@ -438,10 +450,6 @@ public class ControlMainFragment extends Fragment {
 					public void onSuccess(boolean result) {
 						// if reading was successful, we get the value in the onSuccess as
 						// the parameter
-
-						// now we can update the image of the light bulb to on (if PWM value is
-						// greater than 0) or off if it is 0
-						updateLightBulb(result);
 
 						// at the end we disconnect and close the device again. you could also
 						// stay connected if you want. but it's preferable to only connect,
@@ -651,8 +659,6 @@ public class ControlMainFragment extends Fragment {
 					@Override
 					public void onSuccess(boolean result) {
 						Log.i(TAG, "toggle success");
-						// power was toggled successfully, update the light bulb
-						updateLightBulb(result);
 						done();
 //						dismissProgressSpinner();
 						ProgressSpinner.dismiss();
@@ -671,23 +677,6 @@ public class ControlMainFragment extends Fragment {
 			}
 		});
 	}
-
-	private void updateLightBulb(final boolean on) {
-		if (getActivity() != null) {
-			getActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					_lightOn = on;
-					if (on) {
-						_lightBulb.setImageResource(getResources().getIdentifier("light_bulb_on", "drawable", getActivity().getPackageName()));
-					} else {
-						_lightBulb.setImageResource(getResources().getIdentifier("light_bulb_off", "drawable", getActivity().getPackageName()));
-					}
-				}
-			});
-		}
-	}
-
 
 	private void relayOff() {
 		showProgressSpinner();

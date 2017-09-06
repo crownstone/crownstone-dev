@@ -82,7 +82,7 @@
 		</LinearLayout>
 
 		<LinearLayout
-			android:id="@+id/layPower"
+			android:id="@+id/layPwmOnOff"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_above="@id/layRelay"
@@ -94,23 +94,59 @@
 				android:layout_height="wrap_content"
 				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
-				android:text="@string/control_power_on"/>
+				android:text="@string/control_dimmer_on"/>
 			<Button
 				android:id="@+id/btnPwmOff"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_weight="1"
-				android:text="@string/control_power_off"
+				android:text="@string/control_dimmer_off"
 				/>
 		</LinearLayout>
 
-		<ImageView
-			android:id="@+id/imgLightBulb"
-			android:layout_width="50dp"
-			android:layout_height="50dp"
-			android:layout_alignParentTop="true"
-			android:src="@drawable/light_bulb_off"
-			/>
+		<LinearLayout
+			android:id="@+id/layAdvertisementData"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_above="@id/layPwmOnOff"
+			android:orientation="vertical"
+			>
+			<TextView
+				android:id="@+id/textLastScanResponse"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginStart="0dp"
+				android:layout_marginTop="0dp"
+				android:text="Last scan response"/>
+			<TextView
+				android:id="@+id/textPowerUsage"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginStart="0dp"
+				android:layout_marginTop="0dp"
+				android:text="Power usage"/>
+			<TextView
+				android:id="@+id/textEnergyUsage"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginStart="0dp"
+				android:layout_marginTop="0dp"
+				android:text="Energy usage"/>
+			<TextView
+				android:id="@+id/textChipTemp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginStart="0dp"
+				android:layout_marginTop="0dp"
+				android:text="Chip temp"/>
+			<TextView
+				android:id="@+id/textName"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginStart="0dp"
+				android:layout_marginTop="0dp"
+				android:text="Name"/>
+	</LinearLayout>
 
 	</RelativeLayout>
 
