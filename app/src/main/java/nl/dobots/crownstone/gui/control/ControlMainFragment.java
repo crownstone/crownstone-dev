@@ -11,14 +11,17 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -60,26 +63,29 @@ public class ControlMainFragment extends Fragment {
 
 	private static final int GRAPH_UPDATE_TIME = 2000;
 
-	private CheckBox _cbPwmEnable;
+//	private CheckBox _cbPwmEnable;
 
 	private Button _btnRelayOff;
 	private Button _btnRelayOn;
 	private Button _btnPwmOff;
 	private Button _btnPwmOn;
 	private SeekBar _sbPwm;
+	private EditText _editPwm;
 	private RelativeLayout _layGraph;
 	private ImageButton _btnZoomIn;
 	private ImageButton _btnZoomOut;
 	private ImageButton _btnZoomReset;
 
 	private TextView _txtLastScanResponse;
+	private TextView _txtDimmerState;
 	private TextView _txtPowerUsage;
 	private TextView _txtEnergyUsage;
 	private TextView _txtChipTemp;
 	private TextView _txtName;
 
 	private RelativeLayout _layStatistics;
-	private RelativeLayout _layControl;
+//	private RelativeLayout _layControl;
+	private LinearLayout _layControl;
 
 	private Handler _handler;
 	private boolean _closing;
@@ -90,7 +96,7 @@ public class ControlMainFragment extends Fragment {
 	private String _address;
 
 	private AdvertisementGraph _graph;
-	private boolean _pwmEnabled = true;
+//	private boolean _pwmEnabled = true;
 	private LinearLayout _layPwm;
 	private LinearLayout _layPower;
 	private boolean _led1On;
@@ -160,7 +166,7 @@ public class ControlMainFragment extends Fragment {
 		public boolean execute() {
 			// update graph, to move x axis along even if device is not scanned, or currently connected
 
-			if (Build.VERSION.SDK_INT >= 24) {
+			if (Build.VERSION.SDK_INT >= 19) {
 				if (_ble.isDisconnected(null)) {
 					BleLog.getInstance().LOGi(TAG, "starting scan");
 					if (!_ble.isScanning()) {
@@ -193,10 +199,14 @@ public class ControlMainFragment extends Fragment {
 									CrownstoneServiceData serviceData = device.getServiceData();
 									if (serviceData != null && !serviceData.isExternalData()) {
 										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
+										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
 										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " mW");
 										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
 										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
 										_txtName.setText("Name: " + device.getName());
+
+										// It looks a bit weird to see state change to old state, when you set a new one
+//										_sbPwm.setProgress(serviceData.getPwm());
 									}
 								}
 							}
@@ -219,64 +229,76 @@ public class ControlMainFragment extends Fragment {
 					return false;
 				}
 			}
-			// On older versions we can stop scanning each time we got an advertisement,
-			// and start again after GRAPH_UPDATE_TIME
-			else {
-				if (_ble.isDisconnected(null)) {
-					BleLog.getInstance().LOGi(TAG, "starting scan");
-					if (!_ble.isScanning()) {
-						_ble.startScan(new IBleDeviceCallback() {
-							@Override
-							public void onSuccess() {
-
-							}
-
-							@Override
-							public void onDeviceScanned(BleDevice device) {
-								if (device.getAddress().equals(_address)) {
-									BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
-
-									// Draw a point at most every GRAPH_UPDATE_TIME ms.
-									if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME * 1000000) {
-										CrownstoneServiceData serviceData = device.getServiceData();
-
-										// Only use the data when it has serviceData which is not external data
-										if (serviceData != null && !serviceData.isExternalData()) {
-											_lastUpdate = System.nanoTime();
-											_graph.onServiceData(device.getName(), serviceData);
-											// Once an advertisement is received for the device, stop the scan again
-											_ble.stopScan(null);
-											done();
-										} else {
-											_graph.updateRange();
-										}
-									}
-								}
-								if (_closing) {
-									BleLog.getInstance().LOGd(TAG, "closing: stop scanning");
-									_ble.stopScan(null);
-									done();
-								}
-							}
-
-							@Override
-							public void onError(int error) {
-								BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
-								done();
-							}
-						});
-					}
-					_handler.postDelayed(this, GRAPH_UPDATE_TIME);
-					return true;
-				}
-				// When connected, keep updating range
-				else {
-					BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
-					_graph.updateRange();
-					_handler.postDelayed(this, 100);
-					return false;
-				}
-			}
+//			// On older versions we can stop scanning each time we got an advertisement,
+//			// and start again after GRAPH_UPDATE_TIME
+//			else {
+//				if (_ble.isDisconnected(null)) {
+//					BleLog.getInstance().LOGi(TAG, "starting scan");
+//					if (!_ble.isScanning()) {
+//						_ble.startScan(new IBleDeviceCallback() {
+//							@Override
+//							public void onSuccess() {
+//
+//							}
+//
+//							@Override
+//							public void onDeviceScanned(BleDevice device) {
+//								if (device.getAddress().equals(_address)) {
+//									BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
+//
+//									// Draw a point at most every GRAPH_UPDATE_TIME ms.
+//									if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME * 1000000) {
+//										CrownstoneServiceData serviceData = device.getServiceData();
+//
+//										// Only use the data when it has serviceData which is not external data
+//										if (serviceData != null && !serviceData.isExternalData()) {
+//											_lastUpdate = System.nanoTime();
+//											_graph.onServiceData(device.getName(), serviceData);
+//											// Once an advertisement is received for the device, stop the scan again
+//											_ble.stopScan(null);
+//											done();
+//										} else {
+//											_graph.updateRange();
+//										}
+//									}
+//									// Update text views
+//									CrownstoneServiceData serviceData = device.getServiceData();
+//									if (serviceData != null && !serviceData.isExternalData()) {
+//										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
+//										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
+//										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " mW");
+//										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
+//										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
+//										_txtName.setText("Name: " + device.getName());
+////										_sbPwm.setProgress(serviceData.getPwm());
+//									}
+//								}
+//								if (_closing) {
+//									BleLog.getInstance().LOGd(TAG, "closing: stop scanning");
+//									_ble.stopScan(null);
+//									done();
+//								}
+//							}
+//
+//							@Override
+//							public void onError(int error) {
+//								BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
+//								done();
+//							}
+//						});
+//					}
+//					_handler.postDelayed(this, GRAPH_UPDATE_TIME);
+//					return true;
+//				}
+//				// When connected, keep updating range
+//				else {
+//					BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
+//					_graph.updateRange();
+//					_handler.postDelayed(this, 100);
+//					return false;
+//				}
+//			}
+			return false;
 		}
 	};
 
@@ -345,16 +367,34 @@ public class ControlMainFragment extends Fragment {
 			}
 		});
 
-		_cbPwmEnable = (CheckBox) v.findViewById(R.id.cbPwmEnable);
-		_cbPwmEnable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//		_cbPwmEnable = (CheckBox) v.findViewById(R.id.cbPwmEnable);
+//		_cbPwmEnable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//			@Override
+//			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//				_sbPwm.setEnabled(isChecked);
+//			}
+//		});
+
+		_editPwm = (EditText) v.findViewById(R.id.editPwm);
+		_editPwm.setText("0");
+		_editPwm.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				_sbPwm.setEnabled(isChecked);
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				// The IME type should match the type set as imeOptions for the editText
+				if (actionId == EditorInfo.IME_ACTION_DONE) {
+					setPwm(Integer.parseInt(_editPwm.getText().toString()));
+					return true;
+				}
+//				// User pressed the enter button
+//				if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
+//					setPwm(Integer.parseInt(_editPwm.getText().toString()));
+//					return true;
+//				}
+				return false;
 			}
 		});
-
 		_sbPwm = (SeekBar) v.findViewById(R.id.sbPwm);
-		_sbPwm.setEnabled(_cbPwmEnable.isChecked());
+//		_sbPwm.setEnabled(_cbPwmEnable.isChecked());
 		_sbPwm.setMax(100);
 		_sbPwm.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			@Override
@@ -374,7 +414,8 @@ public class ControlMainFragment extends Fragment {
 
 		_layPwm = (LinearLayout) v.findViewById(R.id.layPwm);
 		_layPower = (LinearLayout) v.findViewById(R.id.layPwmOnOff);
-		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
+//		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
+		_layControl = (LinearLayout) v.findViewById(R.id.layControl);
 		_layStatistics = (RelativeLayout) v.findViewById(R.id.layContainer);
 
 		_layGraph = (RelativeLayout) v.findViewById(R.id.graph);
@@ -406,10 +447,11 @@ public class ControlMainFragment extends Fragment {
 			}
 		});
 
-		enablePwm(_pwmEnabled);
+//		enablePwm(_pwmEnabled);
 		_handler.postDelayed(_advStateChecker, 2000);
 
 		_txtLastScanResponse = (TextView) v.findViewById(R.id.textLastScanResponse);
+		_txtDimmerState      = (TextView) v.findViewById(R.id.textDimmerState);
 		_txtPowerUsage       = (TextView) v.findViewById(R.id.textPowerUsage);
 		_txtEnergyUsage      = (TextView) v.findViewById(R.id.textEnergyUsage);
 		_txtChipTemp         = (TextView) v.findViewById(R.id.textChipTemp);
@@ -740,7 +782,14 @@ public class ControlMainFragment extends Fragment {
 		});
 	}
 
-	private void setPwm(final int pwm) {
+	private void setPwm(final int pwmValue) {
+		Log.i(TAG, "setPwm " + pwmValue);
+		final int pwm = pwmValue > 100 ? 100 : pwmValue;
+
+		_editPwm.setText("" + pwm);
+		_sbPwm.setProgress(pwm);
+
+
 		showProgressSpinner();
 		_handler.post(new SequentialRunner("setPwm") {
 			@Override
@@ -778,11 +827,11 @@ public class ControlMainFragment extends Fragment {
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
 
-		if (_pwmEnabled) {
-			menu.findItem(R.id.action_pwm).setTitle("Disable PWM");
-		} else {
-			menu.findItem(R.id.action_pwm).setTitle("Enable PWM");
-		}
+//		if (_pwmEnabled) {
+//			menu.findItem(R.id.action_pwm).setTitle("Disable PWM");
+//		} else {
+//			menu.findItem(R.id.action_pwm).setTitle("Enable PWM");
+//		}
 
 		super.onPrepareOptionsMenu(menu);
 	}
@@ -795,24 +844,24 @@ public class ControlMainFragment extends Fragment {
 		int id = item.getItemId();
 
 		switch(id) {
-			case R.id.action_pwm: {
-				enablePwm(!_pwmEnabled);
-				break;
-			}
+//			case R.id.action_pwm: {
+//				enablePwm(!_pwmEnabled);
+//				break;
+//			}
 		}
 
 		return super.onOptionsItemSelected(item);
 	}
 
-	private void enablePwm(boolean enable) {
-		_pwmEnabled = enable;
-		_layPwm.setEnabled(_pwmEnabled);
-		_layPower.setEnabled(_pwmEnabled);
-		_cbPwmEnable.setEnabled(_pwmEnabled);
-		_btnPwmOff.setEnabled(_pwmEnabled);
-		_btnPwmOn.setEnabled(_pwmEnabled);
-		_sbPwm.setEnabled(_pwmEnabled);
-	}
+//	private void enablePwm(boolean enable) {
+//		_pwmEnabled = enable;
+//		_layPwm.setEnabled(_pwmEnabled);
+//		_layPower.setEnabled(_pwmEnabled);
+//		_cbPwmEnable.setEnabled(_pwmEnabled);
+//		_btnPwmOff.setEnabled(_pwmEnabled);
+//		_btnPwmOn.setEnabled(_pwmEnabled);
+//		_sbPwm.setEnabled(_pwmEnabled);
+//	}
 
 	private void showProgressSpinner() {
 		ProgressSpinner.show(getActivity());

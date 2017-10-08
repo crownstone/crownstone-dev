@@ -26,52 +26,109 @@
 		<!--android:visibility="invisible"-->
 		<!--/>-->
 
-	<RelativeLayout
+	<LinearLayout
 		android:id="@+id/layControl"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:layout_below="@id/layContainer"
+		android:orientation="vertical"
 		android:paddingBottom="@dimen/activity_vertical_margin"
 		android:paddingLeft="@dimen/activity_horizontal_margin"
 		android:paddingRight="@dimen/activity_horizontal_margin"
 		android:paddingTop="@dimen/activity_vertical_margin"
+		android:gravity="bottom"
 		>
 
+
+<!--
+		<TextView
+			android:id="@+id/textPwm"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="0dp"
+			android:layout_marginTop="10dp"
+			android:text="Dimmer"
+			android:layout_gravity="center_horizontal"
+			/>
+-->
 		<LinearLayout
-			android:id="@+id/layPwm"
+			android:id="@+id/layPwmOnOff"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_alignParentBottom="true"
 			android:orientation="horizontal"
 			>
-			<CheckBox
-				android:id="@+id/cbPwmEnable"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				/>
-			<SeekBar
-				android:id="@+id/sbPwm"
+
+			<Button
+				android:id="@+id/btnPwmOn"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
+				android:text="@string/control_dimmer_on"
+				/>
+			<Button
+				android:id="@+id/btnPwmOff"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="@string/control_dimmer_off"
+				/>
+		</LinearLayout>
+		<LinearLayout
+			android:id="@+id/layPwm"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+			<!--<CheckBox-->
+			<!--android:id="@+id/cbPwmEnable"-->
+			<!--android:layout_width="wrap_content"-->
+			<!--android:layout_height="wrap_content"-->
+			<!--/>-->
+			<EditText
+				android:id="@+id/editPwm"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:ems="10"
+				android:imeOptions="actionDone"
+				android:inputType="number"/>
+			<SeekBar
+				android:id="@+id/sbPwm"
+				android:layout_width="0dp"
+				android:layout_weight="7"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_vertical"
 				/>
 		</LinearLayout>
 
+
+<!--
+		<TextView
+			android:id="@+id/textRelay"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="0dp"
+			android:layout_marginTop="10dp"
+			android:text="Relay"
+			android:layout_gravity="center_horizontal"
+			/>
+-->
 		<LinearLayout
 			android:id="@+id/layRelay"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_above="@id/layPwm"
 			android:orientation="horizontal"
 			>
+
 			<Button
 				android:id="@+id/btnRelayOn"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
-				android:text="@string/control_relay_on"/>
+				android:text="@string/control_relay_on"
+				/>
 			<Button
 				android:id="@+id/btnRelayOff"
 				android:layout_width="0dp"
@@ -81,34 +138,20 @@
 				/>
 		</LinearLayout>
 
-		<LinearLayout
-			android:id="@+id/layPwmOnOff"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_above="@id/layRelay"
-			android:orientation="horizontal"
-			>
-			<Button
-				android:id="@+id/btnPwmOn"
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_gravity="center_vertical"
-				android:layout_weight="1"
-				android:text="@string/control_dimmer_on"/>
-			<Button
-				android:id="@+id/btnPwmOff"
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_weight="1"
-				android:text="@string/control_dimmer_off"
-				/>
-		</LinearLayout>
 
+		<TextView
+			android:id="@+id/textAdvertisementData"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="0dp"
+			android:layout_marginTop="10dp"
+			android:text="Advertisement data"
+			android:layout_gravity="center_horizontal"
+			/>
 		<LinearLayout
 			android:id="@+id/layAdvertisementData"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_above="@id/layPwmOnOff"
 			android:orientation="vertical"
 			>
 			<TextView
@@ -118,6 +161,13 @@
 				android:layout_marginStart="0dp"
 				android:layout_marginTop="0dp"
 				android:text="Last scan response"/>
+			<TextView
+				android:id="@+id/textDimmerState"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginStart="0dp"
+				android:layout_marginTop="0dp"
+				android:text="Dimmer state"/>
 			<TextView
 				android:id="@+id/textPowerUsage"
 				android:layout_width="wrap_content"
@@ -146,9 +196,9 @@
 				android:layout_marginStart="0dp"
 				android:layout_marginTop="0dp"
 				android:text="Name"/>
-	</LinearLayout>
+		</LinearLayout>
 
-	</RelativeLayout>
+	</LinearLayout>
 
 
 </RelativeLayout>

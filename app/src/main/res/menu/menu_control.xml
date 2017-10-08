@@ -20,12 +20,6 @@
 		app:showAsAction="never"/>
 
 	<item
-		android:id="@+id/action_pwm"
-		android:orderInCategory="100"
-		android:title="PWM Enable"
-		app:showAsAction="never"/>
-
-	<item
 		android:id="@+id/action_errorstate"
 		android:orderInCategory="100"
 		android:title="Get error state"
