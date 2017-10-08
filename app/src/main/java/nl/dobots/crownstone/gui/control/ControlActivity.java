@@ -20,6 +20,7 @@ import com.strongloop.android.loopback.callbacks.VoidCallback;
 
 import java.util.UUID;
 
+import nl.dobots.bluenet.ble.base.BleBaseEncryption;
 import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
@@ -112,6 +113,10 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 				_ble.enableEncryption(true);
 				_ble.getBleBase().setEncryptionKeys(keys);
 
+				if (keys.getHighestKey().accessLevel != BleBaseEncryption.ACCESS_LEVEL_ADMIN) {
+					showToast("No admin access!");
+				}
+
 				// get the stone object from the cloud
 				_stoneRepository = CrownstoneRestAPI.getStoneRepository();
 				_stoneRepository.findByAddress(_address, new ObjectCallback<Stone>() {
@@ -126,6 +131,9 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					}
 				});
 			}
+			else {
+				showToast("Unknown sphere!");
+			}
 		}
 
 		initUI();
@@ -139,6 +147,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	}
 
 	private void initUI() {
+		this.setTitle(_address);
 		_fragControlMain = new ControlMainFragment();
 		_fragControlMeasurements = new ControlMeasurementsFragment();
 		_fragControlConfig = new ControlConfigFragment();
