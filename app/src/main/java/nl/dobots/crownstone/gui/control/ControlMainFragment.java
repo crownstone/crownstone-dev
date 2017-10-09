@@ -393,6 +393,7 @@ public class ControlMainFragment extends Fragment {
 				return false;
 			}
 		});
+
 		_sbPwm = (SeekBar) v.findViewById(R.id.sbPwm);
 //		_sbPwm.setEnabled(_cbPwmEnable.isChecked());
 		_sbPwm.setMax(100);
@@ -456,6 +457,10 @@ public class ControlMainFragment extends Fragment {
 		_txtEnergyUsage      = (TextView) v.findViewById(R.id.textEnergyUsage);
 		_txtChipTemp         = (TextView) v.findViewById(R.id.textChipTemp);
 		_txtName             = (TextView) v.findViewById(R.id.textName);
+
+//		Log.i(TAG, "isFocusable: " + _layControl.isFocusable() + " " + _btnPwmOn.isFocusable() + " " + _sbPwm.isFocusable() + " " + _txtLastScanResponse.isFocusable());
+//		Log.i(TAG, "isFocusableTouch: " + _layControl.isFocusableInTouchMode() + " " + _btnPwmOn.isFocusableInTouchMode() + " " + _sbPwm.isFocusableInTouchMode() + " " + _txtLastScanResponse.isFocusableInTouchMode());
+		_layControl.requestFocus();
 
 		return v;
 	}
