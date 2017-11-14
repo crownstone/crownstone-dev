@@ -443,12 +443,6 @@ public class ControlScheduleFragment extends Fragment {
 		_packet._entry._repeatType = ScheduleEntryPacket.REPEAT_DAY;
 		_packet._entry._dayOfWeekMask = (byte)((long)value);
 
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(new Date());
-		calendar.setFirstDayOfWeek(Calendar.SUNDAY); // Make the week start at sunday
-		calendar.add(Calendar.DATE, 1); // Add a day
-		int dayTomorrow = calendar.get(Calendar.DAY_OF_WEEK) - 1; // Calendar days are 1-7, we need 0-6
-		_packet._entry._dayOfWeekNext = (byte)dayTomorrow;
 		updatePacket();
 	}
 
