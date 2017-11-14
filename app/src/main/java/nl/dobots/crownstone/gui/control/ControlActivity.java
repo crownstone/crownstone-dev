@@ -136,6 +136,9 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			}
 		}
 
+		// Enable encryption so we can control crownstones in setup
+		_ble.enableEncryption(true);
+
 		initUI();
 	}
 
