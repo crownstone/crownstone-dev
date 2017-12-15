@@ -427,7 +427,7 @@ public class ControlMeshFragment extends Fragment {
 	void writeCommandControl() {
 		BleLog.getInstance().LOGd(TAG, "writeCommandControl");
 		String text = _txtMeshCommandControlArray.getText().toString();
-		writeMeshMessage(text);
+		writeControlMessage(text);
 	}
 	void clearCommandControl() {
 		BleLog.getInstance().LOGd(TAG, "clearCommandControl");
@@ -440,7 +440,7 @@ public class ControlMeshFragment extends Fragment {
 		if (payload == null) {
 			return;
 		}
-		MeshControlMsg msg = new MeshControlMsg(BluenetConfig.MESH_HANDLE_COMMAND, payload.length, payload);
+		ControlMsg msg = new ControlMsg(BluenetConfig.CMD_MESH_COMMAND, payload.length, payload);
 		String text = BleUtils.bytesToString(msg.toArray());
 		_txtMeshCommandControlArray.setText(text);
 	}
