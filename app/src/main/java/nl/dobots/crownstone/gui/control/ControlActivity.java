@@ -322,19 +322,19 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 						Log.i(TAG, "success");
 						Toast.makeText(ControlActivity.this, "success", Toast.LENGTH_SHORT).show();
 						showToast("Factory reset successful");
-						_currentStone.destroy(new VoidCallback() {
-							@Override
-							public void onSuccess() {
-//								Toast.makeText(ControlActivity.this, "Stone removed from DB", Toast.LENGTH_SHORT).show();
-								showToast("Stone removed from DB");
-							}
+						if (_currentStone != null) {
+							_currentStone.destroy(new VoidCallback() {
+								@Override
+								public void onSuccess() {
+									showToast("Stone removed from DB");
+								}
 
-							@Override
-							public void onError(Throwable t) {
-//								Toast.makeText(ControlActivity.this, "Failed to remove Stone from DB", Toast.LENGTH_LONG).show();
-								showToast("Failed to remove Stone from DB");
-							}
-						});
+								@Override
+								public void onError(Throwable t) {
+									showToast("Failed to remove Stone from DB");
+								}
+							});
+						}
 						ProgressSpinner.dismiss();
 						finish();
 					}
