@@ -20,6 +20,71 @@
 		>
 
 
+
+		<TextView
+			android:id="@+id/textConfigDimmingAllowed"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="dimming allowed"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigDimmingAllowed"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<Button
+				android:id="@+id/btnConfigDimmingAllowedEnable"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="enable"
+				/>
+			<Button
+				android:id="@+id/btnConfigDimmingAllowedDisable"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="disable"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigSwitchLocked"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="switch lock"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigSwitchLocked"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<Button
+				android:id="@+id/btnConfigSwitchLockedEnable"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="enable"
+				/>
+			<Button
+				android:id="@+id/btnConfigSwitchLockedDisable"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="disable"
+				/>
+		</LinearLayout>
+
+
 		<TextView
 			android:id="@+id/textConfigRelayHigh"
 			android:layout_width="match_parent"

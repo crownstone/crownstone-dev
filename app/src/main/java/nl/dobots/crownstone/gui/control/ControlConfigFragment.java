@@ -25,6 +25,7 @@ import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.base.callbacks.ILongCallback;
 import nl.dobots.bluenet.ble.base.callbacks.SimpleExecStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.ConfigurationMsg;
+import nl.dobots.bluenet.ble.base.structs.ControlMsg;
 import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.cfg.BluenetConfig;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
@@ -56,6 +57,10 @@ import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 public class ControlConfigFragment extends Fragment {
 	private static final String TAG = ControlConfigFragment.class.getCanonicalName();
 
+	private Button   _btnConfigDimmingAllowedEnable;
+	private Button   _btnConfigDimmingAllowedDisable;
+	private Button   _btnConfigSwitchLockedEnable;
+	private Button   _btnConfigSwitchLockedDisable;
 	private EditText _txtConfigRelayHigh;
 	private Button   _btnConfigRelayHighGet;
 	private Button   _btnConfigRelayHighSet;
@@ -156,6 +161,36 @@ public class ControlConfigFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.frag_control_config, container, false);
+
+		_btnConfigDimmingAllowedEnable  = (Button)   v.findViewById(R.id.btnConfigDimmingAllowedEnable);
+		_btnConfigDimmingAllowedDisable = (Button)   v.findViewById(R.id.btnConfigDimmingAllowedDisable);
+		_btnConfigDimmingAllowedEnable.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				dimmingAllowedEnable();
+			}
+		});
+		_btnConfigDimmingAllowedDisable.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				dimmingAllowedDisable();
+			}
+		});
+
+		_btnConfigSwitchLockedEnable  = (Button)   v.findViewById(R.id.btnConfigSwitchLockedEnable);
+		_btnConfigSwitchLockedDisable = (Button)   v.findViewById(R.id.btnConfigSwitchLockedDisable);
+		_btnConfigSwitchLockedEnable.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				switchLockedEnable();
+			}
+		});
+		_btnConfigSwitchLockedDisable.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				switchLockedDisable();
+			}
+		});
 
 		_txtConfigRelayHigh    = (EditText) v.findViewById(R.id.txtConfigRelayHigh);
 		_btnConfigRelayHighGet = (Button)   v.findViewById(R.id.btnConfigRelayHighGet);
@@ -429,6 +464,42 @@ public class ControlConfigFragment extends Fragment {
 
 //		return super.onCreateView(inflater, container, savedInstanceState);
 		return v;
+	}
+
+
+
+	/////////////////////
+	// DIMMING ALLOWED //
+	/////////////////////
+
+	private void dimmingAllowedEnable() {
+		writeDimmingAllowed(true);
+	}
+
+	private void dimmingAllowedDisable() {
+		writeDimmingAllowed(false);
+	}
+
+	private void writeDimmingAllowed(boolean enable) {
+		optionEnable("allow dimming", enable, BluenetConfig.CMD_ALLOW_DIMMING);
+	}
+
+
+
+	///////////////////
+	// SWITCH LOCKED //
+	///////////////////
+
+	private void switchLockedEnable() {
+		writeSwitchLocked(true);
+	}
+
+	private void switchLockedDisable() {
+		writeSwitchLocked(false);
+	}
+
+	private void writeSwitchLocked(boolean enable) {
+		optionEnable("switch locked", enable, BluenetConfig.CMD_LOCK_SWITCH);
 	}
 
 
@@ -1245,6 +1316,38 @@ public class ControlConfigFragment extends Fragment {
 						dismissProgressSpinner();
 					}
 				}));
+				return true;
+			}
+		});
+	}
+
+	private void optionEnable(final String name, final boolean enable, final int controlType) {
+		showProgressSpinner();
+		final String enableStr = enable ? "Enable " : "Disable ";
+		BleLog.getInstance().LOGi(TAG, enableStr + name);
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+				byte[] valArr = new byte[1];
+				valArr[0] = (byte)(enable ? 1 : 0);
+				ControlMsg msg = new ControlMsg(controlType, valArr.length, valArr);
+				_ble.writeControl(_address, msg, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, enableStr + name + " success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, enableStr + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				});
 				return true;
 			}
 		});

@@ -70,10 +70,10 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 	// the following values are used to rescale the graph dynamically based on the min and max
 	// values
-	private long _maxPowerUsage;
-	private long _minPowerUsage;
-	private long _maxAccumulatedEnergy;
-	private long _minAccumulatedEnergy;
+	private double _maxPowerUsage;
+	private double _minPowerUsage;
+	private double _maxAccumulatedEnergy;
+	private double _minAccumulatedEnergy;
 	private long _minTemp;
 	private long _maxTemp;
 
@@ -127,14 +127,12 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 	 */
 	public void onServiceData(String name, CrownstoneServiceData serviceData) {
 		String str = name;
-		str += " bitmask=" + BleUtils.toUint8(serviceData.getEventBitmask());
-		str += " isNewData=" + serviceData.isNewData();
-		str += " isExternalData=" + serviceData.isExternalData();
-		str += " isError=" + serviceData.isErrorBit();
+		str += " isExternalData=" + serviceData.getFlagExternalData();
+		str += " isError=" + serviceData.getFlagError();
 		str += " temp=" + serviceData.getTemperature();
 		Log.d(TAG, str);
 
-		if (serviceData.isExternalData()) {
+		if (serviceData.getFlagExternalData()) {
 			return;
 		}
 		onPwm(serviceData.getPwm());
@@ -142,7 +140,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		onTemperature(serviceData.getTemperature());
 		onPowerUsage(serviceData.getPowerUsage());
 		onAccumulatedEnergy(serviceData.getAccumulatedEnergy());
-		onErrorState(serviceData.isErrorBit());
+		onErrorState(serviceData.getFlagError());
 
 		// check if the stone reset
 		String[] split = name.split("_");
@@ -211,7 +209,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		}
 	}
 
-	void onPowerUsage(int powerUsage) {
+	void onPowerUsage(double powerUsage) {
 
 		// add new point
 		XYSeries series = _dataSet.getSeriesAt(_powerUsageSeries);
@@ -219,14 +217,14 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 
 		// update y-axis range
 		if (powerUsage > _maxPowerUsage) {
-			_maxPowerUsage = (long)(powerUsage + (powerUsage - _minPowerUsage) * 0.2);
+			_maxPowerUsage = (powerUsage + (powerUsage - _minPowerUsage) * 0.2);
 		}
 		if (powerUsage < _minPowerUsage) {
-			_minPowerUsage = Math.min(0, (long)(powerUsage - (_maxPowerUsage - powerUsage) * 0.2));
+			_minPowerUsage = Math.min(0, (powerUsage - (_maxPowerUsage - powerUsage) * 0.2));
 		}
 	}
 
-	void onAccumulatedEnergy(int accumulatedEnergy) {
+	void onAccumulatedEnergy(double accumulatedEnergy) {
 
 		// add new point
 		XYSeries series = _dataSet.getSeriesAt(_accumulatedEnergySeries);

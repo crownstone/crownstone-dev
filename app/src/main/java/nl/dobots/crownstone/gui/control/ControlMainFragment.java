@@ -19,8 +19,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -65,11 +63,14 @@ public class ControlMainFragment extends Fragment {
 
 //	private CheckBox _cbPwmEnable;
 
+	private SeekBar _sbSwitch;
+	private EditText _editSwitch;
+	private Button _btnSwitchOn;
+	private Button _btnSwitchOff;
 	private Button _btnRelayOff;
 	private Button _btnRelayOn;
 	private Button _btnPwmOff;
 	private Button _btnPwmOn;
-	private SeekBar _sbPwm;
 	private EditText _editPwm;
 	private RelativeLayout _layGraph;
 	private ImageButton _btnZoomIn;
@@ -90,18 +91,10 @@ public class ControlMainFragment extends Fragment {
 	private Handler _handler;
 	private boolean _closing;
 
-	private boolean _lightOn;
-
 	private BleExt _ble;
 	private String _address;
 
 	private AdvertisementGraph _graph;
-//	private boolean _pwmEnabled = true;
-	private LinearLayout _layPwm;
-	private LinearLayout _layPower;
-	private boolean _led1On;
-	private boolean _led2On;
-	private boolean _connected = false;
 
 	private Context _context;
 
@@ -187,7 +180,7 @@ public class ControlMainFragment extends Fragment {
 										CrownstoneServiceData serviceData = device.getServiceData();
 
 										// Only use the data when it has serviceData which is not external data
-										if (serviceData != null && !serviceData.isExternalData()) {
+										if (serviceData != null && !serviceData.getFlagExternalData()) {
 											_lastUpdate = System.nanoTime();
 											_graph.onServiceData(device.getName(), serviceData);
 										} else {
@@ -197,7 +190,7 @@ public class ControlMainFragment extends Fragment {
 
 									// Update text views
 									CrownstoneServiceData serviceData = device.getServiceData();
-									if (serviceData != null && !serviceData.isExternalData()) {
+									if (serviceData != null && !serviceData.getFlagExternalData()) {
 										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
 										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
 										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " mW");
@@ -206,7 +199,7 @@ public class ControlMainFragment extends Fragment {
 										_txtName.setText("Name: " + device.getName());
 
 										// It looks a bit weird to see state change to old state, when you set a new one
-//										_sbPwm.setProgress(serviceData.getPwm());
+//										_sbSwitch.setProgress(serviceData.getPwm());
 									}
 								}
 							}
@@ -270,7 +263,7 @@ public class ControlMainFragment extends Fragment {
 //										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
 //										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
 //										_txtName.setText("Name: " + device.getName());
-////										_sbPwm.setProgress(serviceData.getPwm());
+////										_sbSwitch.setProgress(serviceData.getPwm());
 //									}
 //								}
 //								if (_closing) {
@@ -333,12 +326,61 @@ public class ControlMainFragment extends Fragment {
 		Log.i(TAG, "onCreateView");
 		View v = inflater.inflate(R.layout.frag_control_main, container, false);
 
+		_editSwitch = (EditText) v.findViewById(R.id.editSwitch);
+		_editSwitch.setText("0");
+		_editSwitch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				// The IME type should match the type set as imeOptions for the editText
+				if (actionId == EditorInfo.IME_ACTION_DONE) {
+					setSwitch(Integer.parseInt(_editSwitch.getText().toString()));
+					return true;
+				}
+				return false;
+			}
+		});
+
+		_sbSwitch = (SeekBar) v.findViewById(R.id.sbSwitch);
+//		_sbSwitch.setEnabled(_cbPwmEnable.isChecked());
+		_sbSwitch.setMax(99);
+		_sbSwitch.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				_editSwitch.setText("" + progress);
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				setSwitch(seekBar.getProgress());
+			}
+		});
+
+		_btnSwitchOn = (Button) v.findViewById(R.id.btnSwitchOn);
+		_btnSwitchOn.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				switchOn();
+			}
+		});
+
+		_btnSwitchOff = (Button) v.findViewById(R.id.btnSwitchOff);
+		_btnSwitchOff.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				switchOff();
+			}
+		});
+
 		_btnPwmOn = (Button) v.findViewById(R.id.btnPwmOn);
 		_btnPwmOn.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				pwmOn();
-//				toggleLed1();
 			}
 		});
 
@@ -347,7 +389,6 @@ public class ControlMainFragment extends Fragment {
 			@Override
 			public void onClick(View view) {
 				pwmOff();
-//				toggleLed2();
 			}
 		});
 
@@ -371,7 +412,7 @@ public class ControlMainFragment extends Fragment {
 //		_cbPwmEnable.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 //			@Override
 //			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//				_sbPwm.setEnabled(isChecked);
+//				_sbSwitch.setEnabled(isChecked);
 //			}
 //		});
 
@@ -394,27 +435,6 @@ public class ControlMainFragment extends Fragment {
 			}
 		});
 
-		_sbPwm = (SeekBar) v.findViewById(R.id.sbPwm);
-//		_sbPwm.setEnabled(_cbPwmEnable.isChecked());
-		_sbPwm.setMax(100);
-		_sbPwm.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-			@Override
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-			}
-
-			@Override
-			public void onStartTrackingTouch(SeekBar seekBar) {
-
-			}
-
-			@Override
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				setPwm(seekBar.getProgress());
-			}
-		});
-
-		_layPwm = (LinearLayout) v.findViewById(R.id.layPwm);
-		_layPower = (LinearLayout) v.findViewById(R.id.layPwmOnOff);
 //		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
 		_layControl = (LinearLayout) v.findViewById(R.id.layControl);
 		_layStatistics = (RelativeLayout) v.findViewById(R.id.layContainer);
@@ -458,271 +478,19 @@ public class ControlMainFragment extends Fragment {
 		_txtChipTemp         = (TextView) v.findViewById(R.id.textChipTemp);
 		_txtName             = (TextView) v.findViewById(R.id.textName);
 
-//		Log.i(TAG, "isFocusable: " + _layControl.isFocusable() + " " + _btnPwmOn.isFocusable() + " " + _sbPwm.isFocusable() + " " + _txtLastScanResponse.isFocusable());
-//		Log.i(TAG, "isFocusableTouch: " + _layControl.isFocusableInTouchMode() + " " + _btnPwmOn.isFocusableInTouchMode() + " " + _sbPwm.isFocusableInTouchMode() + " " + _txtLastScanResponse.isFocusableInTouchMode());
+//		Log.i(TAG, "isFocusable: " + _layControl.isFocusable() + " " + _btnPwmOn.isFocusable() + " " + _sbSwitch.isFocusable() + " " + _txtLastScanResponse.isFocusable());
+//		Log.i(TAG, "isFocusableTouch: " + _layControl.isFocusableInTouchMode() + " " + _btnPwmOn.isFocusableInTouchMode() + " " + _sbSwitch.isFocusableInTouchMode() + " " + _txtLastScanResponse.isFocusableInTouchMode());
 		_layControl.requestFocus();
 
 		return v;
 	}
 
-	private void checkPwm() {
-		ProgressSpinner.show(getActivity(), new ProgressSpinner.OnCancelListener() {
-			@Override
-			public void onCancel() {
-				getActivity().finish();
-			}
-		});
-
-		// first we have to connect to the device and discover the available characteristics.
-		_ble.connectAndDiscover(_address, new IDiscoveryCallback() {
-			@Override
-			public void onDiscovery(String serviceUuid, String characteristicUuid) {
-				// this function is called for every detected characteristic with the
-				// characteristic's UUID and the UUID of the service it belongs.
-				// you can keep track of what functions are available on the device,
-				// but you don't have to, the library does that for you.
-			}
-
-			@Override
-			public void onSuccess() {
-				// once discovery is completed, this function will be called. we can now execute
-				// the functions on the device. in this case, we want to know what the current
-				// PWM state is
-				_connected = true;
-
-				// first we try and read the PWM value from the device. this call will make sure
-				// that the PWM or State characteristic is available, otherwise an error is created
-				_ble.readRelay(new IBooleanCallback() {
-					@Override
-					public void onSuccess(boolean result) {
-						// if reading was successful, we get the value in the onSuccess as
-						// the parameter
-
-						// at the end we disconnect and close the device again. you could also
-						// stay connected if you want. but it's preferable to only connect,
-						// execute and disconnect, so that the device can continue advertising
-						// again.
-						_ble.disconnectAndClose(false, new IStatusCallback() {
-							@Override
-							public void onSuccess() {
-								// at this point we successfully disconnected and closed
-								// the device again
-								dismissProgressSpinner();
-							}
-
-							@Override
-							public void onError(int error) {
-								// an error occurred while disconnecting
-								dismissProgressSpinner();
-							}
-						});
-					}
-
-					@Override
-					public void onError(int error) {
-						// an error occurred while trying to read the PWM state
-						Log.e(TAG, "Failed to get Pwm: " + error);
-
-						if (error == BleErrors.ERROR_CHARACTERISTIC_NOT_FOUND) {
-
-							dismissProgressSpinner();
-							// return an error and exit if the PWM characteristic is not available
-							getActivity().runOnUiThread(new Runnable() {
-								@Override
-								public void run() {
-									Toast.makeText(getActivity(), "No PWM Characteristic found for this device!", Toast.LENGTH_LONG).show();
-								}
-							});
-							getActivity().finish();
-						} else {
-
-							// disconnect and close the device again
-							_ble.disconnectAndClose(false, new IStatusCallback() {
-								@Override
-								public void onSuccess() {
-									// at this point we successfully disconnected and closed
-									// the device again.
-									dismissProgressSpinner();
-								}
-
-								@Override
-								public void onError(int error) {
-									// an error occurred while disconnecting
-									dismissProgressSpinner();
-								}
-							});
-						}
-					}
-				});
-			}
-
-			@Override
-			public void onError(int error) {
-				// an error occurred during connect/discover
-				Log.e(TAG, "failed to connect/discover: " + error);
-				displayError(error);
-				dismissProgressSpinner();
-				// device will disconnect after idle and error 19 is thrown,
-				// so only close the activity if connect fails. if already connected
-				// only log the error without closing activity
-				if (error == 19) {
-					if (getActivity() != null) {
-						getActivity().finish();
-					}
-				}
-			}
-		});
-	}
-
-	private void toggleLed2() {
-		showProgressSpinner();
-		_handler.post(new SequentialRunner("toggleLed2") {
-			@Override
-			public boolean execute() {
-					_ble.writeLed(_address, 2, !_led2On, new IStatusCallback() {
-						@Override
-						public void onSuccess() {
-							Log.i(TAG, "write led success");
-							_led2On = !_led2On;
-							done();
-							dismissProgressSpinner();
-						}
-
-						@Override
-						public void onError(int error) {
-							Log.i(TAG, "write led failed: " + error);
-							displayError(error);
-							done();
-							dismissProgressSpinner();
-						}
-					});
-				return true;
-			}
-		});
-	}
-
-
-	private void toggleLed1() {
-		showProgressSpinner();
-		_handler.post(new SequentialRunner("toggleLed1") {
-			@Override
-			public boolean execute() {
-					_ble.writeLed(_address, 1, !_led1On, new IStatusCallback() {
-						@Override
-						public void onSuccess() {
-							Log.i(TAG, "write led success");
-							_led1On = !_led1On;
-							done();
-							dismissProgressSpinner();
-						}
-
-						@Override
-						public void onError(int error) {
-							Log.i(TAG, "write led failed: " + error);
-							displayError(error);
-							done();
-							dismissProgressSpinner();
-						}
-					});
-				return true;
-			}
-		});
-	}
-
 	private void pwmOff() {
-		showProgressSpinner();
-		_handler.post(new SequentialRunner("pwmOff") {
-			@Override
-			public boolean execute() {
-				// switch the device off. this function will check first if the device is connected
-				// (and connect if it is not), then it switches the device off, and disconnects again
-				// afterwards (once the disconnect timeout expires)
-				_ble.pwmOff(_address, new IStatusCallback() {
-					@Override
-					public void onSuccess() {
-						Log.i(TAG, "power off success");
-						// power was switch off successfully, update the light bulb
-//						updateLightBulb(false);
-						_sbPwm.setProgress(0);
-						done();
-						dismissProgressSpinner();
-					}
-
-					@Override
-					public void onError(int error) {
-						Log.i(TAG, "power off failed: " + error);
-						displayError(error);
-						done();
-						dismissProgressSpinner();
-					}
-				});
-				return true;
-			}
-		});
+		setPwm(0);
 	}
 
 	private void pwmOn() {
-		showProgressSpinner();
-		_handler.post(new SequentialRunner("pwmOn") {
-			@Override
-			public boolean execute() {
-				// switch the device on. this function will check first if the device is connected
-				// (and connect if it is not), then it switches the device on, and disconnects again
-				// afterwards (once the disconnect timeout expires)
-				_ble.pwmOn(_address, new IStatusCallback() {
-					@Override
-					public void onSuccess() {
-						Log.i(TAG, "power on success");
-						// power was switch on successfully, update the light bulb
-//						updateLightBulb(true);
-						_sbPwm.setProgress(100);
-						done();
-						dismissProgressSpinner();
-					}
-
-					@Override
-					public void onError(int error) {
-						Log.i(TAG, "power on failed: " + error);
-						displayError(error);
-						done();
-						dismissProgressSpinner();
-					}
-				});
-				return true;
-			}
-		});
-	}
-
-	private void toggleRelay() {
-		showProgressSpinner();
-		_handler.post(new SequentialRunner("toggleRelay") {
-			@Override
-			public boolean execute() {
-				// toggle the device switch, without needing to know the current state. this function will
-				// check first if the device is connected (and connect if it is not), then it reads the
-				// current PWM state, and depending on the state, decides if it needs to switch it on or
-				// off. in the end it disconnects again (once the disconnect timeout expires)
-				_ble.toggleRelay(_address, new IBooleanCallback() {
-					@Override
-					public void onSuccess(boolean result) {
-						Log.i(TAG, "toggle success");
-						done();
-//						dismissProgressSpinner();
-						ProgressSpinner.dismiss();
-					}
-
-					@Override
-					public void onError(int error) {
-						Log.e(TAG, "toggle failed: " + error);
-						displayError(error);
-						done();
-//						dismissProgressSpinner();
-						ProgressSpinner.dismiss();
-					}
-				});
-				return true;
-			}
-		});
+		setPwm(100);
 	}
 
 	private void relayOff() {
@@ -730,15 +498,13 @@ public class ControlMainFragment extends Fragment {
 		_handler.post(new SequentialRunner("relayOff") {
 			@Override
 			public boolean execute() {
-				// switch the device off. this function will check first if the device is connected
-				// (and connect if it is not), then it switches the device off, and disconnects again
+				// switch the relay off. this function will check first if the device is connected
+				// (and connect if it is not), then it switches the relay off, and disconnects again
 				// afterwards (once the disconnect timeout expires)
 				_ble.relayOff(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "relay off success");
-						// power was switch off successfully, update the light bulb
-//						updateLightBulb(false);
 						done();
 						dismissProgressSpinner();
 					}
@@ -761,15 +527,13 @@ public class ControlMainFragment extends Fragment {
 		_handler.post(new SequentialRunner("relayOn") {
 			@Override
 			public boolean execute() {
-				// switch the device on. this function will check first if the device is connected
-				// (and connect if it is not), then it switches the device on, and disconnects again
+				// switch the relay on. this function will check first if the device is connected
+				// (and connect if it is not), then it switches the relay on, and disconnects again
 				// afterwards (once the disconnect timeout expires)
 				_ble.relayOn(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "relay on success");
-						// power was switch on successfully, update the light bulb
-//						updateLightBulb(true);
 						done();
 						dismissProgressSpinner();
 					}
@@ -787,12 +551,55 @@ public class ControlMainFragment extends Fragment {
 		});
 	}
 
-	private void setPwm(final int pwmValue) {
-		Log.i(TAG, "setPwm " + pwmValue);
-		final int pwm = pwmValue > 100 ? 100 : pwmValue;
 
-		_editPwm.setText("" + pwm);
-		_sbPwm.setProgress(pwm);
+	private void setPwm(final int value) {
+		Log.i(TAG, "setPwm " + value);
+		final int pwmVal = value > 100 ? 100 : value;
+
+		_editPwm.setText("" + pwmVal);
+
+		showProgressSpinner();
+		_handler.post(new SequentialRunner("setPwm") {
+			@Override
+			public boolean execute() {
+				// set the pwm. this function will check first if the device is connected
+				// (and connect if it is not), then it sets pwm, and disconnects again
+				// afterwards (once the disconnect timeout expires)
+				_ble.writePwm(_address, pwmVal, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "set pwm success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "set pwm failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				});
+				return true;
+			}
+		});
+	}
+
+	private void switchOn() {
+		setSwitch(100);
+	}
+
+	private void switchOff() {
+		setSwitch(0);
+	}
+
+	private void setSwitch(final int value) {
+		Log.i(TAG, "setSwitch " + value);
+		final int switchVal = value > 100 ? 100 : value;
+
+		_editSwitch.setText("" + switchVal);
+		_sbSwitch.setProgress(switchVal);
 
 
 		showProgressSpinner();
@@ -802,23 +609,17 @@ public class ControlMainFragment extends Fragment {
 				// switch the device on. this function will check first if the device is connected
 				// (and connect if it is not), then it switches the device on, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.writePwm(_address, pwm, new IStatusCallback() {
+				_ble.writeSwitch(_address, switchVal, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
-						Log.i(TAG, "set pwm success");
-						// power was switch on successfully, update the light bulb
-//						if (pwm > 0) {
-//							updateLightBulb(true);
-//						} else {
-//							updateLightBulb(false);
-//						}
+						Log.i(TAG, "set switch success");
 						done();
 						dismissProgressSpinner();
 					}
 
 					@Override
 					public void onError(int error) {
-						Log.i(TAG, "set pwm failed: " + error);
+						Log.i(TAG, "set switch failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
@@ -865,7 +666,7 @@ public class ControlMainFragment extends Fragment {
 //		_cbPwmEnable.setEnabled(_pwmEnabled);
 //		_btnPwmOff.setEnabled(_pwmEnabled);
 //		_btnPwmOn.setEnabled(_pwmEnabled);
-//		_sbPwm.setEnabled(_pwmEnabled);
+//		_sbSwitch.setEnabled(_pwmEnabled);
 //	}
 
 	private void showProgressSpinner() {

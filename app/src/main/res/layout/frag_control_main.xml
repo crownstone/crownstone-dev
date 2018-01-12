@@ -45,54 +45,26 @@
 	    android:focusable="true"
 		>
 
-
 <!--
 		<TextView
-			android:id="@+id/textPwm"
+			android:id="@+id/textSwitch"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="0dp"
 			android:layout_marginTop="10dp"
-			android:text="Dimmer"
+			android:text="Switch"
 			android:layout_gravity="center_horizontal"
 			/>
 -->
 		<LinearLayout
-			android:id="@+id/layPwmOnOff"
+			android:id="@+id/laySwitchDim"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:orientation="horizontal"
 			>
 
-			<Button
-				android:id="@+id/btnPwmOn"
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_gravity="center_vertical"
-				android:layout_weight="1"
-				android:text="@string/control_dimmer_on"
-				/>
-			<Button
-				android:id="@+id/btnPwmOff"
-				android:layout_width="0dp"
-				android:layout_height="wrap_content"
-				android:layout_weight="1"
-				android:text="@string/control_dimmer_off"
-				/>
-		</LinearLayout>
-		<LinearLayout
-			android:id="@+id/layPwm"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:orientation="horizontal"
-			>
-			<!--<CheckBox-->
-			<!--android:id="@+id/cbPwmEnable"-->
-			<!--android:layout_width="wrap_content"-->
-			<!--android:layout_height="wrap_content"-->
-			<!--/>-->
 			<EditText
-				android:id="@+id/editPwm"
+				android:id="@+id/editSwitch"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
 				android:layout_weight="1"
@@ -101,33 +73,88 @@
 				android:inputType="number"
 				/>
 			<SeekBar
-				android:id="@+id/sbPwm"
+				android:id="@+id/sbSwitch"
 				android:layout_width="0dp"
 				android:layout_weight="7"
 				android:layout_height="wrap_content"
 				android:layout_gravity="center_vertical"
 				/>
 		</LinearLayout>
-
-
-<!--
-		<TextView
-			android:id="@+id/textRelay"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginStart="0dp"
-			android:layout_marginTop="10dp"
-			android:text="Relay"
-			android:layout_gravity="center_horizontal"
-			/>
--->
 		<LinearLayout
-			android:id="@+id/layRelay"
+			android:id="@+id/laySwitch"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:orientation="horizontal"
 			>
 
+			<Button
+				android:id="@+id/btnSwitchOn"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_vertical"
+				android:layout_weight="1"
+				android:text="@string/control_switch_on"
+				android:textStyle="bold"
+				/>
+
+			<Button
+				android:id="@+id/btnSwitchOff"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="@string/control_switch_off"
+				android:textStyle="bold"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textIndependentSwitch"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="0dp"
+			android:layout_marginTop="10dp"
+			android:text="Dev switch"
+			android:layout_gravity="center_horizontal"
+			/>
+		<LinearLayout
+			android:id="@+id/layIndependentSwitch"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
+
+			<Button
+				android:id="@+id/btnPwmOn"
+				style="@style/Widget.AppCompat.Button"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_vertical"
+				android:layout_weight="1"
+				android:text="@string/control_dimmer_on"
+				android:textColor="@android:color/holo_orange_dark"
+				/>
+
+			<EditText
+				android:id="@+id/editPwm"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:ems="10"
+				android:imeOptions="actionDone"
+				android:inputType="number"
+				android:textColor="@android:color/holo_orange_dark"
+				/>
+
+			<Button
+				android:id="@+id/btnPwmOff"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_vertical"
+				android:layout_weight="1"
+				android:text="@string/control_dimmer_off"
+				android:textColor="@android:color/holo_orange_dark"
+				/>
 			<Button
 				android:id="@+id/btnRelayOn"
 				android:layout_width="0dp"
@@ -135,13 +162,16 @@
 				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
 				android:text="@string/control_relay_on"
+				android:textColor="@android:color/holo_orange_dark"
 				/>
 			<Button
 				android:id="@+id/btnRelayOff"
 				android:layout_width="0dp"
 				android:layout_height="wrap_content"
+				android:layout_gravity="center_vertical"
 				android:layout_weight="1"
 				android:text="@string/control_relay_off"
+				android:textColor="@android:color/holo_orange_dark"
 				/>
 		</LinearLayout>
 
@@ -204,6 +234,9 @@
 				android:layout_marginTop="0dp"
 				android:text="Name"/>
 		</LinearLayout>
+
+
+
 
 	</LinearLayout>
 	</ScrollView>

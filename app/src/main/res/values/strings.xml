@@ -10,9 +10,11 @@
 	<string name="main_title">Welcome</string>
 	<string name="title_activity_control">ControlActivity</string>
 	<string name="control_disconnect">Disconnect</string>
-	<string name="control_dimmer_on">Dimmer ON</string>
-	<string name="control_dimmer_off">Dimmer OFF</string>
+	<string name="control_dimmer_on">IGBT ON</string>
+	<string name="control_dimmer_off">IGBT OFF</string>
 	<string name="control_relay_on">Relay ON</string>
 	<string name="control_relay_off">Relay OFF</string>
+	<string name="control_switch_on">Switch ON</string>
+	<string name="control_switch_off">Switch OFF</string>
 	<string name="action_login">Log in</string>
 </resources>
