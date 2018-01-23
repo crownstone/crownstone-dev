@@ -123,6 +123,11 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					@Override
 					public void onSuccess(Stone object) {
 						_currentStone = object;
+						String title = _address;
+						if (_currentStone != null) {
+							title += " (" + _currentStone.getUid() + ")";
+						}
+						setTitle(title);
 					}
 
 					@Override
@@ -150,7 +155,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	}
 
 	private void initUI() {
-		this.setTitle(_address);
+		setTitle(_address);
 		_fragControlMain = new ControlMainFragment();
 		_fragControlMeasurements = new ControlMeasurementsFragment();
 		_fragControlConfig = new ControlConfigFragment();
