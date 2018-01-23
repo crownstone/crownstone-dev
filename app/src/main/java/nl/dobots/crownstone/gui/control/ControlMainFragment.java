@@ -79,10 +79,15 @@ public class ControlMainFragment extends Fragment {
 
 	private TextView _txtLastScanResponse;
 	private TextView _txtDimmerState;
+	private TextView _txtPowerFactor;
 	private TextView _txtPowerUsage;
 	private TextView _txtEnergyUsage;
 	private TextView _txtChipTemp;
 	private TextView _txtName;
+	private TextView _txtDimmingAvailable;
+	private TextView _txtDimmingAllowed;
+	private TextView _txtSwitchLocked;
+	private TextView _txtTimeSet;
 
 	private RelativeLayout _layStatistics;
 //	private RelativeLayout _layControl;
@@ -193,10 +198,15 @@ public class ControlMainFragment extends Fragment {
 									if (serviceData != null && !serviceData.getFlagExternalData()) {
 										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
 										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
-										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " mW");
+										_txtPowerFactor.setText("Power factor: " + serviceData.getPowerFactor());
+										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " W");
 										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
 										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
 										_txtName.setText("Name: " + device.getName());
+										_txtDimmingAvailable.setText("Dimming available: " + serviceData.getFlagDimmingAvailable());
+										_txtDimmingAllowed.setText("Dimming allowed: " + serviceData.getFlagDimmingAllowed());
+										_txtSwitchLocked.setText("Switch locked: " + serviceData.getFlagSwitchLocked());
+										_txtTimeSet.setText("Time set: " + serviceData.getFlagTimeSet());
 
 										// It looks a bit weird to see state change to old state, when you set a new one
 //										_sbSwitch.setProgress(serviceData.getPwm());
@@ -473,10 +483,15 @@ public class ControlMainFragment extends Fragment {
 
 		_txtLastScanResponse = (TextView) v.findViewById(R.id.textLastScanResponse);
 		_txtDimmerState      = (TextView) v.findViewById(R.id.textDimmerState);
+		_txtPowerFactor      = (TextView) v.findViewById(R.id.textPowerFactor);
 		_txtPowerUsage       = (TextView) v.findViewById(R.id.textPowerUsage);
 		_txtEnergyUsage      = (TextView) v.findViewById(R.id.textEnergyUsage);
 		_txtChipTemp         = (TextView) v.findViewById(R.id.textChipTemp);
 		_txtName             = (TextView) v.findViewById(R.id.textName);
+		_txtDimmingAvailable = (TextView) v.findViewById(R.id.textDimmingAvailable);
+		_txtDimmingAllowed   = (TextView) v.findViewById(R.id.textDimmingAllowed);
+		_txtSwitchLocked     = (TextView) v.findViewById(R.id.textSwitchLocked);
+		_txtTimeSet          = (TextView) v.findViewById(R.id.textTimeSet);
 
 //		Log.i(TAG, "isFocusable: " + _layControl.isFocusable() + " " + _btnPwmOn.isFocusable() + " " + _sbSwitch.isFocusable() + " " + _txtLastScanResponse.isFocusable());
 //		Log.i(TAG, "isFocusableTouch: " + _layControl.isFocusableInTouchMode() + " " + _btnPwmOn.isFocusableInTouchMode() + " " + _sbSwitch.isFocusableInTouchMode() + " " + _txtLastScanResponse.isFocusableInTouchMode());
