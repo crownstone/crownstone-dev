@@ -613,8 +613,9 @@ public class ControlMainFragment extends Fragment {
 		Log.i(TAG, "setSwitch " + value);
 		final int switchVal = value > 100 ? 100 : value;
 
-		_editSwitch.setText("" + switchVal);
+		// First set seekbar, as changing that also updates the edit text.
 		_sbSwitch.setProgress(switchVal);
+		_editSwitch.setText("" + switchVal);
 
 
 		showProgressSpinner();
