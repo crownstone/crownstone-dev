@@ -20,6 +20,12 @@
 		app:showAsAction="never"/>
 
 	<item
+		android:id="@+id/action_firmwareversion"
+		android:orderInCategory="100"
+		android:title="Get firmware version"
+		app:showAsAction="never"/>
+
+	<item
 		android:id="@+id/action_errorstate"
 		android:orderInCategory="100"
 		android:title="Get error state"

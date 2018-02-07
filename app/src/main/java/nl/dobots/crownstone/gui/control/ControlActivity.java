@@ -21,6 +21,7 @@ import com.strongloop.android.loopback.callbacks.VoidCallback;
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.BleBaseEncryption;
+import nl.dobots.bluenet.ble.base.callbacks.IByteArrayCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IIntegerCallback;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
@@ -348,6 +349,26 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 					public void onError(int error) {
 						Log.e(TAG, "error" + error);
 						showToast("Failed to factory reset");
+						ProgressSpinner.dismiss();
+					}
+				});
+				break;
+			}
+			case R.id.action_firmwareversion: {
+				BleLog.getInstance().LOGd(TAG, "read firmware version");
+				ProgressSpinner.show(this);
+				_ble.readFirmwareRevision(_address, new IByteArrayCallback() {
+					@Override
+					public void onSuccess(byte[] result) {
+						String firmwareVersionStr = new String(result);
+						Log.i(TAG, "firmware version: " + firmwareVersionStr);
+						showToast("Firmware version: " + firmwareVersionStr);
+						ProgressSpinner.dismiss();
+					}
+
+					@Override
+					public void onError(int error) {
+						showToast("Failed to read firmware version");
 						ProgressSpinner.dismiss();
 					}
 				});
