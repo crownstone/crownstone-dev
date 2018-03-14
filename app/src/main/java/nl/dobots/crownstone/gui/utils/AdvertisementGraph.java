@@ -138,7 +138,7 @@ public class AdvertisementGraph implements ZoomListener, PanListener {
 		onPwm(serviceData.getPwm());
 		onRelayState(serviceData.getRelayState());
 		onTemperature(serviceData.getTemperature());
-		onPowerUsage(serviceData.getPowerUsage());
+		onPowerUsage(serviceData.getPowerUsageReal());
 		onAccumulatedEnergy(serviceData.getAccumulatedEnergy());
 		onErrorState(serviceData.getFlagError());
 

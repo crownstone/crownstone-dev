@@ -286,6 +286,13 @@
 					android:layout_marginStart="0dp"
 					android:layout_marginTop="0dp"
 					android:text="Time set:"/>
+				<TextView
+					android:id="@+id/textErrorBitmask"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="0dp"
+					android:layout_marginTop="0dp"
+					android:text="Errors:"/>
 			</LinearLayout>
 		</LinearLayout>
 

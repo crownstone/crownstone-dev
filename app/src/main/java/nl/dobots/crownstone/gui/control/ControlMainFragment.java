@@ -88,6 +88,7 @@ public class ControlMainFragment extends Fragment {
 	private TextView _txtDimmingAllowed;
 	private TextView _txtSwitchLocked;
 	private TextView _txtTimeSet;
+	private TextView _textErrorBitmask;
 
 	private RelativeLayout _layStatistics;
 //	private RelativeLayout _layControl;
@@ -199,7 +200,7 @@ public class ControlMainFragment extends Fragment {
 										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
 										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
 										_txtPowerFactor.setText("Power factor: " + serviceData.getPowerFactor());
-										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " W");
+										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsageReal() + " W");
 										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
 										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
 										_txtName.setText("Name: " + device.getName());
@@ -207,6 +208,7 @@ public class ControlMainFragment extends Fragment {
 										_txtDimmingAllowed.setText("Dimming allowed: " + serviceData.getFlagDimmingAllowed());
 										_txtSwitchLocked.setText("Switch locked: " + serviceData.getFlagSwitchLocked());
 										_txtTimeSet.setText("Time set: " + serviceData.getFlagTimeSet());
+										_textErrorBitmask.setText("Errors: " + serviceData.getErrorBitMaskString());
 
 										// It looks a bit weird to see state change to old state, when you set a new one
 //										_sbSwitch.setProgress(serviceData.getPwm());
@@ -492,6 +494,7 @@ public class ControlMainFragment extends Fragment {
 		_txtDimmingAllowed   = (TextView) v.findViewById(R.id.textDimmingAllowed);
 		_txtSwitchLocked     = (TextView) v.findViewById(R.id.textSwitchLocked);
 		_txtTimeSet          = (TextView) v.findViewById(R.id.textTimeSet);
+		_textErrorBitmask    = (TextView) v.findViewById(R.id.textErrorBitmask);
 
 //		Log.i(TAG, "isFocusable: " + _layControl.isFocusable() + " " + _btnPwmOn.isFocusable() + " " + _sbSwitch.isFocusable() + " " + _txtLastScanResponse.isFocusable());
 //		Log.i(TAG, "isFocusableTouch: " + _layControl.isFocusableInTouchMode() + " " + _btnPwmOn.isFocusableInTouchMode() + " " + _sbSwitch.isFocusableInTouchMode() + " " + _txtLastScanResponse.isFocusableInTouchMode());
