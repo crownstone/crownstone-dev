@@ -1,7 +1,6 @@
 package nl.dobots.crownstone.gui.utils;
 
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -9,9 +8,9 @@ import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.callbacks.EventListener;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceList;
+import nl.dobots.bluenet.scanner.BleScanner;
 import nl.dobots.bluenet.service.BleScanService;
-import nl.dobots.bluenet.service.callbacks.ScanDeviceListener;
-import nl.dobots.bluenet.utils.BleUtils;
+import nl.dobots.bluenet.scanner.callbacks.ScanDeviceListener;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.SelectControlFragment;
@@ -24,16 +23,17 @@ import nl.dobots.crownstone.gui.SelectControlFragment;
  *
  * @author Dominik Egger <dominik@dobots.nl>
  */
-public abstract class SelectFragment extends Fragment implements ScanDeviceListener, ServiceBindListener, EventListener {
+public abstract class SelectFragment extends Fragment implements ScanDeviceListener {
 
 	private static final String TAG = SelectControlFragment.class.getCanonicalName();
 
 	private static final int GUI_UPDATE_INTERVAL = 500;
 	private long _lastUpdate;
 
-	protected boolean _scanning;
+	protected boolean _scanning = false;
 
-	protected BleScanService _bleService;
+//	protected BleScanService _bleService;
+	protected BleScanner _bleScanner;
 
 	protected BleDeviceList _bleDeviceList;
 
@@ -44,22 +44,23 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 
 	@Override
 	public void onResume() {
-		// if service is not bound yet, register as service bind listener
-		if (!CrownstoneDevApp.getInstance().isServiceBound()) {
-			CrownstoneDevApp.getInstance().registerServiceBindListener(this);
-		} else {
-			// otherwise get the service
-			_bleService = CrownstoneDevApp.getInstance().getScanService();
-			_bleService.registerEventListener(SelectFragment.this);
-		}
+//		// if service is not bound yet, register as service bind listener
+//		if (!CrownstoneDevApp.getInstance().isServiceBound()) {
+//			CrownstoneDevApp.getInstance().registerServiceBindListener(this);
+//		} else {
+//			// otherwise get the service
+//			_bleService = CrownstoneDevApp.getInstance().getScanService();
+//			_bleService.registerEventListener(SelectFragment.this);
+//		}
+		_bleScanner = CrownstoneDevApp.getInstance().getScanner();
 
 		super.onResume();
 	}
 
 	@Override
 	public void onPause() {
-		// unregister as service bind listener in any case
-		CrownstoneDevApp.getInstance().unregisterServiceBindListener(this);
+//		// unregister as service bind listener in any case
+//		CrownstoneDevApp.getInstance().unregisterServiceBindListener(this);
 
 		super.onPause();
 	}
@@ -67,18 +68,19 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 	protected void stopScan() {
 		_scanning = false;
 		_btnScan.setText(getString(R.string.main_scan));
-		_bleService.stopIntervalScan();
+		_bleScanner.stopScanning();
 		// unregister as scan device listener again
-		_bleService.unregisterScanDeviceListener(this);
+		_bleScanner.unregisterScanDeviceListener(this);
 	}
 
 	protected void startScan(BleDeviceFilter filter) {
 		_scanning = true;
 		_btnScan.setText(getString(R.string.main_stop_scan));
 		// only register as scan device listener before starting the scan
-		_bleService.registerScanDeviceListener(this);
-		_bleService.startIntervalScan(2000, 500, filter);
-		_bleService.clearDeviceMap();
+		_bleScanner.registerScanDeviceListener(this);
+		_bleScanner.setScanFilter(filter);
+		_bleScanner.getIntervalScanner().getBleExt().clearDeviceMap();
+		_bleScanner.startScanning();
 		_adapter.clear();
 		_adapter.notifyDataSetChanged();
 	}
@@ -87,7 +89,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		// update the device list. since we are not keeping up a list of devices ourselves, we
 		// get the list of devices from the service
 
-		_bleDeviceList = _bleService.getDeviceMap().getRssiSortedList();
+		_bleDeviceList = _bleScanner.getIntervalScanner().getBleExt().getDeviceMap().getRssiSortedList();
 
 		if (!_bleDeviceList.isEmpty()) {
 			getActivity().runOnUiThread(new Runnable() {
@@ -114,22 +116,22 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		}
 	}
 
-	@Override
-	public void onBind(BleScanService service) {
-		_bleService = CrownstoneDevApp.getInstance().getScanService();
-		_bleService.registerEventListener(SelectFragment.this);
-		_btnScan.setEnabled(true);
-	}
+//	@Override
+//	public void onBind(BleScanService service) {
+//		_bleService = CrownstoneDevApp.getInstance().getScanService();
+//		_bleService.registerEventListener(SelectFragment.this);
+//		_btnScan.setEnabled(true);
+//	}
 
-	@Override
-	public void onEvent(Event event) {
-		switch(event) {
-			case BLE_PERMISSIONS_MISSING: {
-				_btnScan.setText(getString(R.string.main_scan));
-				// unregister as scan device listener again
-				_bleService.unregisterScanDeviceListener(this);
-				_scanning = false;
-			}
-		}
-	}
+//	@Override
+//	public void onEvent(Event event) {
+//		switch(event) {
+//			case BLE_PERMISSIONS_MISSING: {
+//				_btnScan.setText(getString(R.string.main_scan));
+//				// unregister as scan device listener again
+//				_bleService.unregisterScanDeviceListener(this);
+//				_scanning = false;
+//			}
+//		}
+//	}
 }

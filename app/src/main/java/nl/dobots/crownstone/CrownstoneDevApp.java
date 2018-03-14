@@ -39,6 +39,7 @@ import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.CrownstoneSetup;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceMap;
+import nl.dobots.bluenet.scanner.BleScanner;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.crownstone.cfg.Config;
@@ -75,7 +76,8 @@ public class CrownstoneDevApp extends Application {
 	// rssi value expiration after ...
 	public static final int DEVICE_EXPIRATION_TIME = 5000;
 
-	private BleScanService _service;
+//	private BleScanService _service;
+	private BleScanner _scanner;
 
 	private static CrownstoneDevApp instance = null;
 	private JSONArray _keys;
@@ -90,7 +92,7 @@ public class CrownstoneDevApp extends Application {
 
 	private boolean _bound = false;
 
-	private ArrayList<ServiceBindListener> _listeners = new ArrayList<>();
+//	private ArrayList<ServiceBindListener> _listeners = new ArrayList<>();
 
 	private Settings _settings;
 	private RestAdapter _restAdapter;
@@ -109,8 +111,11 @@ public class CrownstoneDevApp extends Application {
 		super.onCreate();
 		instance = this;
 
+		_scanner = new BleScanner();
+
 		// create our access point to the library
-		_ble = new BleExt();
+//		_ble = new BleExt();
+//		_ble = _scanner.getIntervalScanner().getBleExt();
 
 		// set device expiration time (after which rssi values are discarded)
 		BleDevice.setExpirationTime(DEVICE_EXPIRATION_TIME);
@@ -125,112 +130,119 @@ public class CrownstoneDevApp extends Application {
 			_stoneRepository = CrownstoneRestAPI.getStoneRepository();
 		}
 
-		// create and bind to the BleScanService
-		Intent intent = new Intent(this, BleScanService.class);
-		bindService(intent, _connection, Context.BIND_AUTO_CREATE);
 
-		_ble.setLogger(BleLog.getInstance());
-		_ble.getLogger().setLogLevel(Log.VERBOSE);
-		_ble.getBleBase().getLogger().setLogLevel(Log.VERBOSE);
+//		// create and bind to the BleScanService
+//		Intent intent = new Intent(this, BleScanService.class);
+//		bindService(intent, _connection, Context.BIND_AUTO_CREATE);
+
+//		_ble.setLogger(BleLog.getInstance());
+//		_ble.getLogger().setLogLevel(Log.VERBOSE);
+//		_ble.getBleBase().getLogger().setLogLevel(Log.VERBOSE);
 		BleLog.getInstance().setLogLevelPerTag(BleDevice.TAG, Log.DEBUG);
 	}
 
 	@Override
 	public void onTerminate() {
 		super.onTerminate();
-		// destroy ble library
-		_ble.destroy();
-		// unbind from service
-		unbindService(_connection);
+//		// destroy ble library
+//		_ble.destroy();
+//		// unbind from service
+//		unbindService(_connection);
+		_scanner.destroy();
 	}
 
 	public BleExt getBle() {
-		// make sure it is initialized (if it wasn't already)
-		if (!_bleInitialized) {
-			_ble.init(this, new IStatusCallback() {
-				@Override
-				public void onSuccess() {
-					Log.v(TAG, "onSuccess");
-					_bleInitialized = true;
-				}
+		return _scanner.getIntervalScanner().getBleExt();
+	}
+//		// make sure it is initialized (if it wasn't already)
+//		if (!_bleInitialized) {
+//			_ble.init(this, new IStatusCallback() {
+//				@Override
+//				public void onSuccess() {
+//					Log.v(TAG, "onSuccess");
+//					_bleInitialized = true;
+//				}
+//
+//				@Override
+//				public void onError(int error) {
+//					BleLog.getInstance().LOGe(TAG, "onError: " + error);
+//					_bleInitialized = false;
+//				}
+//			});
+//		}
+//		return _ble;
+//	}
 
-				@Override
-				public void onError(int error) {
-					BleLog.getInstance().LOGe(TAG, "onError: " + error);
-					_bleInitialized = false;
-				}
-			});
-		}
-		return _ble;
+//	public BleScanService getScanService() {
+//		return _service;
+//	}
+	public BleScanner getScanner() {
+		return _scanner;
 	}
 
-	public BleScanService getScanService() {
-		return _service;
-	}
+//	public boolean isServiceBound() {
+//		return _bound;
+//	}
 
-	public boolean isServiceBound() {
-		return _bound;
-	}
+//	// if the service was connected successfully, the service connection gives us access to the service
+//	private ServiceConnection _connection = new ServiceConnection() {
+//		@Override
+//		public void onServiceConnected(ComponentName name, IBinder service) {
+//			BleLog.getInstance().LOGi(TAG, "connected to ble scan service ...");
+//			// get the service from the binder
+//			BleScanService.BleScanBinder binder = (BleScanService.BleScanBinder) service;
+//			_service = binder.getService();
+//
+//			// set the scan interval (for how many ms should the service scan for devices)
+//			_service.setScanInterval(LOW_SCAN_INTERVAL);
+//			// set the scan pause (how many ms should the service wait before starting the next scan)
+//			_service.setScanPause(LOW_SCAN_PAUSE);
+//
+//			if (Build.VERSION.SDK_INT >= 21) {
+//				_service.getBleExt().getBleBase().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+//			}
+//
+//			_bound = true;
+//			onServiceBind(_service);
+//		}
+//
+//		@Override
+//		public void onServiceDisconnected(ComponentName name) {
+//			BleLog.getInstance().LOGi(TAG, "disconnected from service");
+//			_bound = false;
+//		}
+//	};
 
-	// if the service was connected successfully, the service connection gives us access to the service
-	private ServiceConnection _connection = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(ComponentName name, IBinder service) {
-			BleLog.getInstance().LOGi(TAG, "connected to ble scan service ...");
-			// get the service from the binder
-			BleScanService.BleScanBinder binder = (BleScanService.BleScanBinder) service;
-			_service = binder.getService();
-
-			// set the scan interval (for how many ms should the service scan for devices)
-			_service.setScanInterval(LOW_SCAN_INTERVAL);
-			// set the scan pause (how many ms should the service wait before starting the next scan)
-			_service.setScanPause(LOW_SCAN_PAUSE);
-
-			if (Build.VERSION.SDK_INT >= 21) {
-				_service.getBleExt().getBleBase().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
-			}
-
-			_bound = true;
-			onServiceBind(_service);
-		}
-
-		@Override
-		public void onServiceDisconnected(ComponentName name) {
-			BleLog.getInstance().LOGi(TAG, "disconnected from service");
-			_bound = false;
-		}
-	};
-
-	/**
-	 * Register as a ScanDeviceListener. Whenever a device is detected, an onDeviceScanned event
-	 * is triggered with the detected device as a parameter
-	 * @param listener the listener to register
-	 */
-	public synchronized void registerServiceBindListener(ServiceBindListener listener) {
-		if (!_listeners.contains(listener)) {
-			_listeners.add(listener);
-		}
-	}
-
-	/**
-	 * Unregister from the service
-	 * @param listener the listener to unregister
-	 */
-	public synchronized void unregisterServiceBindListener(ServiceBindListener listener) {
-		if (_listeners.contains(listener)) {
-			_listeners.remove(listener);
-		}
-	}
-
-	/**
-	 * Helper function to notify IntervalScanListeners when a scan interval starts
-	 * @param service
-	 */
-	private synchronized void onServiceBind(BleScanService service) {
-		for (ServiceBindListener listener : _listeners) {
-			listener.onBind(service);
-		}
-	}
+//	/**
+//	 * Register as a ScanDeviceListener. Whenever a device is detected, an onDeviceScanned event
+//	 * is triggered with the detected device as a parameter
+//	 * @param listener the listener to register
+//	 */
+//	public synchronized void registerServiceBindListener(ServiceBindListener listener) {
+//		if (!_listeners.contains(listener)) {
+//			_listeners.add(listener);
+//		}
+//	}
+//
+//	/**
+//	 * Unregister from the service
+//	 * @param listener the listener to unregister
+//	 */
+//	public synchronized void unregisterServiceBindListener(ServiceBindListener listener) {
+//		if (_listeners.contains(listener)) {
+//			_listeners.remove(listener);
+//		}
+//	}
+//
+//	/**
+//	 * Helper function to notify IntervalScanListeners when a scan interval starts
+//	 * @param service
+//	 */
+//	private synchronized void onServiceBind(BleScanService service) {
+//		for (ServiceBindListener listener : _listeners) {
+//			listener.onBind(service);
+//		}
+//	}
 
 	/**
 	 * Retrieve user data of currently logged in user

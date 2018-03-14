@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
+import nl.dobots.bluenet.scanner.BleScanner;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
@@ -87,7 +88,7 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 		initUI();
 
 		CrownstoneDevApp app = CrownstoneDevApp.getInstance();
-		BleScanService scanService = app.getScanService();
+		BleScanner scanner = app.getScanner();
 
 		// retrieve the sphere by proximity uuid
 		if (!Config.OFFLINE && !app.getSettings().isOfflineMode()) {
@@ -95,21 +96,22 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 			if (sphere != null) {
 				// and set the encryption keys
 				EncryptionKeys keys = app.getKeys(sphere.getId());
-				scanService.getBleExt().enableEncryption(true);
-				scanService.getBleExt().getBleBase().setEncryptionKeys(keys);
+//				scanner.getIntervalScanner().getBleExt().enableEncryption(true);
+				scanner.getIntervalScanner().getBleExt().getBleBase().setEncryptionKeys(keys);
 			}
 		}
 
 		// clear the device map and start scanning
-		scanService.clearDeviceMap();
-		scanService.startIntervalScan(LOW_SCAN_INTERVAL, LOW_SCAN_PAUSE, BleDeviceFilter.anyStone);
+		scanner.getIntervalScanner().getBleExt().clearDeviceMap();
+		scanner.setScanFilter(BleDeviceFilter.anyStone);
+		scanner.startScanning();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		// stop scanning
-		CrownstoneDevApp.getInstance().getScanService().stopIntervalScan();
+		CrownstoneDevApp.getInstance().getScanner().stopScanning();
 	}
 
 	private void initUI() {

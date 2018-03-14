@@ -58,9 +58,9 @@ public class SelectMonitorFragment extends SelectFragment {
 				}
 			}
 		});
-		if (!CrownstoneDevApp.getInstance().isServiceBound()) {
-			_btnScan.setEnabled(false);
-		}
+//		if (!CrownstoneDevApp.getInstance().isServiceBound()) {
+//			_btnScan.setEnabled(false);
+//		}
 
 		Button btnShow = (Button) v.findViewById(R.id.btnShow);
 		btnShow.setOnClickListener(new View.OnClickListener() {

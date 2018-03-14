@@ -18,9 +18,15 @@ import android.widget.Toast;
 
 import com.strongloop.android.loopback.callbacks.VoidCallback;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
+import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
+import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.callbacks.EventListener;
 import nl.dobots.bluenet.service.BleScanService;
 import nl.dobots.bluenet.utils.BleLog;
@@ -43,7 +49,7 @@ import nl.dobots.loopback.loopback.repositories.UserRepository;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class MainActivity  extends AppCompatActivity implements ServiceBindListener, EventListener {
+public class MainActivity  extends AppCompatActivity implements EventListener {
 
 	private static final String TAG = MainActivity.class.getCanonicalName();
 
@@ -60,13 +66,13 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 	private List<Sphere> _spheres;
 	private CrownstoneDevApp _app;
 
-	private BleScanService _bleService;
+//	private BleScanService _bleService;
 
 	private boolean _logToFile = true;
 	private String _logDir ="crownstone/dev-app";
 	private FileLogger _fileLogger;
 
-//	private BleExt _bleExt;
+	private BleExt _bleExt;
 
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -82,22 +88,62 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 //		} else {
 //			_fileLogger.requestPermissions(this);
 //		}
+		String formatStr = "MM/dd/yyyy HH:mm:ss";
+		Date date = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat(formatStr, Locale.ENGLISH);
+		BleLog.getInstance().LOGi(TAG, "time: " + dateFormat.format(date));
+		String timeStrUtc = dateFormat.format(date) + " UTC";
+		SimpleDateFormat dateFormatUtc = new SimpleDateFormat(formatStr + " z", Locale.ENGLISH);
+		try {
+			Date dateUtc = dateFormatUtc.parse(timeStrUtc);
+			BleLog.getInstance().LOGi(TAG, "time utc: " + dateFormat.format(dateUtc));
+		} catch (ParseException e) {
+			BleLog.getInstance().LOGw(TAG, "parse error: " + timeStrUtc);
+		}
+
+
 
 		// initialize user interface
 		initUI();
 
-		// if service is not yet bound, register as service bind listener
-		if (!_app.isServiceBound()) {
-			_app.registerServiceBindListener(this);
-		} else {
-			// otherwise get the service
-			onBind(_app.getScanService());
-		}
+		_app.getScanner().init(false, this, null, null, new IStatusCallback() {
+			@Override
+			public void onSuccess() {
+				BleLog.getInstance().setLogLevel(Log.VERBOSE);
+				_app.getScanner().getIntervalScanner().getBleExt().setLogger(BleLog.getInstance());
+//				_app.getScanner().getIntervalScanner().getBleExt().getLogger().setLogLevel(Log.VERBOSE);
+//				_app.getScanner().getIntervalScanner().getBleExt().getBleBase().getLogger().setLogLevel(Log.VERBOSE);
+				BleLog.getInstance().LOGi(TAG, "logLevel: " + BleLog.getInstance().getLogLevel());
+				BleLog.getInstance().LOGi(TAG, "logLevel: " + _app.getScanner().getIntervalScanner().getBleExt().getLogger().getLogLevel());
+				BleLog.getInstance().LOGi(TAG, "logLevel: " + _app.getScanner().getIntervalScanner().getBleExt().getBleBase().getLogger().getLogLevel());
+				BleLog.getInstance().LOGi(TAG, "Scanner init success.");
+			}
+
+			@Override
+			public void onError(int error) {
+				BleLog.getInstance().LOGe(TAG, "Scanner init error: " + error);
+				switch (error) {
+					case BleErrors.ERROR_LOCATION_PERMISSION_MISSING:
+						showErrorDialog("Permission missing", "Cannot scan for devices without permissions.");
+						break;
+				}
+			}
+		});
+
+//		// if service is not yet bound, register as service bind listener
+//		if (!_app.isServiceBound()) {
+//			_app.registerServiceBindListener(this);
+//		} else {
+//			// otherwise get the service
+//			onBind(_app.getScanService());
+//		}
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		BleLog.getInstance().LOGi(TAG, "onResume");
+		BleLog.getInstance().LOGi(TAG, "scanner ready: " + _app.getScanner().getIntervalScanner().getBleExt().getBleBase().isScannerReady());
 
 		// if app is resumed, make sure a user is logged in (or app is in offline mode)
 		if (!Config.OFFLINE) {
@@ -248,7 +294,7 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 				break;
 			}
 			case R.id.resetBle: {
-				_bleService.getBleExt().getBleBase().resetBle();
+				_bleExt.getBleBase().resetBle();
 				break;
 			}
 //			case R.id.spheres: {
@@ -265,20 +311,19 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 		return super.onOptionsItemSelected(item);
 	}
 
-	@Override
-	public void onBind(BleScanService service) {
-		// get the service object
-		_bleService = service;
-		// register activity as event listener
-		_bleService.registerEventListener(this);
-	}
+//	@Override
+//	public void onBind(BleScanService service) {
+//		// get the service object
+//		_bleService = service;
+//		// register activity as event listener
+//		_bleService.registerEventListener(this);
+//	}
 
 	@Override
 	public void onEvent(EventListener.Event event) {
 		switch(event) {
 			case BLE_PERMISSIONS_MISSING: {
-				// try to request permissions for BLE
-				_bleService.requestPermissions(this);
+				BleLog.getInstance().LOGe(TAG, "Missing permissions");
 			}
 		}
 	}
@@ -287,52 +332,43 @@ public class MainActivity  extends AppCompatActivity implements ServiceBindListe
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
 		// handle permission results
-		if (!_bleService.getBleExt().handlePermissionResult(requestCode, permissions, grantResults,
+		if (_bleExt != null && _bleExt.handlePermissionResult(requestCode, permissions, grantResults)) {
+			return;
+		}
+		if (_fileLogger != null && _fileLogger.handlePermissionResult(requestCode, permissions, grantResults,
 				new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						BleLog.addFileLogger(_fileLogger);
+					}
 
 					@Override
 					public void onError(int error) {
-						runOnUiThread(new Runnable() {
-							@Override
-							public void run() {
-								AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-								builder.setTitle("Fatal Error")
-										.setMessage("Cannot scan for devices without permissions. Please " +
-												"grant permissions or uninstall the app again!")
-										.setNeutralButton("OK", new DialogInterface.OnClickListener() {
-											@Override
-											public void onClick(DialogInterface dialog, int which) {
-//												dismiss();
-											}
-										});
-								builder.create().show();
-							}
-						});
+						BleLog.getInstance().LOGe(TAG, "File logger missing permission: " + error);
+						showErrorDialog("Permission missing", "Can't write to file without write permissions.");
 					}
-
-					@Override
-					public void onSuccess() {
-					}
-				}))
-		{
-			if (!_fileLogger.handlePermissionResult(requestCode, permissions, grantResults,
-					new IStatusCallback() {
-						@Override
-						public void onSuccess() {
-							BleLog.addFileLogger(_fileLogger);
-						}
-
-						@Override
-						public void onError(int error) {
-							Toast.makeText(MainActivity.this, "can't write to file without write permissions", Toast.LENGTH_LONG).show();
-							BleLog.getInstance().LOGe(TAG, "can't write to file without write permissions");
-						}
-					}))
-			{
-				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-			}
+				})) {
+			return;
 		}
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 	}
 
+	private void showErrorDialog(final String title, final String message) {
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setTitle(title)
+						.setMessage(message)
+						.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+//												dismiss();
+							}
+						});
+				builder.create().show();
+			}
+		});
+	}
 }
 

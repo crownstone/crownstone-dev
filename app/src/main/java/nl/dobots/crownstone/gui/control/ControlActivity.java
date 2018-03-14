@@ -111,7 +111,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 				EncryptionKeys keys = _app.getKeys(sphere.getId());
 
 				// set the keys on the library
-				_ble.enableEncryption(true);
+//				_ble.enableEncryption(true);
 				_ble.getBleBase().setEncryptionKeys(keys);
 
 				if (keys.getHighestKey().accessLevel != BleBaseEncryption.ACCESS_LEVEL_ADMIN) {
@@ -142,8 +142,8 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			}
 		}
 
-		// Enable encryption so we can control crownstones in setup
-		_ble.enableEncryption(true);
+//		// Enable encryption so we can control crownstones in setup
+//		_ble.enableEncryption(true);
 
 		initUI();
 	}
@@ -151,8 +151,8 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		// disable encryption again
-		_ble.enableEncryption(false);
+//		// disable encryption again
+//		_ble.enableEncryption(false);
 	}
 
 	private void initUI() {

@@ -15,6 +15,9 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
@@ -62,7 +65,8 @@ public class SelectControlFragment extends SelectFragment {
 				if (!_scanning) {
 					// start a scan with the given filter
 					startScan(_selectedItem);
-				} else {
+				}
+				else {
 					stopScan();
 				}
 			}
@@ -70,7 +74,9 @@ public class SelectControlFragment extends SelectFragment {
 
 		// create a spinner element with the device filter options
 		_spFilter = (Spinner) v.findViewById(R.id.spFilter);
-		_spFilter.setAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, BleDeviceFilter.values()));
+		BleDeviceFilter[] filterList = BleDeviceFilter.values();
+
+		_spFilter.setAdapter(new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_dropdown_item, filterList));
 		_spFilter.setSelection(2);
 
 		// create an empty list to assign to the list view. this will be updated whenever a

@@ -12,10 +12,10 @@ import android.widget.RelativeLayout;
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
+import nl.dobots.bluenet.ble.extended.callbacks.EventListener;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.ble.extended.structs.BleDeviceMap;
-import nl.dobots.bluenet.service.BleScanService;
-import nl.dobots.bluenet.service.callbacks.IntervalScanListener;
+import nl.dobots.bluenet.scanner.BleScanner;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
@@ -26,7 +26,7 @@ import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class AdvertisementFragment extends Fragment implements IntervalScanListener {
+public class AdvertisementFragment extends Fragment implements EventListener {
 
 	private static final String TAG = AdvertisementFragment.class.getCanonicalName();
 
@@ -37,7 +37,8 @@ public class AdvertisementFragment extends Fragment implements IntervalScanListe
 
 	private String _address;
 
-	private BleScanService _scanService;
+//	private BleScanService _scanService;
+	private BleScanner _scanner;
 	private AdvertisementGraph _graph;
 	private UUID _proximityUuid;
 
@@ -57,14 +58,14 @@ public class AdvertisementFragment extends Fragment implements IntervalScanListe
 
 		_address = getArguments().getString("address");
 
-		_scanService = CrownstoneDevApp.getInstance().getScanService();
-		_scanService.registerIntervalScanListener(this);
+		_scanner = CrownstoneDevApp.getInstance().getScanner();
+		_scanner.registerEventListener(this);
 	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		_scanService.unregisterIntervalScanListener(this);
+		_scanner.unregisterEventListener(this);
 	}
 
 	@Nullable
@@ -107,26 +108,27 @@ public class AdvertisementFragment extends Fragment implements IntervalScanListe
 		super.onDestroyView();
 	}
 
-
 	@Override
-	public void onScanStart() {
-		_scanService.clearDeviceMap();
-	}
+	public void onEvent(Event event) {
+		switch (event) {
+			case SCAN_INTERVAL_START: {
+				_scanner.getIntervalScanner().getBleExt().clearDeviceMap();
+				break;
+			}
+			case SCAN_INTERVAL_END: {
+				if (getActivity() == null) return;
 
-	@Override
-	public void onScanEnd() {
-		if (getActivity() == null) return;
-
-		BleDeviceMap deviceMap = _scanService.getDeviceMap();
-		BleDevice device = deviceMap.getDevice(_address);
-		if (device != null) {
-			CrownstoneServiceData serviceData = device.getServiceData();
-			if (serviceData != null) {
-				_graph.onServiceData(device.getName(), serviceData);
+				BleDeviceMap deviceMap = _scanner.getIntervalScanner().getBleExt().getDeviceMap();
+				BleDevice device = deviceMap.getDevice(_address);
+				if (device != null) {
+					CrownstoneServiceData serviceData = device.getServiceData();
+					if (serviceData != null) {
+						_graph.onServiceData(device.getName(), serviceData);
+					}
+				}
+				_graph.updateRange();
+				break;
 			}
 		}
-		_graph.updateRange();
-
 	}
-
 }
