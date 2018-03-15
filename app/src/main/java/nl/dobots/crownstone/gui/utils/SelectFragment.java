@@ -4,6 +4,7 @@ import android.support.v4.app.Fragment;
 import android.widget.Button;
 import android.widget.ListView;
 
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.ble.extended.callbacks.EventListener;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
@@ -32,6 +33,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 
 	protected boolean _scanning = false;
 
+	private CrownstoneDevApp _app;
 //	protected BleScanService _bleService;
 	protected BleScanner _bleScanner;
 
@@ -52,6 +54,7 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 //			_bleService = CrownstoneDevApp.getInstance().getScanService();
 //			_bleService.registerEventListener(SelectFragment.this);
 //		}
+		_app = CrownstoneDevApp.getInstance();
 		_bleScanner = CrownstoneDevApp.getInstance().getScanner();
 
 		super.onResume();
@@ -73,16 +76,36 @@ public abstract class SelectFragment extends Fragment implements ScanDeviceListe
 		_bleScanner.unregisterScanDeviceListener(this);
 	}
 
-	protected void startScan(BleDeviceFilter filter) {
-		_scanning = true;
-		_btnScan.setText(getString(R.string.main_stop_scan));
-		// only register as scan device listener before starting the scan
-		_bleScanner.registerScanDeviceListener(this);
-		_bleScanner.setScanFilter(filter);
-		_bleScanner.getIntervalScanner().getBleExt().clearDeviceMap();
-		_bleScanner.startScanning();
-		_adapter.clear();
-		_adapter.notifyDataSetChanged();
+	protected void startScan(final BleDeviceFilter filter) {
+		_bleScanner.checkReady(true, false, getActivity(), new IStatusCallback() {
+			@Override
+			public void onSuccess() {
+				_bleScanner.setScanFilter(filter);
+				_bleScanner.getIntervalScanner().getBleExt().clearDeviceMap();
+				_bleScanner.startScanning(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						_scanning = true;
+						_btnScan.setText(getString(R.string.main_stop_scan));
+						// only register as scan device listener before starting the scan <-- why?
+						_bleScanner.registerScanDeviceListener(SelectFragment.this);
+						_adapter.clear();
+						_adapter.notifyDataSetChanged();
+					}
+
+					@Override
+					public void onError(int error) {
+
+					}
+				});
+			}
+
+			@Override
+			public void onError(int error) {
+
+			}
+		});
+
 	}
 
 	private void updateDeviceList() {

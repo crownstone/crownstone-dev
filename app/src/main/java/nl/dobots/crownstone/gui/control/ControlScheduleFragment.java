@@ -32,6 +32,7 @@ import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.callbacks.IExecuteCallback;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.bluenet.utils.BleUtils;
+import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 
@@ -69,7 +70,8 @@ public class ControlScheduleFragment extends Fragment {
 	private ScheduleCommandPacket _packet;
 
 	// Other stuff
-	private BleExt _ble;
+	private CrownstoneDevApp _app;
+//	private BleExt _ble;
 	private String _address;
 	private boolean _closing;
 	private Handler _handler;
@@ -82,7 +84,8 @@ public class ControlScheduleFragment extends Fragment {
 		ht.start();
 		_handler = new Handler(ht.getLooper());
 
-		_ble = ControlActivity.getInstance().getBle();
+		_app = CrownstoneDevApp.getInstance();
+//		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
 		_packet = new ScheduleCommandPacket();
 	}
@@ -92,13 +95,12 @@ public class ControlScheduleFragment extends Fragment {
 		super.onDestroy();
 		_closing = true;
 		_handler.removeCallbacksAndMessages(null);
-		if (_ble.isScanning()) {
-			_ble.stopScan(null);
-		}
+		_app.getScanner().stopScanning();
+
 		// finish has to be called on the library to release the objects if the library
 		// is not used anymore
-		if (_ble.isConnected(null)) {
-			_ble.disconnectAndClose(false, new IStatusCallback() {
+		if (_app.getBle().isConnected(null)) {
+			_app.getBle().disconnectAndClose(false, new IStatusCallback() {
 				@Override
 				public void onSuccess() {
 
@@ -252,11 +254,11 @@ public class ControlScheduleFragment extends Fragment {
 		_handler.post(new ControlScheduleFragment.SequentialRunner("setEntry") {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						ControlMsg msg = new ControlMsg(BluenetConfig.CMD_SCHEDULE_ENTRY_SET, array.length, array);
-						_ble.writeControl(_address, msg, execCallback);
+						_app.getBle().writeControl(_address, msg, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -299,11 +301,11 @@ public class ControlScheduleFragment extends Fragment {
 		_handler.post(new ControlScheduleFragment.SequentialRunner("setEntry") {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						ControlMsg msg = new ControlMsg(BluenetConfig.CMD_SCHEDULE_ENTRY_CLEAR, array.length, array);
-						_ble.writeControl(_address, msg, execCallback);
+						_app.getBle().writeControl(_address, msg, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -334,10 +336,10 @@ public class ControlScheduleFragment extends Fragment {
 		_handler.post(new ControlScheduleFragment.SequentialRunner("getList") {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_ble.getBleExtState().getSchedule(_address, execCallback);
+						_app.getBle().getBleExtState().getSchedule(_address, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IByteArrayCallback() {
 					@Override

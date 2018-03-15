@@ -23,6 +23,7 @@ import nl.dobots.bluenet.ble.mesh.structs.multiswitch.MeshMultiSwitchPacket;
 import nl.dobots.bluenet.ble.mesh.structs.cmd.MeshControlPacket;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.bluenet.utils.BleUtils;
+import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 
 /**
@@ -86,7 +87,8 @@ public class ControlMeshFragment extends Fragment {
 
 
 	// Other stuff
-	private BleExt  _ble;
+	private CrownstoneDevApp _app;
+//	private BleExt  _ble;
 	private String  _address;
 	private boolean _closing;
 	private Handler _handler;
@@ -99,7 +101,8 @@ public class ControlMeshFragment extends Fragment {
 		ht.start();
 		_handler = new Handler(ht.getLooper());
 
-		_ble = ControlActivity.getInstance().getBle();
+		_app = CrownstoneDevApp.getInstance();
+//		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
 
 		_meshKeepAlivePacket.setPayload(_meshKeepAliveSameTimeoutPacket);
@@ -111,13 +114,11 @@ public class ControlMeshFragment extends Fragment {
 		super.onDestroy();
 		_closing = true;
 		_handler.removeCallbacksAndMessages(null);
-		if (_ble.isScanning()) {
-			_ble.stopScan(null);
-		}
+		_app.getScanner().stopScanning();
 		// finish has to be called on the library to release the objects if the library
 		// is not used anymore
-		if (_ble.isConnected(null)) {
-			_ble.disconnectAndClose(false, new IStatusCallback() {
+		if (_app.getBle().isConnected(null)) {
+			_app.getBle().disconnectAndClose(false, new IStatusCallback() {
 				@Override
 				public void onSuccess() {
 
@@ -269,7 +270,7 @@ public class ControlMeshFragment extends Fragment {
 			BleLog.getInstance().LOGw(TAG, "Invalid message: " + BleUtils.bytesToString(msgBytes));
 			return;
 		}
-		_ble.writeMeshMessage(_address, msg, new IStatusCallback() {
+		_app.getBle().writeMeshMessage(_address, msg, new IStatusCallback() {
 			@Override
 			public void onSuccess() {
 				BleLog.getInstance().LOGd(TAG, "mesh message success");
@@ -298,7 +299,7 @@ public class ControlMeshFragment extends Fragment {
 			BleLog.getInstance().LOGw(TAG, "Invalid message: " + BleUtils.bytesToString(msgBytes));
 			return;
 		}
-		_ble.writeControl(_address, msg, new IStatusCallback() {
+		_app.getBle().writeControl(_address, msg, new IStatusCallback() {
 			@Override
 			public void onSuccess() {
 				BleLog.getInstance().LOGd(TAG, "mesh message success");

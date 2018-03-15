@@ -39,7 +39,9 @@ import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.extended.BleExt;
 import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
+import nl.dobots.bluenet.scanner.callbacks.ScanDeviceListener;
 import nl.dobots.bluenet.utils.BleLog;
+import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
 import nl.dobots.crownstone.gui.utils.ProgressSpinner;
@@ -55,11 +57,11 @@ import nl.dobots.crownstone.gui.utils.ProgressSpinner;
  * Created on 1-10-15
  * @author Dominik Egger
  */
-public class ControlMainFragment extends Fragment {
+public class ControlMainFragment extends Fragment implements ScanDeviceListener {
 
 	private static final String TAG = ControlMainFragment.class.getCanonicalName();
 
-	private static final int GRAPH_UPDATE_TIME = 2000;
+	private static final int GRAPH_UPDATE_TIME_MS = 2000;
 
 //	private CheckBox _cbPwmEnable;
 
@@ -97,7 +99,8 @@ public class ControlMainFragment extends Fragment {
 	private Handler _handler;
 	private boolean _closing;
 
-	private BleExt _ble;
+//	private BleExt _ble;
+	private CrownstoneDevApp _app;
 	private String _address;
 
 	private AdvertisementGraph _graph;
@@ -117,9 +120,10 @@ public class ControlMainFragment extends Fragment {
 		ht.start();
 		_handler = new Handler(ht.getLooper());
 
-		_ble = ControlActivity.getInstance().getBle();
+		_app = CrownstoneDevApp.getInstance();
+//		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
-		_bleConfiguration = new BleConfiguration(_ble.getBleBase());
+//		_bleConfiguration = new BleConfiguration(_ble.getBleBase());
 	}
 
 	private abstract class SequentialRunner implements Runnable {
@@ -165,160 +169,83 @@ public class ControlMainFragment extends Fragment {
 		public boolean execute() {
 			// update graph, to move x axis along even if device is not scanned, or currently connected
 
-			if (Build.VERSION.SDK_INT >= 19) {
-				if (_ble.isDisconnected(null)) {
-					BleLog.getInstance().LOGi(TAG, "starting scan");
-					if (!_ble.isScanning()) {
-						_ble.getBleBase().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
-						_ble.startScan(new IBleDeviceCallback() {
-							@Override
-							public void onSuccess() {
-
-							}
-
-							@Override
-							public void onDeviceScanned(BleDevice device) {
-								if (device.getAddress().equals(_address)) {
-									BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
-
-									// Draw a point at most every GRAPH_UPDATE_TIME ms.
-									if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME * 1000000) {
-										CrownstoneServiceData serviceData = device.getServiceData();
-
-										// Only use the data when it has serviceData which is not external data
-										if (serviceData != null && !serviceData.getFlagExternalData()) {
-											_lastUpdate = System.nanoTime();
-											_graph.onServiceData(device.getName(), serviceData);
-										} else {
-											_graph.updateRange();
-										}
-									}
-
-									// Update text views
-									CrownstoneServiceData serviceData = device.getServiceData();
-									if (serviceData != null && !serviceData.getFlagExternalData()) {
-										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
-										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
-										_txtPowerFactor.setText("Power factor: " + serviceData.getPowerFactor());
-										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsageReal() + " W");
-										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
-										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
-										_txtName.setText("Name: " + device.getName());
-										_txtDimmingAvailable.setText("Dimming available: " + serviceData.getFlagDimmingAvailable());
-										_txtDimmingAllowed.setText("Dimming allowed: " + serviceData.getFlagDimmingAllowed());
-										_txtSwitchLocked.setText("Switch locked: " + serviceData.getFlagSwitchLocked());
-										_txtTimeSet.setText("Time set: " + serviceData.getFlagTimeSet());
-										_textErrorBitmask.setText("Errors: " + serviceData.getErrorBitMaskString());
-
-										// It looks a bit weird to see state change to old state, when you set a new one
-//										_sbSwitch.setProgress(serviceData.getPwm());
-									}
-								}
-							}
-
-							@Override
-							public void onError(int error) {
-								BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
-							}
-						});
-
-					}
-					done();
-					return true;
-				}
-				// When connected, keep updating range
-				else {
-					BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
-					_graph.updateRange();
-					_handler.postDelayed(this, 100);
-					return false;
-				}
+			if (!_app.getBle().isDisconnected(null)) {
+				// When not disconnected, keep updating range
+				BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
+				_graph.updateRange();
+				_handler.postDelayed(this, 100);
+				return false;
 			}
-//			// On older versions we can stop scanning each time we got an advertisement,
-//			// and start again after GRAPH_UPDATE_TIME
-//			else {
-//				if (_ble.isDisconnected(null)) {
-//					BleLog.getInstance().LOGi(TAG, "starting scan");
-//					if (!_ble.isScanning()) {
-//						_ble.startScan(new IBleDeviceCallback() {
-//							@Override
-//							public void onSuccess() {
-//
-//							}
-//
-//							@Override
-//							public void onDeviceScanned(BleDevice device) {
-//								if (device.getAddress().equals(_address)) {
-//									BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
-//
-//									// Draw a point at most every GRAPH_UPDATE_TIME ms.
-//									if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME * 1000000) {
-//										CrownstoneServiceData serviceData = device.getServiceData();
-//
-//										// Only use the data when it has serviceData which is not external data
-//										if (serviceData != null && !serviceData.isExternalData()) {
-//											_lastUpdate = System.nanoTime();
-//											_graph.onServiceData(device.getName(), serviceData);
-//											// Once an advertisement is received for the device, stop the scan again
-//											_ble.stopScan(null);
-//											done();
-//										} else {
-//											_graph.updateRange();
-//										}
-//									}
-//									// Update text views
-//									CrownstoneServiceData serviceData = device.getServiceData();
-//									if (serviceData != null && !serviceData.isExternalData()) {
-//										_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
-//										_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
-//										_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsage() + " mW");
-//										_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
-//										_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
-//										_txtName.setText("Name: " + device.getName());
-////										_sbSwitch.setProgress(serviceData.getPwm());
-//									}
-//								}
-//								if (_closing) {
-//									BleLog.getInstance().LOGd(TAG, "closing: stop scanning");
-//									_ble.stopScan(null);
-//									done();
-//								}
-//							}
-//
-//							@Override
-//							public void onError(int error) {
-//								BleLog.getInstance().LOGe(TAG, "scan error: %d", error);
-//								done();
-//							}
-//						});
-//					}
-//					_handler.postDelayed(this, GRAPH_UPDATE_TIME);
-//					return true;
-//				}
-//				// When connected, keep updating range
-//				else {
-//					BleLog.getInstance().LOGv(TAG, "wait with starting scan..");
-//					_graph.updateRange();
-//					_handler.postDelayed(this, 100);
-//					return false;
-//				}
-//			}
-			return false;
+
+			BleLog.getInstance().LOGi(TAG, "starting scan");
+			_app.getScanner().setScanMode(ScanSettings.SCAN_MODE_BALANCED);
+			_app.getScanner().registerScanDeviceListener(ControlMainFragment.this);
+			_app.getScanner().startScanning(new IStatusCallback() {
+				@Override
+				public void onSuccess() {
+
+				}
+
+				@Override
+				public void onError(int error) {
+
+				}
+			});
+			done();
+			return true;
 		}
 	};
+
+	@Override
+	public void onDeviceScanned(BleDevice device) {
+		if (device.getAddress().equals(_address)) {
+			BleLog.getInstance().LOGv(TAG, "scanned:" + device.toString());
+
+			// Draw a point at most every GRAPH_UPDATE_TIME_MS ms.
+			if (System.nanoTime() - _lastUpdate > GRAPH_UPDATE_TIME_MS * 1000000) {
+				CrownstoneServiceData serviceData = device.getServiceData();
+
+				// Only use the data when it has serviceData which is not external data
+				if (serviceData != null && !serviceData.getFlagExternalData()) {
+					_lastUpdate = System.nanoTime();
+					_graph.onServiceData(device.getName(), serviceData);
+				} else {
+					_graph.updateRange();
+				}
+			}
+
+			// Update text views
+			CrownstoneServiceData serviceData = device.getServiceData();
+			if (serviceData != null && !serviceData.getFlagExternalData()) {
+				_txtLastScanResponse.setText("Last scanned: " + new SimpleDateFormat("HH:mm:ss").format(new Date()));
+				_txtDimmerState.setText("Dimmer state: " + serviceData.getPwm());
+				_txtPowerFactor.setText("Power factor: " + serviceData.getPowerFactor());
+				_txtPowerUsage.setText("Power usage: " + serviceData.getPowerUsageReal() + " W");
+				_txtEnergyUsage.setText("Energy used: " + serviceData.getAccumulatedEnergy() + " J");
+				_txtChipTemp.setText("Chip temp: " + serviceData.getTemperature() + " C");
+				_txtName.setText("Name: " + device.getName());
+				_txtDimmingAvailable.setText("Dimming available: " + serviceData.getFlagDimmingAvailable());
+				_txtDimmingAllowed.setText("Dimming allowed: " + serviceData.getFlagDimmingAllowed());
+				_txtSwitchLocked.setText("Switch locked: " + serviceData.getFlagSwitchLocked());
+				_txtTimeSet.setText("Time set: " + serviceData.getFlagTimeSet());
+				_textErrorBitmask.setText("Errors: " + serviceData.getErrorBitMaskString());
+
+				// It looks a bit weird to see state change to old state, when you set a new one
+//										_sbSwitch.setProgress(serviceData.getPwm());
+			}
+		}
+	}
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		_closing = true;
 		_handler.removeCallbacksAndMessages(null);
-		if (_ble.isScanning()) {
-			_ble.stopScan(null);
-		}
-		// finish has to be called on the library to release the objects if the library
-		// is not used anymore
-		if (_ble.isConnected(null)) {
-			_ble.disconnectAndClose(false, new IStatusCallback() {
+		_app.getScanner().stopScanning();
+		_app.getScanner().unregisterScanDeviceListener(ControlMainFragment.this);
+		// finish has to be called on the library to release the objects if the library is not used anymore
+		if (_app.getBle().isConnected(null)) {
+			_app.getBle().disconnectAndClose(false, new IStatusCallback() {
 				@Override
 				public void onSuccess() {
 
@@ -519,7 +446,7 @@ public class ControlMainFragment extends Fragment {
 				// switch the relay off. this function will check first if the device is connected
 				// (and connect if it is not), then it switches the relay off, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.relayOff(_address, new IStatusCallback() {
+				_app.getBle().relayOff(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "relay off success");
@@ -548,7 +475,7 @@ public class ControlMainFragment extends Fragment {
 				// switch the relay on. this function will check first if the device is connected
 				// (and connect if it is not), then it switches the relay on, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.relayOn(_address, new IStatusCallback() {
+				_app.getBle().relayOn(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "relay on success");
@@ -583,7 +510,7 @@ public class ControlMainFragment extends Fragment {
 				// set the pwm. this function will check first if the device is connected
 				// (and connect if it is not), then it sets pwm, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.writePwm(_address, pwmVal, new IStatusCallback() {
+				_app.getBle().writePwm(_address, pwmVal, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "set pwm success");
@@ -628,7 +555,7 @@ public class ControlMainFragment extends Fragment {
 				// switch the device on. this function will check first if the device is connected
 				// (and connect if it is not), then it switches the device on, and disconnects again
 				// afterwards (once the disconnect timeout expires)
-				_ble.writeSwitch(_address, switchVal, new IStatusCallback() {
+				_app.getBle().writeSwitch(_address, switchVal, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "set switch success");

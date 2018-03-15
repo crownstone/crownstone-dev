@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
+import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.extended.BleDeviceFilter;
 import nl.dobots.bluenet.scanner.BleScanner;
 import nl.dobots.bluenet.service.BleScanService;
@@ -88,7 +89,7 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 		initUI();
 
 		CrownstoneDevApp app = CrownstoneDevApp.getInstance();
-		BleScanner scanner = app.getScanner();
+		final BleScanner scanner = app.getScanner();
 
 		// retrieve the sphere by proximity uuid
 		if (!Config.OFFLINE && !app.getSettings().isOfflineMode()) {
@@ -101,10 +102,21 @@ public class MonitoringActivity extends AppCompatActivity implements ViewPagerAc
 			}
 		}
 
-		// clear the device map and start scanning
-		scanner.getIntervalScanner().getBleExt().clearDeviceMap();
-		scanner.setScanFilter(BleDeviceFilter.anyStone);
-		scanner.startScanning();
+		scanner.checkReady(true, false, this, new IStatusCallback() {
+			@Override
+			public void onSuccess() {
+				// clear the device map and start scanning
+				scanner.getIntervalScanner().getBleExt().clearDeviceMap();
+				scanner.setScanFilter(BleDeviceFilter.anyStone);
+				scanner.startScanning(null);
+			}
+
+			@Override
+			public void onError(int error) {
+
+			}
+		});
+
 	}
 
 	@Override

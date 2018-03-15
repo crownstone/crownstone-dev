@@ -74,7 +74,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 	}
 
 	private String _address;
-	private BleExt _ble;
+//	private BleExt _ble;
 
 	/**
 	 * Show the Control activity
@@ -101,7 +101,6 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		_proximityUuid = (UUID)getIntent().getSerializableExtra(EXTRA_PROXIMITY_UUID);
 
 		_app = CrownstoneDevApp.getInstance();
-		_ble = _app.getBle();
 
 		// retrieve the sphere by proximity uuid
 		if (!Config.OFFLINE && !_app.getSettings().isOfflineMode() && _proximityUuid != null) {
@@ -111,8 +110,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 				EncryptionKeys keys = _app.getKeys(sphere.getId());
 
 				// set the keys on the library
-//				_ble.enableEncryption(true);
-				_ble.getBleBase().setEncryptionKeys(keys);
+				_app.getBle().getBleBase().setEncryptionKeys(keys);
 
 				if (keys.getHighestKey().accessLevel != BleBaseEncryption.ACCESS_LEVEL_ADMIN) {
 					showToast("No admin access!");
@@ -248,10 +246,6 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 
 	}
 
-	public BleExt getBle() {
-		return _ble;
-	}
-
 	public String getAddress() {
 		return _address;
 	}
@@ -283,7 +277,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 		switch(id) {
 			case R.id.action_reset: {
 				ProgressSpinner.show(this);
-				_ble.resetDevice(_address, new IStatusCallback() {
+				_app.getBle().resetDevice(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "success");
@@ -302,7 +296,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			}
 			case R.id.action_dfu: {
 				ProgressSpinner.show(this);
-				_ble.resetToBootloader(_address, new IStatusCallback() {
+				_app.getBle().resetToBootloader(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "success");
@@ -322,7 +316,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			}
 			case R.id.action_factoryreset: {
 				ProgressSpinner.show(this);
-				_ble.writeFactoryReset(_address, new IStatusCallback() {
+				_app.getBle().writeFactoryReset(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "success");
@@ -357,7 +351,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			case R.id.action_firmwareversion: {
 				BleLog.getInstance().LOGd(TAG, "read firmware version");
 				ProgressSpinner.show(this);
-				_ble.readFirmwareRevision(_address, new IByteArrayCallback() {
+				_app.getBle().readFirmwareRevision(_address, new IByteArrayCallback() {
 					@Override
 					public void onSuccess(byte[] result) {
 						String firmwareVersionStr = new String(result);
@@ -377,7 +371,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			case R.id.action_errorstate: {
 				BleLog.getInstance().LOGd(TAG, "read error state");
 				ProgressSpinner.show(this);
-				_ble.getBleExtState().getErrorState(_address, new IIntegerCallback() {
+				_app.getBle().getBleExtState().getErrorState(_address, new IIntegerCallback() {
 					@Override
 					public void onSuccess(int result) {
 						String stateErrorStr = Integer.toBinaryString(result);
@@ -397,7 +391,7 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 			case R.id.action_reseterrorstate: {
 				BleLog.getInstance().LOGd(TAG, "reset error state");
 				ProgressSpinner.show(this);
-				_ble.writeResetStateErrors(_address, new IStatusCallback() {
+				_app.getBle().writeResetStateErrors(_address, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						showToast("State errors reset");

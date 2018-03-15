@@ -22,7 +22,7 @@
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7">
     <output url="file://$MODULE_DIR$/build/intermediates/classes/debug" />
     <output-test url="file://$MODULE_DIR$/build/intermediates/classes/test/debug" />
     <exclude-output />
@@ -89,7 +89,6 @@
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/instant-run-support" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/jniLibs" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/manifests" />
-      <excludeFolder url="file://$MODULE_DIR$/build/intermediates/pre-dexed" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/reload-dex" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/res" />
       <excludeFolder url="file://$MODULE_DIR$/build/intermediates/restart-dex" />
@@ -103,22 +102,22 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 24 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="support-v4-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-compat-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-media-compat-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="animated-vector-drawable-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-fragment-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-core-ui-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="recyclerview-v7-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="achartengine-1.2.0" level="project" />
-    <orderEntry type="library" exported="" name="appcompat-v7-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-vector-drawable-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-core-utils-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="support-annotations-24.2.1" level="project" />
-    <orderEntry type="library" exported="" name="design-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:recyclerview-v7-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-annotations:24.2.1@jar" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-media-compat-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-fragment-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-v4-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-vector-drawable-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-core-utils-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:animated-vector-drawable-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="__local_jars__:/mnt/work/dev/crownstone/crownstone-dev-app/app/libs/achartengine-1.2.0.jar:unspecified@jar" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:design-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-core-ui-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:appcompat-v7-24.2.1" level="project" />
+    <orderEntry type="library" exported="" name="com.android.support:support-compat-24.2.1" level="project" />
     <orderEntry type="module" module-name="loopback-sdk-android" exported="" />
-    <orderEntry type="module" module-name="bluenet" exported="" />
     <orderEntry type="module" module-name="crownstone-loopback-sdk" exported="" />
+    <orderEntry type="module" module-name="bluenet" exported="" />
     <orderEntry type="library" exported="" name="org.apache.http.legacy-android-24" level="project" />
   </component>
 </module>

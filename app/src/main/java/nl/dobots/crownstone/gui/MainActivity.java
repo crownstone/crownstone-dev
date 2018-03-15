@@ -106,29 +106,18 @@ public class MainActivity  extends AppCompatActivity implements EventListener {
 		// initialize user interface
 		initUI();
 
-		_app.getScanner().init(false, this, null, null, new IStatusCallback() {
+		_app.init(this, new IStatusCallback() {
 			@Override
 			public void onSuccess() {
-				BleLog.getInstance().setLogLevel(Log.VERBOSE);
-				_app.getScanner().getIntervalScanner().getBleExt().setLogger(BleLog.getInstance());
-//				_app.getScanner().getIntervalScanner().getBleExt().getLogger().setLogLevel(Log.VERBOSE);
-//				_app.getScanner().getIntervalScanner().getBleExt().getBleBase().getLogger().setLogLevel(Log.VERBOSE);
-				BleLog.getInstance().LOGi(TAG, "logLevel: " + BleLog.getInstance().getLogLevel());
-				BleLog.getInstance().LOGi(TAG, "logLevel: " + _app.getScanner().getIntervalScanner().getBleExt().getLogger().getLogLevel());
-				BleLog.getInstance().LOGi(TAG, "logLevel: " + _app.getScanner().getIntervalScanner().getBleExt().getBleBase().getLogger().getLogLevel());
-				BleLog.getInstance().LOGi(TAG, "Scanner init success.");
+
 			}
 
 			@Override
 			public void onError(int error) {
-				BleLog.getInstance().LOGe(TAG, "Scanner init error: " + error);
-				switch (error) {
-					case BleErrors.ERROR_LOCATION_PERMISSION_MISSING:
-						showErrorDialog("Permission missing", "Cannot scan for devices without permissions.");
-						break;
-				}
+
 			}
 		});
+
 
 //		// if service is not yet bound, register as service bind listener
 //		if (!_app.isServiceBound()) {
@@ -143,7 +132,9 @@ public class MainActivity  extends AppCompatActivity implements EventListener {
 	protected void onResume() {
 		super.onResume();
 		BleLog.getInstance().LOGi(TAG, "onResume");
-		BleLog.getInstance().LOGi(TAG, "scanner ready: " + _app.getScanner().getIntervalScanner().getBleExt().getBleBase().isScannerReady());
+		if (_app != null &&  _app.getScanner() != null &&  _app.getScanner().getIntervalScanner() != null &&  _app.getScanner().getIntervalScanner().getBleExt() != null) {
+			BleLog.getInstance().LOGi(TAG, "scanner ready: " + _app.getScanner().getIntervalScanner().getBleExt().getBleBase().isScannerReady());
+		}
 
 		// if app is resumed, make sure a user is logged in (or app is in offline mode)
 		if (!Config.OFFLINE) {

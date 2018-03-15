@@ -34,6 +34,7 @@ import nl.dobots.bluenet.ble.extended.BleExtState;
 import nl.dobots.bluenet.ble.extended.callbacks.IExecuteCallback;
 import nl.dobots.bluenet.utils.BleLog;
 import nl.dobots.bluenet.utils.BleUtils;
+import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.ProgressSpinner;
 
@@ -109,7 +110,8 @@ public class ControlConfigFragment extends Fragment {
 
 
 	// Other stuff
-	private BleExt _ble;
+//	private BleExt _ble;
+	private CrownstoneDevApp _app;
 	private String _address;
 	private boolean _closing;
 	private Handler _handler;
@@ -126,9 +128,10 @@ public class ControlConfigFragment extends Fragment {
 		ht.start();
 		_handler = new Handler(ht.getLooper());
 
-		_ble = ControlActivity.getInstance().getBle();
+		_app = CrownstoneDevApp.getInstance();
+//		_ble = ControlActivity.getInstance().getBle();
 		_address = ControlActivity.getInstance().getAddress();
-		_bleConfiguration = new BleConfiguration(_ble.getBleBase());
+		_bleConfiguration = new BleConfiguration(_app.getBle().getBleBase());
 	}
 
 	@Override
@@ -136,13 +139,12 @@ public class ControlConfigFragment extends Fragment {
 		super.onDestroy();
 		_closing = true;
 		_handler.removeCallbacksAndMessages(null);
-		if (_ble.isScanning()) {
-			_ble.stopScan(null);
-		}
+		_app.getScanner().stopScanning();
+
 		// finish has to be called on the library to release the objects if the library
 		// is not used anymore
-		if (_ble.isConnected(null)) {
-			_ble.disconnectAndClose(false, new IStatusCallback() {
+		if (_app.getBle().isConnected(null)) {
+			_app.getBle().disconnectAndClose(false, new IStatusCallback() {
 				@Override
 				public void onSuccess() {
 
@@ -570,7 +572,7 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public boolean execute() {
 
-				BleExtState bleState = new BleExtState(_ble);
+				BleExtState bleState = new BleExtState(_app.getBle());
 				bleState.getTime(_address, new IIntegerCallback() {
 					@Override
 					public void onSuccess(int result) {
@@ -639,7 +641,7 @@ public class ControlConfigFragment extends Fragment {
 					unixTime += System.currentTimeMillis() / 1000;
 				}
 				final java.util.Date date = new java.util.Date(unixTime*1000);
-				_ble.writeSetTime(_address, unixTime, new IStatusCallback() {
+				_app.getBle().writeSetTime(_address, unixTime, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, "set time success");
@@ -821,10 +823,10 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public boolean execute() {
 
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+						_app.getBle().getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
 							@Override
 							public void onSuccess(ConfigurationMsg configuration) {
 								if (configuration.getLength() != 2) {
@@ -886,12 +888,12 @@ public class ControlConfigFragment extends Fragment {
 		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						byte[] valArr = BleUtils.shortToByteArray(value);
 						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
-						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+						_app.getBle().getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -922,10 +924,10 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public boolean execute() {
 
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+						_app.getBle().getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
 							@Override
 							public void onSuccess(ConfigurationMsg configuration) {
 								if (configuration.getLength() != 4) {
@@ -987,12 +989,12 @@ public class ControlConfigFragment extends Fragment {
 		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						byte[] valArr = BleUtils.uint32ToByteArray(value);
 						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
-						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+						_app.getBle().getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -1023,10 +1025,10 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public boolean execute() {
 
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+						_app.getBle().getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
 							@Override
 							public void onSuccess(ConfigurationMsg configuration) {
 								if (configuration.getLength() != 1) {
@@ -1088,12 +1090,12 @@ public class ControlConfigFragment extends Fragment {
 		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						byte[] valArr = new byte[]{(byte)value};
 						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
-						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+						_app.getBle().getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -1126,10 +1128,10 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public boolean execute() {
 
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+						_app.getBle().getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
 							@Override
 							public void onSuccess(ConfigurationMsg configuration) {
 								if (configuration.getLength() != 4) {
@@ -1191,12 +1193,12 @@ public class ControlConfigFragment extends Fragment {
 		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						byte[] valArr = BleUtils.intToByteArray(value);
 						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
-						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+						_app.getBle().getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -1227,10 +1229,10 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public boolean execute() {
 
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
-						_ble.getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+						_app.getBle().getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
 							@Override
 							public void onSuccess(ConfigurationMsg configuration) {
 								if (configuration.getLength() != 4) {
@@ -1292,12 +1294,12 @@ public class ControlConfigFragment extends Fragment {
 		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
 			@Override
 			public boolean execute() {
-				_ble.connectAndExecute(_address, new IExecuteCallback() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
 					@Override
 					public void execute(final IExecStatusCallback execCallback) {
 						byte[] valArr = BleUtils.floatToByteArray(value);
 						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
-						_ble.getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+						_app.getBle().getBleBase().writeConfiguration(_address, configuration, true, execCallback);
 					}
 				}, new SimpleExecStatusCallback(new IStatusCallback() {
 					@Override
@@ -1331,7 +1333,7 @@ public class ControlConfigFragment extends Fragment {
 				byte[] valArr = new byte[1];
 				valArr[0] = (byte)(enable ? 1 : 0);
 				ControlMsg msg = new ControlMsg(controlType, valArr.length, valArr);
-				_ble.writeControl(_address, msg, new IStatusCallback() {
+				_app.getBle().writeControl(_address, msg, new IStatusCallback() {
 					@Override
 					public void onSuccess() {
 						Log.i(TAG, enableStr + name + " success");

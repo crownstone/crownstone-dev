@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import nl.dobots.bluenet.ble.base.callbacks.IProgressCallback;
+import nl.dobots.bluenet.ble.cfg.BleErrors;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.EncryptionKeys;
 import nl.dobots.bluenet.ble.extended.BleExt;
@@ -151,6 +152,39 @@ public class CrownstoneDevApp extends Application {
 		_scanner.destroy();
 	}
 
+	public void init(final Activity activity, final IStatusCallback callback) {
+		BleLog.getInstance().setLogLevel(Log.VERBOSE);
+		_scanner.init(false, activity, null, null, new IStatusCallback() {
+			@Override
+			public void onSuccess() {
+				_scanner.getIntervalScanner().getBleExt().setLogger(BleLog.getInstance());
+//	        	_scanner.getIntervalScanner().getBleExt().getLogger().setLogLevel(Log.VERBOSE);
+//  		    _scanner.getIntervalScanner().getBleExt().getBleBase().getLogger().setLogLevel(Log.VERBOSE);
+				BleLog.getInstance().LOGi(TAG, "logLevel: " + BleLog.getInstance().getLogLevel());
+				BleLog.getInstance().LOGi(TAG, "logLevel: " + _scanner.getIntervalScanner().getBleExt().getLogger().getLogLevel());
+				BleLog.getInstance().LOGi(TAG, "logLevel: " + _scanner.getIntervalScanner().getBleExt().getBleBase().getLogger().getLogLevel());
+
+				BleLog.getInstance().LOGi(TAG, "Scanner init success.");
+				if (callback != null) {
+					callback.onSuccess();
+				}
+			}
+
+			@Override
+			public void onError(int error) {
+				BleLog.getInstance().LOGe(TAG, "Scanner init error: " + error);
+				switch (error) {
+					case BleErrors.ERROR_LOCATION_PERMISSION_MISSING:
+						showErrorDialog(activity, "Permission missing", "Cannot scan for devices without permissions.");
+						break;
+				}
+				if (callback != null) {
+					callback.onError(error);
+				}
+			}
+		});
+	}
+
 	public BleExt getBle() {
 		return _scanner.getIntervalScanner().getBleExt();
 	}
@@ -243,6 +277,32 @@ public class CrownstoneDevApp extends Application {
 //			listener.onBind(service);
 //		}
 //	}
+
+
+
+	private void showErrorDialog(final Activity activity, final String title, final String message) {
+		activity.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+				builder.setTitle(title)
+						.setMessage(message)
+						.setNeutralButton("OK", new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+//												dismiss();
+							}
+						});
+				builder.create().show();
+			}
+		});
+	}
+
+
+
+
+
+
 
 	/**
 	 * Retrieve user data of currently logged in user
