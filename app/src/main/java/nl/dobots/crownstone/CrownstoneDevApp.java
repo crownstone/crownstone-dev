@@ -154,7 +154,7 @@ public class CrownstoneDevApp extends Application {
 
 	public void init(final Activity activity, final IStatusCallback callback) {
 		BleLog.getInstance().setLogLevel(Log.VERBOSE);
-		_scanner.init(false, activity, null, null, new IStatusCallback() {
+		_scanner.init(true, false, activity, null, null, new IStatusCallback() {
 			@Override
 			public void onSuccess() {
 				_scanner.getIntervalScanner().getBleExt().setLogger(BleLog.getInstance());
