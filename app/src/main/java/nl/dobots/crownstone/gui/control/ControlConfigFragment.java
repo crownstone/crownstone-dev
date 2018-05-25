@@ -62,6 +62,8 @@ public class ControlConfigFragment extends Fragment {
 	private Button   _btnConfigDimmingAllowedDisable;
 	private Button   _btnConfigSwitchLockedEnable;
 	private Button   _btnConfigSwitchLockedDisable;
+	private Button   _btnConfigSwitchcraftEnable;
+	private Button   _btnConfigSwitchcraftDisable;
 	private EditText _txtConfigRelayHigh;
 	private Button   _btnConfigRelayHighGet;
 	private Button   _btnConfigRelayHighSet;
@@ -191,6 +193,21 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				switchLockedDisable();
+			}
+		});
+
+		_btnConfigSwitchcraftEnable  = (Button)   v.findViewById(R.id.btnConfigSwitchcraftEnable);
+		_btnConfigSwitchcraftDisable = (Button)   v.findViewById(R.id.btnConfigSwitchcraftDisable);
+		_btnConfigSwitchcraftEnable.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				switchcraftEnable();
+			}
+		});
+		_btnConfigSwitchcraftDisable.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				switchcraftDisable();
 			}
 		});
 
@@ -502,6 +519,24 @@ public class ControlConfigFragment extends Fragment {
 
 	private void writeSwitchLocked(boolean enable) {
 		optionEnable("switch locked", enable, BluenetConfig.CMD_LOCK_SWITCH);
+	}
+
+
+
+	////////////////////////
+	// SWITCHCRAFT ENABLE //
+	////////////////////////
+
+	private void switchcraftEnable() {
+		writeSwitchcraftEnable(true);
+	}
+
+	private void switchcraftDisable() {
+		writeSwitchcraftEnable(false);
+	}
+
+	private void writeSwitchcraftEnable(boolean enable) {
+		optionEnable("enable switchcraft", enable, BluenetConfig.CMD_ENABLE_SWITCHCRAFT);
 	}
 
 

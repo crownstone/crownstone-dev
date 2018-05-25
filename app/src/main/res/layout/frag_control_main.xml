@@ -287,6 +287,13 @@
 					android:layout_marginTop="0dp"
 					android:text="Time set:"/>
 				<TextView
+					android:id="@+id/textSwitchcraftEnabled"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginStart="0dp"
+					android:layout_marginTop="0dp"
+					android:text="Switchcraft:"/>
+				<TextView
 					android:id="@+id/textErrorBitmask"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
@@ -296,7 +303,34 @@
 			</LinearLayout>
 		</LinearLayout>
 
+		<LinearLayout
+			android:id="@+id/layUartMsg"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			>
 
+			<Button
+				android:id="@+id/btnUartMsg"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_gravity="center_vertical"
+				android:layout_weight="1"
+				android:text="Send uart msg"
+				android:textStyle="bold"
+				/>
+
+			<EditText
+				android:id="@+id/editUartMsg"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_weight="3"
+				android:ems="10"
+				android:imeOptions="actionDone"
+				android:inputType="textMultiLine"
+				android:text=""
+				/>
+		</LinearLayout>
 
 
 	</LinearLayout>

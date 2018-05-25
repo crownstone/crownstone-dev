@@ -232,6 +232,9 @@ public class DeviceListAdapter extends BaseAdapter {
 			else if (device.isGuidestone()) {
 				convertView.setBackgroundColor(0xFFA0E000); // Yellow green
 			}
+			else if (device.isCrownstoneDongle()) {
+				convertView.setBackgroundColor(0xFF00A0A0); // Cyan
+			}
 			else if (device.isIBeacon()) {
 				convertView.setBackgroundColor(0xFFA0A000); // Yellow
 			}

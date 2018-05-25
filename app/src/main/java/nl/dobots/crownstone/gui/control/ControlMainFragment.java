@@ -27,12 +27,15 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import nl.dobots.bluenet.ble.base.BleConfiguration;
 import nl.dobots.bluenet.ble.base.callbacks.IBooleanCallback;
 import nl.dobots.bluenet.ble.base.callbacks.IDiscoveryCallback;
+import nl.dobots.bluenet.ble.base.structs.ControlMsg;
+import nl.dobots.bluenet.ble.cfg.BluenetConfig;
 import nl.dobots.bluenet.ble.core.callbacks.IStatusCallback;
 import nl.dobots.bluenet.ble.base.structs.CrownstoneServiceData;
 import nl.dobots.bluenet.ble.cfg.BleErrors;
@@ -41,6 +44,7 @@ import nl.dobots.bluenet.ble.extended.callbacks.IBleDeviceCallback;
 import nl.dobots.bluenet.ble.extended.structs.BleDevice;
 import nl.dobots.bluenet.scanner.callbacks.ScanDeviceListener;
 import nl.dobots.bluenet.utils.BleLog;
+import nl.dobots.bluenet.utils.BleUtils;
 import nl.dobots.crownstone.CrownstoneDevApp;
 import nl.dobots.crownstone.R;
 import nl.dobots.crownstone.gui.utils.AdvertisementGraph;
@@ -90,11 +94,15 @@ public class ControlMainFragment extends Fragment implements ScanDeviceListener 
 	private TextView _txtDimmingAllowed;
 	private TextView _txtSwitchLocked;
 	private TextView _txtTimeSet;
+	private TextView _txtSwitchcraftEnabled;
 	private TextView _textErrorBitmask;
 
 	private RelativeLayout _layStatistics;
 //	private RelativeLayout _layControl;
 	private LinearLayout _layControl;
+
+	private Button   _btnUartMsg;
+	private EditText _editUartMsg;
 
 	private Handler _handler;
 	private boolean _closing;
@@ -228,6 +236,7 @@ public class ControlMainFragment extends Fragment implements ScanDeviceListener 
 				_txtDimmingAllowed.setText("Dimming allowed: " + serviceData.getFlagDimmingAllowed());
 				_txtSwitchLocked.setText("Switch locked: " + serviceData.getFlagSwitchLocked());
 				_txtTimeSet.setText("Time set: " + serviceData.getFlagTimeSet());
+				_txtSwitchcraftEnabled.setText("Switchcraft: " + serviceData.getFlagSwitchcraftEnabled());
 				_textErrorBitmask.setText("Errors: " + serviceData.getErrorBitMaskString());
 
 				// It looks a bit weird to see state change to old state, when you set a new one
@@ -374,6 +383,28 @@ public class ControlMainFragment extends Fragment implements ScanDeviceListener 
 			}
 		});
 
+		_btnUartMsg = (Button) v.findViewById(R.id.btnUartMsg);
+		_btnUartMsg.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				sendUartMsg();
+			}
+		});
+
+		_editUartMsg = (EditText) v.findViewById(R.id.editUartMsg);
+		_editUartMsg.setText("");
+		_editUartMsg.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				// The IME type should match the type set as imeOptions for the editText
+				if (actionId == EditorInfo.IME_ACTION_DONE) {
+					sendUartMsg(_editUartMsg.getText().toString());
+					return true;
+				}
+				return false;
+			}
+		});
+
 //		_layControl = (RelativeLayout) v.findViewById(R.id.layControl);
 		_layControl = (LinearLayout) v.findViewById(R.id.layControl);
 		_layStatistics = (RelativeLayout) v.findViewById(R.id.layContainer);
@@ -410,18 +441,19 @@ public class ControlMainFragment extends Fragment implements ScanDeviceListener 
 //		enablePwm(_pwmEnabled);
 		_handler.postDelayed(_advStateChecker, 2000);
 
-		_txtLastScanResponse = (TextView) v.findViewById(R.id.textLastScanResponse);
-		_txtDimmerState      = (TextView) v.findViewById(R.id.textDimmerState);
-		_txtPowerFactor      = (TextView) v.findViewById(R.id.textPowerFactor);
-		_txtPowerUsage       = (TextView) v.findViewById(R.id.textPowerUsage);
-		_txtEnergyUsage      = (TextView) v.findViewById(R.id.textEnergyUsage);
-		_txtChipTemp         = (TextView) v.findViewById(R.id.textChipTemp);
-		_txtName             = (TextView) v.findViewById(R.id.textName);
-		_txtDimmingAvailable = (TextView) v.findViewById(R.id.textDimmingAvailable);
-		_txtDimmingAllowed   = (TextView) v.findViewById(R.id.textDimmingAllowed);
-		_txtSwitchLocked     = (TextView) v.findViewById(R.id.textSwitchLocked);
-		_txtTimeSet          = (TextView) v.findViewById(R.id.textTimeSet);
-		_textErrorBitmask    = (TextView) v.findViewById(R.id.textErrorBitmask);
+		_txtLastScanResponse   = (TextView) v.findViewById(R.id.textLastScanResponse);
+		_txtDimmerState        = (TextView) v.findViewById(R.id.textDimmerState);
+		_txtPowerFactor        = (TextView) v.findViewById(R.id.textPowerFactor);
+		_txtPowerUsage         = (TextView) v.findViewById(R.id.textPowerUsage);
+		_txtEnergyUsage        = (TextView) v.findViewById(R.id.textEnergyUsage);
+		_txtChipTemp           = (TextView) v.findViewById(R.id.textChipTemp);
+		_txtName               = (TextView) v.findViewById(R.id.textName);
+		_txtDimmingAvailable   = (TextView) v.findViewById(R.id.textDimmingAvailable);
+		_txtDimmingAllowed     = (TextView) v.findViewById(R.id.textDimmingAllowed);
+		_txtSwitchLocked       = (TextView) v.findViewById(R.id.textSwitchLocked);
+		_txtTimeSet            = (TextView) v.findViewById(R.id.textTimeSet);
+		_txtSwitchcraftEnabled = (TextView) v.findViewById(R.id.textSwitchcraftEnabled);
+		_textErrorBitmask      = (TextView) v.findViewById(R.id.textErrorBitmask);
 
 //		Log.i(TAG, "isFocusable: " + _layControl.isFocusable() + " " + _btnPwmOn.isFocusable() + " " + _sbSwitch.isFocusable() + " " + _txtLastScanResponse.isFocusable());
 //		Log.i(TAG, "isFocusableTouch: " + _layControl.isFocusableInTouchMode() + " " + _btnPwmOn.isFocusableInTouchMode() + " " + _sbSwitch.isFocusableInTouchMode() + " " + _txtLastScanResponse.isFocusableInTouchMode());
@@ -566,6 +598,43 @@ public class ControlMainFragment extends Fragment implements ScanDeviceListener 
 					@Override
 					public void onError(int error) {
 						Log.i(TAG, "set switch failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				});
+				return true;
+			}
+		});
+	}
+
+	private void sendUartMsg() {
+		sendUartMsg(_editUartMsg.getText().toString());
+	}
+
+	private void sendUartMsg(final String str) {
+		Log.i(TAG, "sendUartMsg: " + str);
+		showProgressSpinner();
+		_handler.post(new SequentialRunner("sendUartMsg") {
+			@Override
+			public boolean execute() {
+				// switch the device on. this function will check first if the device is connected
+				// (and connect if it is not), then it switches the device on, and disconnects again
+				// afterwards (once the disconnect timeout expires)
+				byte[] payload = str.getBytes(Charset.forName("UTF-8"));
+				ControlMsg msg = new ControlMsg(BluenetConfig.CMD_UART_MSG, payload.length, payload);
+				_app.getBle().writeControl(_address, msg, new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG,"uart msg success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "uart msg failed: " + error);
 						displayError(error);
 						done();
 						dismissProgressSpinner();
