@@ -406,6 +406,25 @@ public class ControlActivity extends AppCompatActivity implements ViewPagerActiv
 				});
 				break;
 			}
+			case R.id.action_resetcounter: {
+				BleLog.getInstance().LOGd(TAG, "read firmware version");
+				ProgressSpinner.show(this);
+				_app.getBle().getBleExtState().getResetCounter(_address, new IIntegerCallback() {
+					@Override
+					public void onSuccess(int result) {
+						Log.i(TAG, "reset counter: " + result);
+						showToast("Reset counter: " + result);
+						ProgressSpinner.dismiss();
+					}
+
+					@Override
+					public void onError(int error) {
+						showToast("Failed to read reset counter");
+						ProgressSpinner.dismiss();
+					}
+				});
+				break;
+			}
 		}
 
 		return super.onOptionsItemSelected(item);

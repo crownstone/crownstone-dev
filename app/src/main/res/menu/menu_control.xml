@@ -36,4 +36,9 @@
 		android:orderInCategory="100"
 		android:title="Reset error state"
 		app:showAsAction="never"/>
+	<item
+		android:id="@+id/action_resetcounter"
+		android:orderInCategory="100"
+		android:title="Get reset counter"
+		app:showAsAction="never"/>
 </menu>
