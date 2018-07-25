@@ -118,6 +118,129 @@
 
 
 		<TextView
+			android:id="@+id/textConfigSwitchcraftThreshold"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="Switchcraft threshold (float)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigSwitchcraftThreshold"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtConfigSwitchcraftThreshold"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="numberDecimal"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnConfigSwitchcraftThresholdGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+			<Button
+				android:id="@+id/btnConfigSwitchcraftThresholdSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigUartEnable"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="UART enable (enum)"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigUartEnable"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtConfigUartEnable"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnConfigUartEnableGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+			<Button
+				android:id="@+id/btnConfigUartEnableSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
+			android:id="@+id/textConfigMeshChannel"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:layout_marginBottom="0dp"
+			android:layout_marginStart="0dp"
+			android:text="mesh channel"
+			android:textAlignment="center"/>
+		<LinearLayout
+			android:id="@+id/layConfigMeshChannel"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			>
+			<EditText
+				android:id="@+id/txtConfigMeshChannel"
+				android:layout_width="0dp"
+				android:layout_height="wrap_content"
+				android:layout_marginBottom="0dp"
+				android:layout_weight="2"
+				android:ems="10"
+				android:inputType="number"
+				android:text=""/>
+			<Button
+				android:id="@+id/btnConfigMeshChannelGet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="get"
+				/>
+			<Button
+				android:id="@+id/btnConfigMeshChannelSet"
+				android:layout_width="0dp"
+				android:layout_weight="1"
+				android:layout_height="wrap_content"
+				android:text="set"
+				/>
+		</LinearLayout>
+
+
+		<TextView
 			android:id="@+id/textConfigRelayHigh"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
@@ -551,7 +674,7 @@
 				android:layout_marginBottom="0dp"
 				android:layout_weight="2"
 				android:ems="10"
-				android:inputType="number"
+				android:inputType="numberDecimal"
 				android:text=""/>
 			<Button
 				android:id="@+id/btnConfigDimmerTempThresholdDownGet"

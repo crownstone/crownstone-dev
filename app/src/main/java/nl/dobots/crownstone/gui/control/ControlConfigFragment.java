@@ -64,6 +64,15 @@ public class ControlConfigFragment extends Fragment {
 	private Button   _btnConfigSwitchLockedDisable;
 	private Button   _btnConfigSwitchcraftEnable;
 	private Button   _btnConfigSwitchcraftDisable;
+	private EditText _txtConfigSwitchcraftThreshold;
+	private Button   _btnConfigSwitchcraftThresholdGet;
+	private Button   _btnConfigSwitchcraftThresholdSet;
+	private EditText _txtConfigUartEnable;
+	private Button   _btnConfigUartEnableGet;
+	private Button   _btnConfigUartEnableSet;
+	private EditText _txtConfigMeshChannel;
+	private Button   _btnConfigMeshChannelGet;
+	private Button   _btnConfigMeshChannelSet;
 	private EditText _txtConfigRelayHigh;
 	private Button   _btnConfigRelayHighGet;
 	private Button   _btnConfigRelayHighSet;
@@ -208,6 +217,54 @@ public class ControlConfigFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				switchcraftDisable();
+			}
+		});
+
+		_txtConfigSwitchcraftThreshold    = (EditText) v.findViewById(R.id.txtConfigSwitchcraftThreshold);
+		_btnConfigSwitchcraftThresholdGet = (Button)   v.findViewById(R.id.btnConfigSwitchcraftThresholdGet);
+		_btnConfigSwitchcraftThresholdSet = (Button)   v.findViewById(R.id.btnConfigSwitchcraftThresholdSet);
+		_btnConfigSwitchcraftThresholdGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getSwitchcraftThreshold();
+			}
+		});
+		_btnConfigSwitchcraftThresholdSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setSwitchcraftThreshold();
+			}
+		});
+
+		_txtConfigUartEnable    = (EditText) v.findViewById(R.id.txtConfigUartEnable);
+		_btnConfigUartEnableGet = (Button)   v.findViewById(R.id.btnConfigUartEnableGet);
+		_btnConfigUartEnableSet = (Button)   v.findViewById(R.id.btnConfigUartEnableSet);
+		_btnConfigUartEnableGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getUartEnable();
+			}
+		});
+		_btnConfigUartEnableSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setUartEnable();
+			}
+		});
+
+		_txtConfigMeshChannel    = (EditText) v.findViewById(R.id.txtConfigMeshChannel);
+		_btnConfigMeshChannelGet = (Button)   v.findViewById(R.id.btnConfigMeshChannelGet);
+		_btnConfigMeshChannelSet = (Button)   v.findViewById(R.id.btnConfigMeshChannelSet);
+		_btnConfigMeshChannelGet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				getMeshChannel();
+			}
+		});
+		_btnConfigMeshChannelSet.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				setMeshChannel();
 			}
 		});
 
@@ -523,9 +580,9 @@ public class ControlConfigFragment extends Fragment {
 
 
 
-	////////////////////////
-	// SWITCHCRAFT ENABLE //
-	////////////////////////
+	/////////////////
+	// SWITCHCRAFT //
+	/////////////////
 
 	private void switchcraftEnable() {
 		writeSwitchcraftEnable(true);
@@ -539,6 +596,41 @@ public class ControlConfigFragment extends Fragment {
 		optionEnable("enable switchcraft", enable, BluenetConfig.CMD_ENABLE_SWITCHCRAFT);
 	}
 
+	private void getSwitchcraftThreshold() {
+		getFloat("SwitchcraftThreshold", _txtConfigSwitchcraftThreshold, BluenetConfig.CONFIG_SWITCHCRAFT_THRESHOLD);
+	}
+
+	private void setSwitchcraftThreshold() {
+		setFloat("SwitchcraftThreshold", _txtConfigSwitchcraftThreshold, BluenetConfig.CONFIG_SWITCHCRAFT_THRESHOLD);
+	}
+
+
+
+	/////////////////
+	// UART ENABLE //
+	/////////////////
+
+	private void getUartEnable() {
+		getUint8("UartEnable", _txtConfigUartEnable, BluenetConfig.CONFIG_UART_ENABLED);
+	}
+
+	private void setUartEnable() {
+		setUint8("UartEnable", _txtConfigUartEnable, BluenetConfig.CONFIG_UART_ENABLED);
+	}
+
+
+
+	//////////////////
+	// MESH CHANNEL //
+	//////////////////
+
+	private void getMeshChannel() {
+		getUint8("MeshChannel", _txtConfigMeshChannel, BluenetConfig.CONFIG_MESH_CHANNEL);
+	}
+
+	private void setMeshChannel() {
+		setUint8("MeshChannel", _txtConfigMeshChannel, BluenetConfig.CONFIG_MESH_CHANNEL);
+	}
 
 
 	/////////////////////////
@@ -852,6 +944,107 @@ public class ControlConfigFragment extends Fragment {
 	// TEMPLATE FUNCTIONS //
 	////////////////////////
 
+
+	private void getUint8(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						_app.getBle().getBleBase().getConfiguration(_address, configurationType, new IConfigurationCallback() {
+							@Override
+							public void onSuccess(ConfigurationMsg configuration) {
+								if (configuration.getLength() != 1) {
+									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
+									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
+								} else {
+									int value = configuration.getUint8Value();
+									Log.i(TAG, name + ": " + value);
+									execCallback.onSuccess(value);
+								}
+							}
+
+							@Override
+							public void onError(int error) {
+								execCallback.onError(error);
+							}
+						});
+					}
+				}, new SimpleExecStatusCallback(new IIntegerCallback() {
+					@Override
+					public void onSuccess(final int result) {
+						Log.i(TAG, "get " + name + " success");
+						getActivity().runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								outputEditText.setText(Integer.toString(result));
+							}
+						});
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "get " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
+	private void setUint8(final String name, final EditText outputEditText, final int configurationType) {
+		showProgressSpinner();
+
+		final int value;
+		String configStr = outputEditText.getText().toString();
+		try {
+			value = Integer.parseInt(configStr);
+		} catch (NumberFormatException e) {
+			showToast("Invalid number");
+			return;
+		}
+		BleLog.getInstance().LOGi(TAG, "set " + name + ": " + configStr + " = " + value);
+
+		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
+			@Override
+			public boolean execute() {
+				_app.getBle().connectAndExecute(_address, new IExecuteCallback() {
+					@Override
+					public void execute(final IExecStatusCallback execCallback) {
+						byte[] valArr = new byte[]{(byte) value};
+						ConfigurationMsg configuration = new ConfigurationMsg(configurationType, valArr.length, valArr);
+						_app.getBle().getBleBase().writeConfiguration(_address, configuration, true, execCallback);
+					}
+				}, new SimpleExecStatusCallback(new IStatusCallback() {
+					@Override
+					public void onSuccess() {
+						Log.i(TAG, "set " + name + " success");
+						showToast("Success");
+						done();
+						dismissProgressSpinner();
+					}
+
+					@Override
+					public void onError(int error) {
+						Log.i(TAG, "set " + name + " failed: " + error);
+						displayError(error);
+						done();
+						dismissProgressSpinner();
+					}
+				}));
+				return true;
+			}
+		});
+	}
+
 	private void getUint16(final String name, final EditText outputEditText, final int configurationType) {
 		showProgressSpinner();
 		_handler.post(new ControlConfigFragment.SequentialRunner(name) {
@@ -868,7 +1061,7 @@ public class ControlConfigFragment extends Fragment {
 									Log.e(TAG, "Wrong length parameter: " + configuration.getLength());
 									onError(BleErrors.ERROR_WRONG_LENGTH_PARAMETER);
 								} else {
-									int value = configuration.getShortValue();
+									int value = BleUtils.toUint16(configuration.getShortValue());
 									Log.i(TAG, name + ": " + value);
 									execCallback.onSuccess(value);
 								}
